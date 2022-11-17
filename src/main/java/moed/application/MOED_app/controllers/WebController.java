@@ -3,14 +3,8 @@ package moed.application.MOED_app.controllers;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
-import moed.application.MOED_app.ENUM.LineType;
-import moed.application.MOED_app.ENUM.RandomType;
-import moed.application.MOED_app.Entities.Stats;
-import moed.application.MOED_app.Entities.Trend;
 import moed.application.MOED_app.Entities.TrendInfo;
 import moed.application.MOED_app.business.DataAnalyzer;
-import moed.application.MOED_app.business.DataModeller;
-import moed.application.MOED_app.business.IOC;
 import moed.application.MOED_app.components.AppConfig;
 import org.apache.commons.io.file.PathUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,17 +16,13 @@ import org.springframework.web.bind.annotation.GetMapping;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 
 import static org.springframework.http.HttpStatus.OK;
 
 @Controller
 public class WebController {
     @Autowired
-    private IOC IOC;
-    @Autowired
     private AppConfig.SampleData sampleData;
-
     @GetMapping("main")
     public String display(Model model) throws InterruptedException, IOException {
         try {

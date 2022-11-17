@@ -8,8 +8,6 @@ import org.jfree.data.xy.XYSeries;
 
 import java.util.ArrayList;
 
-import static moed.application.MOED_app.business.DataModeller.removeTrend;
-
 public class DataProcessor {
     //Выделение изначальных трендов из смешанных данных с помощью производной
     public static XYSeries reverseMergeDerivative(XYSeries series) {
@@ -58,6 +56,7 @@ public class DataProcessor {
         int N = series.getItemCount();
         double rate = 1/dt;
         int df = (int) rate/N;
+        df = Math.max(df, 1);
         XYSeries spectrum = DataModeller.fourier(series, windowSize);
         for (int i = 0; i < N/2; i += df) {
             result.add(i, spectrum.getY(i));
@@ -67,35 +66,68 @@ public class DataProcessor {
 
     public static XYSeries antiNoise(int M, XYSeries... series) {
         XYSeries result = new XYSeries("");
-        XYSeries additive = new XYSeries("");
+        XYSeries additive;
         int N = 1000;
         if (series.length != 0) {
             N = series[0].getItemCount();
-            XYSeries addNoise = new XYSeries("");
-            Double[] sysNoise = DataModeller.getNoise(N, 30, RandomType.SYSTEM);
-            for (int i = 0; i < N; i++) {
-                addNoise.add(i, sysNoise[i]);
-            }
-            additive = DataModeller.getMerged(series[0], addNoise);
         }
         ArrayList<Double[]> noises = new ArrayList<>();
+        ArrayList<XYSeries> additives = new ArrayList<>();
         for (int i = 0; i < M; i++) {
-            noises.add(DataModeller.getNoise(N, 30, RandomType.SYSTEM));
+            if (series.length != 0) {
+                XYSeries sysNoise = new XYSeries("");
+                Double[] noiseVals = DataModeller.getNoiseOptimized(N, 30, RandomType.SYSTEM);
+                for (int j = 0; j < N; j++) {
+                    sysNoise.add(j, noiseVals[j]);
+                }
+                additive = DataModeller.getMerged(series[0], sysNoise);
+                additives.add(additive);
+            } else {
+                noises.add(DataModeller.getNoiseOptimized(N, 30, RandomType.SYSTEM));
+            }
         }
         for (int i = 0; i < N; i++) {
             Double value = 0.d;
-            for (var noise : noises) {
-                value += noise[i];
+            if (series.length != 0) {
+                for (XYSeries merged : additives) {
+                    value += (Double) merged.getY(i);
+                }
+            } else {
+                for (var noise : noises) {
+                    value += noise[i];
+                }
             }
             result.add(i, value / M);
         }
-        if (series.length != 0) {
-            XYSeries addResult = new XYSeries("");
-            for (int i = 0; i < N; i++) {
-                addResult.add(i, (Double) additive.getY(i) - (Double) result.getY(i));
-            }
-            return addResult;
-        }
         return  result;
+    }
+
+    public static XYSeries normalizeFunc(XYSeries series, Double multiplier) {
+        XYSeries result = new XYSeries("");
+        Double max = DataAnalyzer.Statistics.getMinMax(series)[1];
+        for (int i = 0; i < series.getItemCount(); i++) {
+            result.add(series.getX(i), ((Double) series.getY(i)) * multiplier / max);
+        }
+        return result;
+    }
+
+    public static XYSeries Convolution(XYSeries series1, XYSeries series2) {
+        XYSeries result = new XYSeries("");
+        int N = series2.getItemCount();
+        int M = series1.getItemCount();
+        for (int k = 0; k < N + M; k++) {
+            Double val = 0d;
+            for (int m = 0; m < M; m++) {
+                if (k - m < 0 || k - m >= N) continue;
+                val += (Double) series1.getY(m) * (Double) series2.getY(k - m);
+            }
+            result.add(k, val);
+        }
+        try {
+            result =  result.createCopy(0, N - 1);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return result;
     }
 }

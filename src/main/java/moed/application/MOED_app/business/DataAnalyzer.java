@@ -99,7 +99,7 @@ public class DataAnalyzer {
             return true;
         }
 
-        //РЕАЛИЗОВАТЬ Hist, отображать вместе со статистикой
+        //Изменить реализацию на series
         public static Trend getProbDen(XYSeries series) {
             //Разбить на M интервалов и считать, сколько в каждый интервал попадает значений
             //Min, Max, Avg
@@ -122,7 +122,6 @@ public class DataAnalyzer {
         }
 
         //Автокорреляция
-        //Добавить еще нормирование
         public static XYSeries getAutoCovariance(XYSeries series) {
             XYSeries result = new XYSeries("");
             Double R;

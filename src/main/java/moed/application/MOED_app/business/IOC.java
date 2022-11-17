@@ -7,9 +7,12 @@ import org.jfree.chart.JFreeChart;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Scanner;
 import java.util.UUID;
 
 @Component
@@ -27,6 +30,29 @@ public class IOC {
                 ratio[1]
         );
         return path;
+    }
+
+    public static ArrayList<Number> readDat(String path) {
+        File file = new File(AppConfig.IOCConfig.DATAFILES_FOLDER + "/" + path);
+        DataInputStream stream;
+        ArrayList<Number> dataY = null;
+        try {
+            stream = new DataInputStream(new FileInputStream(file));
+            dataY = new ArrayList<>();
+            byte bytes[] = stream.readAllBytes();
+            stream.close();
+            byte curr[] = new byte[4];
+            for (int i = 0; i < bytes.length; i += 4) {
+                curr[0] = bytes[i];
+                curr[1] = bytes[i + 1];
+                curr[2] = bytes[i + 2];
+                curr[3] = bytes[i + 3];
+                dataY.add((double) ByteBuffer.wrap(curr).order(ByteOrder.LITTLE_ENDIAN).getFloat());
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return dataY;
     }
 
     public static Path getCleanPath() {

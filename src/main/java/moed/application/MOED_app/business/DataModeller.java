@@ -22,47 +22,82 @@ import java.util.stream.Collectors;
 public class DataModeller implements DisposableBean {
     private static final AppConfig.SampleData sampleData = new AppConfig.SampleData();
     public static String getTrend(Trend trend, Integer[] ratio) throws IOException {
-        JFreeChart chart = null;
-        switch (trend.getChartType()) {
-            case LINE:
-                chart = Charts.getLineChart(
-                        trend.getChartName(),
-                        trend.getXAxisName(),
-                        trend.getYAxisName(),
-                        trend.getSeries()
-                );
-                break;
-        }
+        JFreeChart chart = Charts.getLineChart(
+                trend.getChartName(),
+                trend.getXAxisName(),
+                trend.getYAxisName(),
+                trend.getSeries()
+        );
         return IOC.saveChartAsPNG(chart, ratio);
     }
 
-    public static Double[] getNoise(int N, double R, RandomType rndType) {
+    public static XYSeries getModel(ArrayList<Number> points) {
+        if (points == null) {
+            throw new RuntimeException("Got null input!");
+        }
+        XYSeries result = new XYSeries("");
+        int N = points.size();
+        for (int i = 0; i < N; i++) {
+            result.add(i, points.get(i));
+        }
+        return result;
+    }
+
+    public static XYSeries getStraight(int N, Double k, Double b, boolean direction) {
+        XYSeries result = new XYSeries("");
+        for (int i = 0; i < N; i++) {
+            result.add(i, (direction ? 1 : -1) * k * i * b);
+        }
+        return result;
+    }
+
+    public static XYSeries getExponent(int N, Double k, Double b, Double alpha, boolean direction) {
+        XYSeries result = new XYSeries("");
+        for (int i = 0; i < N; i++) {
+            Double yValue = b * Math.exp((direction ? 1 : -1) * alpha * k * i);
+            if (yValue == Double.POSITIVE_INFINITY) { break; }
+            result.add(i, yValue);
+        }
+        return result;
+    }
+
+    public static XYSeries getNoise(int N, double R, RandomType rndType) {
+        XYSeries result = new XYSeries("");
+        Double[] data = getNoiseOptimized(N, R, rndType);
+        for (int i = 0; i < N; i++) {
+            result.add(i, data[i]);
+        }
+        return result;
+    }
+
+    public static Double[] getNoiseOptimized(int N, double R, RandomType rndType) {
         Double[] data = new Double[N];
         Random rnd;
-        switch (rndType) {
-            case SELF:
-                rnd = new SelfRandom();
-                break;
-            default:
-                rnd = new Random();
-                break;
-
+        if (rndType == RandomType.SELF) {
+            rnd = new SelfRandom();
+        } else {
+            rnd = new Random();
         }
         double Xmax = 0.0;
         double Xmin = 1.0;
-        for (int i = 0; i < data.length; i++) {
+        for (int i = 0; i < N; i++) {
             data[i] = rnd.nextDouble();
             if (data[i] > Xmax) { Xmax = data[i]; }
             if (data[i] < Xmin) { Xmin = data[i]; }
         }
-        for (int i = 0; i < data.length; i++) {
-            data[i] = ((data[i] - Xmin)/(Xmax - Xmin) - 0.5) * 2 * R;
+        if (N == 1) {
+            data[0] *= R;
+        } else {
+            for (int i = 0; i < N; i++) {
+                data[i] = ((data[i] - Xmin)/(Xmax - Xmin) - 0.5) * 2 * R;
+            }
         }
         return data;
     }
 
-    public static Trend getShiftedTrend(Trend trend, Double shift, int... splitIndexes) {
-        XYSeries series = trend.getSeries();
+    //Изменить реализацию на series
+    public static XYSeries getShiftedTrend(XYSeries series, Double shift, int... splitIndexes) {
+        XYSeries result = new XYSeries("");
         int startIdx = 0;
         int endIdx = series.getItemCount();
         if (splitIndexes.length == 2) {
@@ -70,13 +105,13 @@ public class DataModeller implements DisposableBean {
             endIdx = splitIndexes[1] + 1;
         }
         for (int i = startIdx; i < endIdx; i++) {
-            series.updateByIndex(i, (Double) series.getY(i) + shift);
+            result.add(i, (Double) series.getY(i) + shift);
         }
-        trend.setSeries(series);
-        return trend;
+        return result;
     }
 
-    public static Double[] getImpulseNoise(int N, Double noiseRange, Double percentile, Double noiseSubRange) {
+    public static XYSeries getImpulseNoise(int N, Double noiseRange, Double percentile, Double noiseSubRange) {
+        XYSeries result = new XYSeries("");
         Double[] randomData = new Double[N];
         for (int i = 0; i < N; i++) {
             randomData[i] = 0d;
@@ -85,21 +120,24 @@ public class DataModeller implements DisposableBean {
         Integer[] xNoiseIndexes = new Integer[noiseCount];
         Random rnd = new Random();
         for (int i = 0; i < noiseCount; i++) {
-            int newIdx = 0;
+            int newIdx;
             do {
                 newIdx = Math.abs(rnd.nextInt(N));
             } while (arrayContains(xNoiseIndexes, newIdx));
             xNoiseIndexes[i] = newIdx;
         }
-        Double[] subNoiseValues = getNoise(noiseCount, noiseSubRange, RandomType.SYSTEM);
+        XYSeries subNoiseValues = getNoise(noiseCount, noiseSubRange, RandomType.SYSTEM);
         Double[] noiseValues = new Double[noiseCount];
         for (int i = 0; i < noiseCount; i++) {
-            noiseValues[i] = (Math.abs(subNoiseValues[i]) + noiseRange * 5) * (rnd.nextBoolean() ? 1 : -1);
+            noiseValues[i] = (Math.abs((Double) subNoiseValues.getY(i)) + noiseRange * 5) * (rnd.nextBoolean() ? 1 : -1);
         }
         for (int i = 0; i < noiseCount; i++) {
             randomData[xNoiseIndexes[i]] = noiseValues[i];
         }
-        return randomData;
+        for (int i = 0; i < N; i++) {
+            result.add(i, randomData[i]);
+        }
+        return result;
     }
 
     public static XYSeries getHarm(int N, int A0, int f0, double deltaT) {
@@ -127,6 +165,15 @@ public class DataModeller implements DisposableBean {
         int count = Math.min(series1.getItemCount(), series2.getItemCount());
         for (int i = 0; i < count; i++) {
             result.add(i, (Double) series1.getY(i) + (Double) series2.getY(i));
+        }
+        return result;
+    }
+
+    public static XYSeries getMultiplied(XYSeries series1, XYSeries series2) {
+        XYSeries result = new XYSeries("");
+        int count = Math.min(series1.getItemCount(), series2.getItemCount());
+        for (int i = 0; i < count; i++) {
+            result.add(i, (Double) series1.getY(i) * (Double) series2.getY(i));
         }
         return result;
     }
@@ -164,8 +211,10 @@ public class DataModeller implements DisposableBean {
                 Re += (Double) windowedSeries.getY(j) * Math.cos(2*Math.PI*i*j/N);
                 Im += (Double) windowedSeries.getY(j) * Math.sin(2*Math.PI*i*j/N);
             }
-            listRe.add(Re/N);
-            listIm.add(Im/N);
+            Re /= N;
+            Im /= N;
+            listRe.add(Re);
+            listIm.add(Im);
             result.add(i, Math.sqrt(Math.pow(Re, 2) + Math.pow(Im, 2)));
         }
         return result;
