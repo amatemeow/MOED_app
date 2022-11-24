@@ -163,46 +163,55 @@ public class DataAnalyzer {
             }
             return result;
         }
+    }
 
-        //Восстановление сдвига
-        public static XYSeries getAntiShift(XYSeries series) {
-            XYSeries result = new XYSeries("");
-            Double avg = getAverage(series);
-            for (var item : series.getItems()) {
-                result.add(((XYDataItem) item).getX(), (Double) ((XYDataItem) item).getY() - avg);
-            }
-            return result;
+    //Восстановление сдвига
+    public static XYSeries getAntiShift(XYSeries series) {
+        XYSeries result = new XYSeries("");
+        Double avg = Statistics.getAverage(series);
+        for (var item : series.getItems()) {
+            result.add(((XYDataItem) item).getX(), (Double) ((XYDataItem) item).getY() - avg);
         }
+        return result;
+    }
 
-        //Без спайков
-        public static XYSeries getAntiSpike(XYSeries series, Double R) {
-            XYSeries result = new XYSeries("");
-            int count = series.getItemCount();
-            for (int i = 0; i < count; i++) {
-                if (Math.abs((Double) series.getY(i)) > R) {
-                    if (i == 0) {
-                        result.add(i,
-                                ((Double) series.getY(i + 1) + (Double) series.getY(i + 2)) / 2);
-                    } else if (i == count - 1) {
-                        result.add(i,
-                                ((Double) series.getY(i - 1) + (Double) series.getY(i - 2)) / 2);
-                    } else {
-                        result.add(i,
-                                ((Double) series.getY(i - 1) + (Double) series.getY(i + 1)) / 2);
-                    }
+    //Без спайков
+    public static XYSeries getAntiSpike(XYSeries series, Double R) {
+        XYSeries result = new XYSeries("");
+        int count = series.getItemCount();
+        for (int i = 0; i < count; i++) {
+            if (Math.abs((Double) series.getY(i)) > R) {
+                if (i == 0) {
+                    result.add(i,
+                            ((Double) series.getY(i + 1) + (Double) series.getY(i + 2)) / 2);
+                } else if (i == count - 1) {
+                    result.add(i,
+                            ((Double) series.getY(i - 1) + (Double) series.getY(i - 2)) / 2);
                 } else {
-                    result.add(i, series.getY(i));
+                    result.add(i,
+                            ((Double) series.getY(i - 1) + (Double) series.getY(i + 1)) / 2);
                 }
+            } else {
+                result.add(i, series.getY(i));
             }
-            return result;
         }
+        return result;
+    }
 
-        public static XYSeries analyzeAntiNoiseSTD(int step, int ceil) {
-            XYSeries result = new XYSeries("");
-            for (int i = 1; i <= ceil; i += step) {
-                result.add(i, getMeanDeviation(DataProcessor.antiNoise(i)));
-            }
-            return result;
+    public static XYSeries analyzeAntiNoiseSTD(int step, int ceil) {
+        XYSeries result = new XYSeries("");
+        for (int i = 1; i <= ceil; i += step) {
+            result.add(i, Statistics.getMeanDeviation(DataProcessor.antiNoise(i)));
         }
+        return result;
+    }
+
+    public static XYSeries filterFreq(XYSeries filter, Double dt, int m) {
+        XYSeries result = new XYSeries("");
+        XYSeries spectrum = DataProcessor.spectrumFourier(filter, dt);
+        for (int i = 0; i < spectrum.getItemCount(); i++) {
+            result.add(i, spectrum.getY(i).doubleValue() * (2 * m + 1));
+        }
+        return result;
     }
 }

@@ -7,6 +7,7 @@ import moed.application.MOED_app.components.Charts;
 import moed.application.MOED_app.utils.SelfRandom;
 import org.apache.commons.io.file.PathUtils;
 import org.jfree.chart.JFreeChart;
+import org.jfree.data.xy.XYDataItem;
 import org.jfree.data.xy.XYSeries;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -96,7 +97,7 @@ public class DataModeller implements DisposableBean {
     }
 
     //Изменить реализацию на series
-    public static XYSeries getShiftedTrend(XYSeries series, Double shift, int... splitIndexes) {
+    public static XYSeries getShiftedY(XYSeries series, Double shift, int... splitIndexes) {
         XYSeries result = new XYSeries("");
         int startIdx = 0;
         int endIdx = series.getItemCount();
@@ -105,7 +106,15 @@ public class DataModeller implements DisposableBean {
             endIdx = splitIndexes[1] + 1;
         }
         for (int i = startIdx; i < endIdx; i++) {
-            result.add(i, (Double) series.getY(i) + shift);
+            result.add(series.getX(i), (Double) series.getY(i) + shift);
+        }
+        return result;
+    }
+
+    public static XYSeries getShiftedX(XYSeries series, Double shift) {
+        XYSeries result = new XYSeries("");
+        for (int i = 0; i < series.getItemCount(); i++) {
+            result.add((Double) series.getX(i) + shift, series.getY(i));
         }
         return result;
     }
@@ -160,11 +169,11 @@ public class DataModeller implements DisposableBean {
     }
 
     //Соединение наборов данных
-    public static XYSeries getMerged(XYSeries series1, XYSeries series2) {
+    public static XYSeries getAddition(XYSeries series1, XYSeries series2) {
         XYSeries result = new XYSeries("");
         int count = Math.min(series1.getItemCount(), series2.getItemCount());
         for (int i = 0; i < count; i++) {
-            result.add(i, (Double) series1.getY(i) + (Double) series2.getY(i));
+            result.add(series1.getX(i), (Double) series1.getY(i) + (Double) series2.getY(i));
         }
         return result;
     }
@@ -173,7 +182,21 @@ public class DataModeller implements DisposableBean {
         XYSeries result = new XYSeries("");
         int count = Math.min(series1.getItemCount(), series2.getItemCount());
         for (int i = 0; i < count; i++) {
-            result.add(i, (Double) series1.getY(i) * (Double) series2.getY(i));
+            result.add(series1.getX(i), (Double) series1.getY(i) * (Double) series2.getY(i));
+        }
+        return result;
+    }
+
+    public static XYSeries getMerged(XYSeries series1, XYSeries series2) {
+        XYSeries result = new XYSeries("");
+        Double i = 0d;
+        for (var item : series1.getItems()) {
+            result.add(i, ((XYDataItem) item).getY());
+            i++;
+        }
+        for (var item : series2.getItems()) {
+            result.add(i, ((XYDataItem) item).getY());
+            i++;
         }
         return result;
     }
@@ -182,7 +205,7 @@ public class DataModeller implements DisposableBean {
         XYSeries result = new XYSeries("");
         int count = Math.min(trend.getItemCount(), series.getItemCount());
         for (int i = 0; i < count; i++) {
-            result.add(i, (Double) series.getY(i) - (Double) trend.getY(i));
+            result.add(series.getX(i), (Double) series.getY(i) - (Double) trend.getY(i));
         }
         return result;
     }
@@ -215,7 +238,7 @@ public class DataModeller implements DisposableBean {
             Im /= N;
             listRe.add(Re);
             listIm.add(Im);
-            result.add(i, Math.sqrt(Math.pow(Re, 2) + Math.pow(Im, 2)));
+            result.add(windowedSeries.getX(i), Math.sqrt(Math.pow(Re, 2) + Math.pow(Im, 2)));
         }
         return result;
     }

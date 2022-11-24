@@ -6,6 +6,7 @@ import moed.application.MOED_app.business.DataAnalyzer.Statistics;
 import org.jfree.data.xy.XYDataItem;
 import org.jfree.data.xy.XYSeries;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 
 public class DataProcessor {
@@ -13,9 +14,9 @@ public class DataProcessor {
     public static XYSeries reverseMergeDerivative(XYSeries series) {
         XYSeries result = new XYSeries("");
         for (int i  = 0; i < series.getItemCount() - 1; i++) {
-            result.add(i, (Double) series.getY(i + 1) - (Double) series.getY(i));
+            result.add(series.getX(i), (Double) series.getY(i + 1) - (Double) series.getY(i));
         }
-        return DataAnalyzer.Statistics.getAntiShift(result);
+        return DataAnalyzer.getAntiShift(result);
     }
 
     //Выделение изначальных трендов из смешанных данных с помощью среднего
@@ -55,11 +56,10 @@ public class DataProcessor {
         XYSeries result = new XYSeries("");
         int N = series.getItemCount();
         double rate = 1/dt;
-        int df = (int) rate/N;
-        df = Math.max(df, 1);
+        double df = rate/N;
         XYSeries spectrum = DataModeller.fourier(series, windowSize);
-        for (int i = 0; i < N/2; i += df) {
-            result.add(i, spectrum.getY(i));
+        for (int i = 0; i < N/2; i++) {
+            result.add(i * df, spectrum.getY(i));
         }
         return result;
     }
@@ -129,5 +129,102 @@ public class DataProcessor {
             e.printStackTrace();
         }
         return result;
+    }
+
+    public static class Filtering {
+        ///Initial frequencies filter
+        public static XYSeries IPF(Double f, Double dt, int m) {
+            XYSeries ipw = new XYSeries("");
+            final Double[] edgePoints = new Double[] {0.35577019, 0.24336983, 0.07211497, 0.00630165};
+            double fact = f * 2 * dt;
+            ipw.add(0, fact);
+            double arg = fact * Math.PI;
+            for (int i = 1; i <= m; i++) {
+                ipw.add(i, Math.sin(arg * i) / (Math.PI * i));
+            }
+            ipw.updateByIndex(m, ipw.getY(m).doubleValue() / 2);
+            double sumg = ipw.getY(0).doubleValue();
+            for (int i = 1; i <= m; i++) {
+                double tmpsum = edgePoints[0];
+                arg = Math.PI * i / m;
+                for (int k = 1; k <= 3; k++) {
+                    tmpsum += 2 * edgePoints[k] * Math.cos(arg * k);
+                }
+                ipw.updateByIndex(i, ipw.getY(i).doubleValue() * tmpsum);
+                sumg += 2 * ipw.getY(i).doubleValue();
+            }
+            for (int i = 0; i <= m; i++) {
+                ipw.updateByIndex(i, ipw.getY(i).doubleValue() / sumg);
+            }
+            XYSeries additional = null;
+            try {
+                additional = ipw.createCopy(1, m);
+            } catch ( Exception e) {
+                e.printStackTrace();
+            }
+            reverseSeries(additional);
+            appendSeries(additional, ipw);
+            return additional;
+        }
+
+        public static XYSeries HPF(Double f, Double dt, int m) {
+            XYSeries hpw = new XYSeries("");
+            XYSeries ipw = IPF(f, dt, m);
+            int looper = 2 * m + 1;
+            for (int k = 0; k < looper; k++) {
+                if (k == m) {
+                    hpw.add(k, 1 - ipw.getY(k).doubleValue());
+                } else {
+                    hpw.add(k, -ipw.getY(k).doubleValue());
+                }
+            }
+            return hpw;
+        }
+
+        public static XYSeries BPF(Double f1, Double f2, Double dt, int m) {
+            XYSeries bpw = new XYSeries("");
+            XYSeries ipw1 = IPF(f1, dt, m);
+            XYSeries ipw2 = IPF(f2, dt, m);
+            int looper = 2 * m + 1;
+            for (int k = 0; k < looper; k++) {
+                bpw.add(k, ipw2.getY(k).doubleValue() - ipw1.getY(k).doubleValue());
+            }
+            return bpw;
+        }
+
+        public static XYSeries BSF(Double f1, Double f2, Double dt, int m) {
+            XYSeries bsw = new XYSeries("");
+            XYSeries ipw1 = IPF(f1, dt, m);
+            XYSeries ipw2 = IPF(f2, dt, m);
+            int looper = 2 * m + 1;
+            for (int k = 0; k < looper; k++) {
+                if (k == m) {
+                    bsw.add(k, 1 + ipw1.getY(k).doubleValue() - ipw2.getY(k).doubleValue());
+                } else {
+                    bsw.add(k, ipw1.getY(k).doubleValue() - ipw2.getY(k).doubleValue());
+                }
+            }
+            return bsw;
+        }
+    }
+
+    //reverse argument series
+    public static void reverseSeries(XYSeries series) {
+        int N = series.getItemCount();
+        Double[] values = new Double[N];
+        for (int i = 0; i < N; i++) {
+            values[i] = series.getY(i).doubleValue();
+        }
+        for (int i = 0; i < N; i++) {
+            series.updateByIndex(i, values[N - i - 1]);
+        }
+    }
+
+    public static void appendSeries(XYSeries initial, XYSeries append) {
+        double idx = initial.getMaxX() + 1;
+        for (int i = 0; i < append.getItemCount(); i++) {
+            initial.add(idx, append.getY(i));
+            idx++;
+        }
     }
 }

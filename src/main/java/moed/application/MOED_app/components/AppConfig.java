@@ -53,7 +53,7 @@ public class AppConfig implements WebMvcConfigurer {
 //                    "Combined Chart"));
             TRENDS.put("System Noise", new Trend("System Noise").setSeries(DataModeller.getNoise(1000, 105.15, RandomType.SYSTEM)));
 //            TRENDS.put("Custom Noise", new Trend("Custom Noise").setSeries(DataModeller.getNoise(1000, 105.15, RandomType.SELF)));
-            TRENDS.put("Shifted Straight", new Trend("Shifted Straight").setSeries(DataModeller.getShiftedTrend(
+            TRENDS.put("Shifted Straight", new Trend("Shifted Straight").setSeries(DataModeller.getShiftedY(
                     TRENDS.get("Straight Positive").getSeries(), 450d, 40, 520)));
             TRENDS.put("Impulse Noise", new Trend("Impulse Noise").setSeries(DataModeller.getImpulseNoise(1000, 105.2, 0.006, 24.6)));
             TRENDS.put("Harmonic", new Trend("Harmonic").setSeries(DataModeller.getHarm(1000, 100, 33, 0.001)));
@@ -71,7 +71,7 @@ public class AppConfig implements WebMvcConfigurer {
 //            TRENDS.put("Antishift Straight", new Trend("Anti Shifted").setSeries(
 //                    DataAnalyzer.Statistics.getAntiShift(TRENDS.get("Shifted Straight").getSeries())));
 //            TRENDS.put("Spiked Noise", new Trend("Spiked").setSeries(
-//                            DataModeller.getMerged(TRENDS.get("System Noise").getSeries(), new Trend(
+//                            DataModeller.getAddition(TRENDS.get("System Noise").getSeries(), new Trend(
 //                                    LineType.IMPULSE_NOISE,
 //                                    1000,
 //                                    DataAnalyzer.Statistics.getMinMax(TRENDS.get("System Noise").getSeries())[1],
@@ -81,7 +81,7 @@ public class AppConfig implements WebMvcConfigurer {
 //                                    "").getSeries())));
 //            TRENDS.put("Antispiked Noise", new Trend("Anti Spiked").setSeries(
 //                    DataAnalyzer.Statistics.getAntiSpike(
-//                            DataModeller.getMerged(TRENDS.get("System Noise").getSeries(), new Trend(
+//                            DataModeller.getAddition(TRENDS.get("System Noise").getSeries(), new Trend(
 //                                    LineType.IMPULSE_NOISE,
 //                                    1000,
 //                                    DataAnalyzer.Statistics.getMinMax(TRENDS.get("System Noise").getSeries())[1],
@@ -91,7 +91,7 @@ public class AppConfig implements WebMvcConfigurer {
 //                                    "").getSeries()),
 //                            DataAnalyzer.Statistics.getMinMax(TRENDS.get("System Noise").getSeries())[1])));
 //            TRENDS.put("Merged with Harmonic", new Trend("Merged").setSeries(
-//                    DataModeller.getMerged(
+//                    DataModeller.getAddition(
 //                            new Trend(
 //                                    LineType.SIMPLE,
 //                                    1000,
@@ -117,7 +117,7 @@ public class AppConfig implements WebMvcConfigurer {
 //            TRENDS.put("Reversed Harmonic Merge", new Trend("Reverse Merge with Derivative").setSeries(
 //                    DataProcessor.reverseMergeDerivative(TRENDS.get("Merged with Harmonic").getSeries())));
 //            TRENDS.put("Merged with Noise", new Trend("Merged").setSeries(
-//                    DataModeller.getMerged(
+//                    DataModeller.getAddition(
 //                            new Trend(
 //                                    LineType.EXPONENT,
 //                                    1000,
@@ -139,38 +139,38 @@ public class AppConfig implements WebMvcConfigurer {
 //                       DataModeller.removeTrend(TRENDS.get("Reversed Trend in Noise Merge").getSeries(),
 //                               TRENDS.get("Merged with Noise").getSeries())), 10.0)));
             TRENDS.put("Harmonic Fourier Spectrum",
-                    new Trend("Fourier Spectrum for Harmonic").setSeries(
+                    new Trend("Fourier Spectrum for Harmonic", "f, Hz", "A").setSeries(
                         DataProcessor.spectrumFourier(TRENDS.get("Harmonic").getSeries(), 0.001)));
             TRENDS.put("Straight Trend Fourier Spectrum",
-                    new Trend("Fourier Spectrum for Straight Trend").setSeries(
+                    new Trend("Fourier Spectrum for Straight Trend", "f, Hz", "A").setSeries(
                             DataProcessor.spectrumFourier(TRENDS.get("Straight Positive").getSeries(), 0.001)));
             TRENDS.put("Harmonic Noise Fourier Spectrum",
-                    new Trend("Fourier Spectrum for Harmonic Noise").setSeries(
-                            DataProcessor.spectrumFourier(DataModeller.getMerged(
+                    new Trend("Fourier Spectrum for Harmonic Noise", "f, Hz", "A").setSeries(
+                            DataProcessor.spectrumFourier(DataModeller.getAddition(
                                     TRENDS.get("Harmonic").getSeries(), TRENDS.get("System Noise").getSeries()), 0.001)));
             TRENDS.put("Impulse Noise Fourier Spectrum",
-                    new Trend("Fourier Spectrum for Impulse Noise").setSeries(
+                    new Trend("Fourier Spectrum for Impulse Noise", "f, Hz", "A").setSeries(
                             DataProcessor.spectrumFourier(TRENDS.get("Impulse Noise").getSeries(), 0.001)));
             TRENDS.put("Poly Harmonic Fourier Spectrum",
-                    new Trend("Fourier Spectrum for Poly Harmonic").setSeries(
+                    new Trend("Fourier Spectrum for Poly Harmonic", "f, Hz", "A").setSeries(
                         DataProcessor.spectrumFourier(TRENDS.get("Poly Harmonic").getSeries(), 0.001)));
             TRENDS.put("Harmonic Fourier Spectrum with window size 24",
-                    new Trend("Fourier Spectrum for Harmonic with window 24").setSeries(
+                    new Trend("Fourier Spectrum for Harmonic with window 24", "f, Hz", "A").setSeries(
                         DataProcessor.spectrumFourier(TRENDS.get("Harmonic").getSeries(), 0.001, 24)));
             TRENDS.put("Harmonic Fourier Spectrum with window size 124",
-                    new Trend("Fourier Spectrum for Harmonic with window 124").setSeries(
+                    new Trend("Fourier Spectrum for Harmonic with window 124", "f, Hz", "A").setSeries(
                             DataProcessor.spectrumFourier(TRENDS.get("Harmonic").getSeries(), 0.001, 124)));
             TRENDS.put("Harmonic Fourier Spectrum with window size 224",
-                    new Trend("Fourier Spectrum for Harmonic with window 224").setSeries(
+                    new Trend("Fourier Spectrum for Harmonic with window 224", "f, Hz", "A").setSeries(
                             DataProcessor.spectrumFourier(TRENDS.get("Harmonic").getSeries(), 0.001, 224)));
             TRENDS.put("Poly Harmonic Fourier Spectrum with window size 24",
-                    new Trend("Fourier Spectrum for Poly Harmonic with window 24").setSeries(
+                    new Trend("Fourier Spectrum for Poly Harmonic with window 24", "f, Hz", "A").setSeries(
                             DataProcessor.spectrumFourier(TRENDS.get("Poly Harmonic").getSeries(), 0.001, 24)));
             TRENDS.put("Poly Harmonic Fourier Spectrum with window size 124",
-                    new Trend("Fourier Spectrum for Poly Harmonic with window 124").setSeries(
+                    new Trend("Fourier Spectrum for Poly Harmonic with window 124", "f, Hz", "A").setSeries(
                             DataProcessor.spectrumFourier(TRENDS.get("Poly Harmonic").getSeries(), 0.001, 124)));
             TRENDS.put("Poly Harmonic Fourier Spectrum with window size 224",
-                    new Trend("Fourier Spectrum for Poly Harmonic with window 224").setSeries(
+                    new Trend("Fourier Spectrum for Poly Harmonic with window 224", "f, Hz", "A").setSeries(
                             DataProcessor.spectrumFourier(TRENDS.get("Poly Harmonic").getSeries(), 0.001, 224)));
 //            TRENDS.put("AntiNoise with M=1",
 //                    new Trend("AntiNoise with M=1").setSeries(
@@ -202,16 +202,17 @@ public class AppConfig implements WebMvcConfigurer {
             TRENDS.put("From file", new Trend("From file").setSeries(
                     DataModeller.getModel(IOC.readDat("pgp_2ms.dat"))
             ));
-            TRENDS.put("Fourier Spectrum from file", new Trend("Fourier Spectrum from file").setSeries(
-                    DataProcessor.spectrumFourier(TRENDS.get("From file").getSeries(), 0.002)
+            TRENDS.put("Fourier Spectrum from file",
+                    new Trend("Fourier Spectrum from file", "f, Hz", "A").setSeries(
+                        DataProcessor.spectrumFourier(TRENDS.get("From file").getSeries(), 0.002)
             ));
-            TRENDS.put("Cardiogram Harm", new Trend("Cardiogram Harm").setSeries(
+            TRENDS.put("Heartbeat Harm", new Trend("Heartbeat Harm").setSeries(
                     DataModeller.getHarm(200, 1, 7, 0.005)
             ));
-            TRENDS.put("Cardiogram Exp", new Trend("Cardiogram Exp").setSeries(
+            TRENDS.put("Heartbeat Exp", new Trend("Heartbeat Exp").setSeries(
                     DataModeller.getExponent(200, 0.005, 1d, 30d, false)
             ));
-            TRENDS.put("Cardiogram", new Trend("Cardiogram").setSeries(
+            TRENDS.put("Heartbeat", new Trend("Heartbeat").setSeries(
                     DataProcessor.normalizeFunc(
                             DataModeller.getMultiplied(
                                     DataModeller.getHarm(200, 1, 7, 0.005),
@@ -227,20 +228,28 @@ public class AppConfig implements WebMvcConfigurer {
                 trashSeries.updateByIndex(800, 0.9);
             //END OF TRASH BLOCK
             TRENDS.put("Rhyme Function", new Trend("Rhyme Function").setSeries(trashSeries));
-            TRENDS.put("Convolution", new Trend("Convolution").setSeries(
+            TRENDS.put("Cardiogram", new Trend("Cardiogram").setSeries(
                     DataProcessor.Convolution(
-                            TRENDS.get("Cardiogram").getSeries(),
+                            TRENDS.get("Heartbeat").getSeries(),
                             TRENDS.get("Rhyme Function").getSeries()
                     )
             ));
-        }
-
-        public Double[] getSampleData(int N) {
-            final Double[] sampleData = new Double[N];
-            for (int i = 0; i < N; i++) {
-                sampleData[i] = (double) i;
-            }
-            return sampleData;
+            TRENDS.put("IPF", new Trend("IPF").setSeries(DataProcessor.Filtering.IPF(50d, 0.002, 64)));
+            TRENDS.put("HPF", new Trend("HPF").setSeries(DataProcessor.Filtering.HPF(50d, 0.002, 64)));
+            TRENDS.put("BPF", new Trend("BPF").setSeries(DataProcessor.Filtering.BPF(35d, 75d, 0.002, 64)));
+            TRENDS.put("BSF", new Trend("BSF").setSeries(DataProcessor.Filtering.BSF(35d, 75d, 0.002, 64)));
+            TRENDS.put("Frequencies IPF", new Trend("Frequency analysis IPF").setSeries(
+                    DataAnalyzer.filterFreq(TRENDS.get("IPF").getSeries(), 0.002, 64)
+            ));
+            TRENDS.put("Frequencies HPF", new Trend("Frequency analysis HPF").setSeries(
+                    DataAnalyzer.filterFreq(TRENDS.get("HPF").getSeries(), 0.002, 64)
+            ));
+            TRENDS.put("Frequencies BPF", new Trend("Frequency analysis BPF").setSeries(
+                    DataAnalyzer.filterFreq(TRENDS.get("BPF").getSeries(), 0.002, 64)
+            ));
+            TRENDS.put("Frequencies BSF", new Trend("Frequency analysis BSF").setSeries(
+                    DataAnalyzer.filterFreq(TRENDS.get("BSF").getSeries(), 0.002, 64)
+            ));
         }
     }
 
