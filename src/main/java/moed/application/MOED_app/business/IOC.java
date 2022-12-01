@@ -1,5 +1,7 @@
 package moed.application.MOED_app.business;
 
+import com.github.psambit9791.wavfile.WavFile;
+import com.github.psambit9791.wavfile.WavFileException;
 import moed.application.MOED_app.components.AppConfig;
 import org.apache.commons.io.FileUtils;
 import org.jfree.chart.ChartUtils;
@@ -53,6 +55,41 @@ public class IOC {
             e.printStackTrace();
         }
         return dataY;
+    }
+
+    public static ArrayList<Number> readWav(String path) {
+        File file = new File(AppConfig.IOCConfig.DATAFILES_FOLDER + "/" + path);
+        ArrayList<Number> data = new ArrayList<>();
+        try {
+            WavFile wavFile = WavFile.openWavFile(file);
+            int channels = wavFile.getNumChannels();
+            long totalFrames = wavFile.getNumFrames();
+            System.out.println(
+                    "Sample rate: "
+                    + wavFile.getSampleRate()
+                    + "\nFrames total: "
+                    + totalFrames
+                    + "\nValid bits: "
+                    + wavFile.getValidBits()
+                    + "\nChannels: "
+                    + channels
+            );
+
+            double[] buffer = new double[100 * channels];
+            int framesRead;
+
+            do {
+                framesRead = wavFile.readFrames(buffer, 100);
+                for (int i = 0; i < framesRead * channels; i++) {
+                    data.add(buffer[i]);
+                }
+            } while (framesRead != 0);
+            wavFile.close();
+        } catch (IOException | WavFileException e) {
+            e.printStackTrace();
+            return null;
+        }
+        return data;
     }
 
     public static Path getCleanPath() {

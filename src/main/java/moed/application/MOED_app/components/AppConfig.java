@@ -229,17 +229,19 @@ public class AppConfig implements WebMvcConfigurer {
             //END OF TRASH BLOCK
             TRENDS.put("Rhyme Function", new Trend("Rhyme Function").setSeries(trashSeries));
             TRENDS.put("Cardiogram", new Trend("Cardiogram").setSeries(
-                    DataProcessor.Convolution(
-                            TRENDS.get("Heartbeat").getSeries(),
-                            TRENDS.get("Rhyme Function").getSeries()
-                    )
-            ));
-            TRENDS.put("IPF", new Trend("IPF").setSeries(DataProcessor.Filtering.IPF(50d, 0.002, 64)));
+                    DataProcessor.cutEdges(
+                            DataProcessor.Convolution(
+                                TRENDS.get("Heartbeat").getSeries(),
+                                TRENDS.get("Rhyme Function").getSeries()),
+                            0,
+                            200
+                    )));
+            TRENDS.put("LPF", new Trend("LPF").setSeries(DataProcessor.Filtering.LPF(50d, 0.002, 64)));
             TRENDS.put("HPF", new Trend("HPF").setSeries(DataProcessor.Filtering.HPF(50d, 0.002, 64)));
             TRENDS.put("BPF", new Trend("BPF").setSeries(DataProcessor.Filtering.BPF(35d, 75d, 0.002, 64)));
             TRENDS.put("BSF", new Trend("BSF").setSeries(DataProcessor.Filtering.BSF(35d, 75d, 0.002, 64)));
-            TRENDS.put("Frequencies IPF", new Trend("Frequency analysis IPF").setSeries(
-                    DataAnalyzer.filterFreq(TRENDS.get("IPF").getSeries(), 0.002, 64)
+            TRENDS.put("Frequencies LPF", new Trend("Frequency analysis LPF").setSeries(
+                    DataAnalyzer.filterFreq(TRENDS.get("LPF").getSeries(), 0.002, 64)
             ));
             TRENDS.put("Frequencies HPF", new Trend("Frequency analysis HPF").setSeries(
                     DataAnalyzer.filterFreq(TRENDS.get("HPF").getSeries(), 0.002, 64)
@@ -250,6 +252,26 @@ public class AppConfig implements WebMvcConfigurer {
             TRENDS.put("Frequencies BSF", new Trend("Frequency analysis BSF").setSeries(
                     DataAnalyzer.filterFreq(TRENDS.get("BSF").getSeries(), 0.002, 64)
             ));
+            TRENDS.put("Dat with LPF", new Trend("Dat with LPF").setSeries(
+                    DataProcessor.cutEdges(DataProcessor.Convolution(
+                        TRENDS.get("From file").getSeries(), DataProcessor.Filtering.LPF(1d, 0.002, 64)), 129, 129)));
+            TRENDS.put("Dat with LPF spectrum", new Trend("Dat with LPF spectrum", "f", "A").setSeries(
+               DataProcessor.spectrumFourier(TRENDS.get("Dat with LPF").getSeries(), 0.002)));
+            TRENDS.put("Dat with HPF", new Trend("Dat with HPF").setSeries(
+                    DataProcessor.cutEdges(DataProcessor.Convolution(
+                            TRENDS.get("From file").getSeries(), DataProcessor.Filtering.HPF(120d, 0.002, 64)), 400, 400)));
+            TRENDS.put("Dat with HPF spectrum", new Trend("Dat with HPF spectrum", "f", "A").setSeries(
+                    DataProcessor.spectrumFourier(TRENDS.get("Dat with HPF").getSeries(), 0.002)));
+            TRENDS.put("Dat with BPF", new Trend("Dat with BPF").setSeries(
+                    DataProcessor.cutEdges(DataProcessor.Convolution(
+                            TRENDS.get("From file").getSeries(), DataProcessor.Filtering.BPF(20d, 40d, 0.002, 115)), 200, 200)));
+            TRENDS.put("Dat with BPF spectrum", new Trend("Dat with BPF spectrum", "f", "A").setSeries(
+                    DataProcessor.spectrumFourier(TRENDS.get("Dat with BPF").getSeries(), 0.002)));
+            TRENDS.put("Dat with BSF", new Trend("Dat with BSF").setSeries(
+                    DataProcessor.cutEdges(DataProcessor.Convolution(
+                            TRENDS.get("From file").getSeries(), DataProcessor.Filtering.BSF(15d, 40d, 0.002, 128)), 400, 400)));
+            TRENDS.put("Dat with BSF spectrum", new Trend("Dat with BSF spectrum", "f", "A").setSeries(
+                    DataProcessor.spectrumFourier(TRENDS.get("Dat with BSF").getSeries(), 0.002)));
         }
     }
 

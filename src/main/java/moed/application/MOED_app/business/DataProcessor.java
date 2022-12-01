@@ -6,7 +6,6 @@ import moed.application.MOED_app.business.DataAnalyzer.Statistics;
 import org.jfree.data.xy.XYDataItem;
 import org.jfree.data.xy.XYSeries;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 
 public class DataProcessor {
@@ -123,8 +122,15 @@ public class DataProcessor {
             }
             result.add(k, val);
         }
+        return result;
+    }
+
+    public static XYSeries cutEdges(XYSeries series, int... edges) {
+        XYSeries result = null;
         try {
-            result =  result.createCopy(0, N - 1);
+            result = series.createCopy(0, series.getItemCount() - 1);
+            result =  result.createCopy(0, result.getItemCount() - edges[1] - 1);
+            result =  result.createCopy(edges[0], result.getItemCount() - 1);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -133,7 +139,7 @@ public class DataProcessor {
 
     public static class Filtering {
         ///Initial frequencies filter
-        public static XYSeries IPF(Double f, Double dt, int m) {
+        public static XYSeries LPF(Double f, Double dt, int m) {
             XYSeries ipw = new XYSeries("");
             final Double[] edgePoints = new Double[] {0.35577019, 0.24336983, 0.07211497, 0.00630165};
             double fact = f * 2 * dt;
@@ -169,7 +175,7 @@ public class DataProcessor {
 
         public static XYSeries HPF(Double f, Double dt, int m) {
             XYSeries hpw = new XYSeries("");
-            XYSeries ipw = IPF(f, dt, m);
+            XYSeries ipw = LPF(f, dt, m);
             int looper = 2 * m + 1;
             for (int k = 0; k < looper; k++) {
                 if (k == m) {
@@ -183,8 +189,8 @@ public class DataProcessor {
 
         public static XYSeries BPF(Double f1, Double f2, Double dt, int m) {
             XYSeries bpw = new XYSeries("");
-            XYSeries ipw1 = IPF(f1, dt, m);
-            XYSeries ipw2 = IPF(f2, dt, m);
+            XYSeries ipw1 = LPF(f1, dt, m);
+            XYSeries ipw2 = LPF(f2, dt, m);
             int looper = 2 * m + 1;
             for (int k = 0; k < looper; k++) {
                 bpw.add(k, ipw2.getY(k).doubleValue() - ipw1.getY(k).doubleValue());
@@ -194,8 +200,8 @@ public class DataProcessor {
 
         public static XYSeries BSF(Double f1, Double f2, Double dt, int m) {
             XYSeries bsw = new XYSeries("");
-            XYSeries ipw1 = IPF(f1, dt, m);
-            XYSeries ipw2 = IPF(f2, dt, m);
+            XYSeries ipw1 = LPF(f1, dt, m);
+            XYSeries ipw2 = LPF(f2, dt, m);
             int looper = 2 * m + 1;
             for (int k = 0; k < looper; k++) {
                 if (k == m) {
@@ -208,7 +214,7 @@ public class DataProcessor {
         }
     }
 
-    //reverse argument series
+    //reverse series
     public static void reverseSeries(XYSeries series) {
         int N = series.getItemCount();
         Double[] values = new Double[N];
