@@ -273,7 +273,7 @@ public class AppConfig implements WebMvcConfigurer {
             TRENDS.put("Dat with BSF spectrum", new Trend("Dat with BSF spectrum", "f", "A").setSeries(
                     DataProcessor.spectrumFourier(TRENDS.get("Dat with BSF").getSeries(), 0.002)));
             TRENDS.put("WAV", new Trend("WAV").setSeries(
-                    DataProcessor.cutEdges(DataModeller.getModel(IOC.readWav("v1c.wav")), 7000, 6000)));
+                    DataProcessor.cutEdges(DataModeller.getModel(IOC.readWav("himono.wav")), 15000, 14000)));
             TRENDS.put("WAV Fourier Spectrum", new Trend("WAV Fourier Spectrum", "f", "A").setSeries(
                     DataProcessor.spectrumFourier(TRENDS.get("WAV").getSeries(), 1/16000d)));
         }
