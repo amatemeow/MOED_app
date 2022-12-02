@@ -32,14 +32,15 @@ public class DataModeller implements DisposableBean {
         return IOC.saveChartAsPNG(chart, ratio);
     }
 
-    public static XYSeries getModel(ArrayList<Number> points) {
+    public static XYSeries getModel(ArrayList<Number> points, Double... axisDividers) {
         if (points == null) {
             throw new RuntimeException("Got null input!");
         }
+        Double xDivider = axisDividers.length != 0 ? axisDividers[0] : 1;
         XYSeries result = new XYSeries("");
         int N = points.size();
         for (int i = 0; i < N; i++) {
-            result.add(i, points.get(i));
+            result.add(i * xDivider, points.get(i));
         }
         return result;
     }
