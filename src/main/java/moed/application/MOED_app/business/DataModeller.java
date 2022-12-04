@@ -244,6 +244,18 @@ public class DataModeller implements DisposableBean {
         return result;
     }
 
+    //window looks like: { x1, x2, y }
+    public static XYSeries squareFilter(int N, Double shift, Double[]... windows) {
+        XYSeries result = getStraight(N, 0d, 0d, true);
+        result = getShiftedX(result, shift);
+        for (int i = 0; i < windows.length; i++) {
+            for (Double j = windows[i][0]; j <= windows[i][1]; j++) {
+                result.update(j, windows[i][2]);
+            }
+        }
+        return result;
+    }
+
     private static <T> boolean arrayContains(T[] arr, T value) {
         for (T item : arr) {
             if (item == value) return true;

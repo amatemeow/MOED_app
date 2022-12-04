@@ -6,6 +6,7 @@ import moed.application.MOED_app.components.AppConfig;
 import org.apache.commons.io.FileUtils;
 import org.jfree.chart.ChartUtils;
 import org.jfree.chart.JFreeChart;
+import org.jfree.data.xy.XYSeries;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -90,6 +91,34 @@ public class IOC {
             return null;
         }
         return data;
+    }
+
+    public static boolean writeWav(int sampleRate, XYSeries data, String fileName) {
+        int framesCount = data.getItemCount();
+        try {
+            WavFile wavFile = WavFile.newWavFile(
+                    new File(AppConfig.IOCConfig.DATAFILES_FOLDER + "/" + fileName + ".wav"),
+                    1,
+                    framesCount,
+                    16,
+                    sampleRate
+            );
+            double[] buffer = new double[100];
+            long counter = 0;
+            while (counter < framesCount) {
+                long remainingFrames = wavFile.getFramesRemaining();
+                int framesToWrite = remainingFrames > 100 ? 100 : (int) remainingFrames;
+                for (int i = 0; i < framesToWrite; i++, counter++) {
+                    buffer[i] = data.getY((int) counter).doubleValue();
+                }
+                wavFile.writeFrames(buffer, framesToWrite);
+            }
+            wavFile.close();
+        } catch (IOException | WavFileException e) {
+            e.printStackTrace();
+            return false;
+        }
+        return true;
     }
 
     public static Path getCleanPath() {
