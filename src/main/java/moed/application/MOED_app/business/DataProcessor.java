@@ -110,6 +110,22 @@ public class DataProcessor {
         return result;
     }
 
+    public static XYSeries amplify(XYSeries series, Double multiplier) {
+        XYSeries result = new XYSeries("");
+        for (int i = 0; i < series.getItemCount(); i++) {
+            result.add(series.getX(i), ((Double) series.getY(i)) * multiplier);
+        }
+        return result;
+    }
+
+    public static XYSeries alterAxis(XYSeries series, Double xMultiplier, Double yMultiplier) {
+        XYSeries result = new XYSeries("");
+        for (int i = 0; i < series.getItemCount(); i++) {
+            result.add(series.getX(i).doubleValue() * xMultiplier, series.getY(i).doubleValue() * yMultiplier);
+        }
+        return result;
+    }
+
     public static XYSeries Convolution(XYSeries series1, XYSeries series2) {
         XYSeries result = new XYSeries("");
         int N = series2.getItemCount();
