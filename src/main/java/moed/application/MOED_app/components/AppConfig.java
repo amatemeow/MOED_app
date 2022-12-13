@@ -302,59 +302,77 @@ public class AppConfig implements WebMvcConfigurer {
                     TRENDS.get("Rama1 orig").getSeries(), 4500, 5400)));
             TRENDS.put("Rama1-1 Fourier", new Trend("Спектр первого слога", "f, Hz", "A").setSeries(
                     DataProcessor.spectrumFourier(TRENDS.get("Rama1-1").getSeries(), 1/8000d)));
-            TRENDS.put("Rama1-1 MT", new Trend("Первый слог, основной тон").setSeries(
-                    DataProcessor.cutEdges(DataProcessor.Convolution(
+            TRENDS.put("Rama1-1 MT", new Trend("Первый слог, основной тон", "t, s", "Y").setSeries(
+                    DataProcessor.alterAxis(DataModeller.getShiftedX(DataProcessor.cutEdges(DataProcessor.Convolution(
                                     TRENDS.get("Rama1-1").getSeries(),
-                                    DataProcessor.Filtering.BPF(95d, 100d, 1/8000d, 1400)),
-                            1650, 2800)));
+                                    DataProcessor.Filtering.LPF(375d, 1/8000d, 128)),
+                            256, 256), 4628d), 1/16000d, 1d)));
             TRENDS.put("Rama1-1 MT Fourier", new Trend("Спектр основного тона первого слога", "f, Hz", "A").setSeries(
                     DataProcessor.spectrumFourier(TRENDS.get("Rama1-1 MT").getSeries(), 1/8000d)));
-            TRENDS.put("Rama1-1 F1", new Trend("Первый слог, формант 1").setSeries(
+            TRENDS.put("Rama1-1 F1", new Trend("Первый слог, форманта 1", "t, s", "Y").setSeries(
                     DataProcessor.alterAxis(DataModeller.getShiftedX(DataProcessor.cutEdges(DataProcessor.Convolution(
                                     TRENDS.get("Rama1-1").getSeries(),
-                                    DataProcessor.Filtering.BPF(650d, 665d, 1/8000d, 1500)),
-                            3000, 2000), 6000d), 1/16000d, 1d)));
-            TRENDS.put("Rama1-1 F1 Fourier", new Trend("Спектр форманта 1 первого слога", "f, Hz", "A").setSeries(
+                                    DataProcessor.Filtering.BPF(580d, 950d, 1/8000d, 256)),
+                            512, 512), 4756d), 1/16000d, 1d)));
+            TRENDS.put("Rama1-1 F1 Fourier", new Trend("Спектр форманты 1 первого слога", "f, Hz", "A").setSeries(
                     DataProcessor.spectrumFourier(TRENDS.get("Rama1-1 F1").getSeries(), 1/8000d)));
-            TRENDS.put("Rama1-1 F2", new Trend("Первый слог, формант 2").setSeries(
+            TRENDS.put("Rama1-1 F2", new Trend("Первый слог, форманта 2", "t, s", "Y").setSeries(
                     DataProcessor.alterAxis(DataModeller.getShiftedX(DataProcessor.cutEdges(DataProcessor.Convolution(
                                     TRENDS.get("Rama1-1").getSeries(),
-                                    DataProcessor.Filtering.BPF(1285d, 1295d, 1/8000d, 1600)),
-                            3175, 3275), 6100d), 1/16000d, 1d)));
-            TRENDS.put("Rama1-1 F2 Fourier", new Trend("Спектр форманта 2 первого слога", "f, Hz", "A").setSeries(
+                                    DataProcessor.Filtering.BPF(1150d, 1370d, 1/8000d, 128)),
+                            256, 256), 4628d), 1/16000d, 1d)));
+            TRENDS.put("Rama1-1 F2 Fourier", new Trend("Спектр форманты 2 первого слога", "f, Hz", "A").setSeries(
                     DataProcessor.spectrumFourier(TRENDS.get("Rama1-1 F2").getSeries(), 1/8000d)));
+            TRENDS.put("Rama1-1 F3", new Trend("Первый слог, форманта 3", "t, s", "Y").setSeries(
+                    DataProcessor.alterAxis(DataModeller.getShiftedX(DataProcessor.cutEdges(DataProcessor.Convolution(
+                                    TRENDS.get("Rama1-1").getSeries(),
+                                    DataProcessor.Filtering.BPF(2400d, 2570d, 1/8000d, 256)),
+                            512, 512), 4756d), 1/16000d, 1d)));
+            TRENDS.put("Rama1-1 F3 Fourier", new Trend("Спектр форманты 3 первого слога", "f, Hz", "A").setSeries(
+                    DataProcessor.spectrumFourier(TRENDS.get("Rama1-1 F3").getSeries(), 1/8000d)));
             TRENDS.put("Rama1-2", new Trend("Второй слог").setSeries(DataProcessor.cutEdges(
                     TRENDS.get("Rama1 orig").getSeries(), 8500, 2000)));
             TRENDS.put("Rama1-2 Fourier", new Trend("Спектр второго слога", "f, Hz", "A").setSeries(
                     DataProcessor.spectrumFourier(TRENDS.get("Rama1-2").getSeries(), 1/8000d)));
-            TRENDS.put("Rama1-2 MT", new Trend("Второй слог, основной тон").setSeries(
-                    DataProcessor.cutEdges(DataProcessor.Convolution(
+            TRENDS.put("Rama1-2 MT", new Trend("Второй слог, основной тон", "t, s", "Y").setSeries(
+                    DataProcessor.alterAxis(DataModeller.getShiftedX(DataProcessor.cutEdges(DataProcessor.Convolution(
                                     TRENDS.get("Rama1-2").getSeries(),
-                                    DataProcessor.Filtering.BPF(95d, 100d, 1/8000d, 1400)),
-                            1650, 2800)));
+                                    DataProcessor.Filtering.LPF(350d, 1/8000d, 128)),
+                            256, 256), 8628d), 1/16000d, 1d)));
             TRENDS.put("Rama1-2 MT Fourier", new Trend("Спектр основного тона второго слога", "f, Hz", "A").setSeries(
                     DataProcessor.spectrumFourier(TRENDS.get("Rama1-2 MT").getSeries(), 1/8000d)));
-            TRENDS.put("Rama1-2 F1", new Trend("Второй слог, формант 1").setSeries(
+            TRENDS.put("Rama1-2 F1", new Trend("Второй слог, форманта 1", "t, s", "Y").setSeries(
                     DataProcessor.alterAxis(DataModeller.getShiftedX(DataProcessor.cutEdges(DataProcessor.Convolution(
                                     TRENDS.get("Rama1-2").getSeries(),
-                                    DataProcessor.Filtering.BPF(650d, 665d, 1/8000d, 1500)),
-                            2200, 1800), 9500d), 1/16000d, 1d)));
-            TRENDS.put("Rama1-2 F1 Fourier", new Trend("Спектр форманта 1 второго слога", "f, Hz", "A").setSeries(
+                                    DataProcessor.Filtering.BPF(570d, 850d, 1/8000d, 256)),
+                            512, 512), 8756d), 1/16000d, 1d)));
+            TRENDS.put("Rama1-2 F1 Fourier", new Trend("Спектр форманты 1 второго слога", "f, Hz", "A").setSeries(
                     DataProcessor.spectrumFourier(TRENDS.get("Rama1-2 F1").getSeries(), 1/8000d)));
-            TRENDS.put("Rama1-2 F2", new Trend("Второй слог, формант 2").setSeries(
+            TRENDS.put("Rama1-2 F2", new Trend("Второй слог, форманта 2", "t, s", "Y").setSeries(
                     DataProcessor.alterAxis(DataModeller.getShiftedX(DataProcessor.cutEdges(DataProcessor.Convolution(
                                     TRENDS.get("Rama1-2").getSeries(),
-                                    DataProcessor.Filtering.BPF(1180d, 1200d, 1/8000d, 1024)),
-                            2050, 2050), 9525d), 1/16000d, 1d)));
-            TRENDS.put("Rama1-2 F2 Fourier", new Trend("Спектр форманта 2 второго слога", "f, Hz", "A").setSeries(
+                                    DataProcessor.Filtering.BPF(1170d, 1300d, 1/8000d, 256)),
+                            512, 512), 8756d), 1/16000d, 1d)));
+            TRENDS.put("Rama1-2 F2 Fourier", new Trend("Спектр форманты 2 второго слога", "f, Hz", "A").setSeries(
                     DataProcessor.spectrumFourier(TRENDS.get("Rama1-2 F2").getSeries(), 1/8000d)));
+            TRENDS.put("Rama1-2 F3", new Trend("Второй слог, форманта 3", "t, s", "Y").setSeries(
+                    DataProcessor.alterAxis(DataModeller.getShiftedX(DataProcessor.cutEdges(DataProcessor.Convolution(
+                                    TRENDS.get("Rama1-2").getSeries(),
+                                    DataProcessor.Filtering.BPF(2500d, 2650d, 1/8000d, 256)),
+                            512, 512), 8756d), 1/16000d, 1d)));
+            TRENDS.put("Rama1-2 F3 Fourier", new Trend("Спектр форманты 3 второго слога", "f, Hz", "A").setSeries(
+                    DataProcessor.spectrumFourier(TRENDS.get("Rama1-2 F3").getSeries(), 1/8000d)));
 
-            IOC.writeWav(8000, DataProcessor.amplify(TRENDS.get("Rama1-1 MT").getSeries(), 20d), "Rama1-1_MT");
-            IOC.writeWav(8000, DataProcessor.amplify(TRENDS.get("Rama1-1 F1").getSeries(), 5d), "Rama1-1_F1");
-            IOC.writeWav(8000, DataProcessor.amplify(TRENDS.get("Rama1-1 F2").getSeries(), 50d), "Rama1-1_F2");
-            IOC.writeWav(8000, DataProcessor.amplify(TRENDS.get("Rama1-1 MT").getSeries(), 10d), "Rama1-2_MT");
-            IOC.writeWav(8000, DataProcessor.amplify(TRENDS.get("Rama1-1 F1").getSeries(), 1d), "Rama1-2_F1");
-            IOC.writeWav(8000, DataProcessor.amplify(TRENDS.get("Rama1-1 F2").getSeries(), 10d), "Rama1-2_F2");
+            IOC.writeWav(8000, DataProcessor.amplify(TRENDS.get("Rama1-1").getSeries(), 1d), "Rama1-1");
+            IOC.writeWav(8000, DataProcessor.amplify(TRENDS.get("Rama1-2").getSeries(), 1d), "Rama1-2");
+            IOC.writeWav(8000, DataProcessor.amplify(TRENDS.get("Rama1-1 MT").getSeries(), 1d), "Rama1-1_MT");
+            IOC.writeWav(8000, DataProcessor.amplify(TRENDS.get("Rama1-1 F1").getSeries(), 1d), "Rama1-1_F1");
+            IOC.writeWav(8000, DataProcessor.amplify(TRENDS.get("Rama1-1 F2").getSeries(), 1d), "Rama1-1_F2");
+            IOC.writeWav(8000, DataProcessor.amplify(TRENDS.get("Rama1-1 F3").getSeries(), 1d), "Rama1-1_F3");
+            IOC.writeWav(8000, DataProcessor.amplify(TRENDS.get("Rama1-2 MT").getSeries(), 1d), "Rama1-2_MT");
+            IOC.writeWav(8000, DataProcessor.amplify(TRENDS.get("Rama1-2 F1").getSeries(), 1d), "Rama1-2_F1");
+            IOC.writeWav(8000, DataProcessor.amplify(TRENDS.get("Rama1-2 F2").getSeries(), 1d), "Rama1-2_F2");
+            IOC.writeWav(8000, DataProcessor.amplify(TRENDS.get("Rama1-2 F3").getSeries(), 1d), "Rama1-2_F3");
         }
     }
 
