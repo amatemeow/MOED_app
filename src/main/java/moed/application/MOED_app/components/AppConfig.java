@@ -39,6 +39,102 @@ public class AppConfig implements WebMvcConfigurer {
         private final LinkedHashMap<String, Trend> TRENDS = new LinkedHashMap<>();
 
         @PostConstruct
+        public void populateCW() {
+            TRENDS.put("Main Noise", new Trend("Engine Reference Noise").setSeries(
+                    DataModeller.getNoise(20000, 10d, RandomType.SYSTEM)
+            ));
+            TRENDS.put("BackNoise", new Trend("Background Noise").setSeries(
+                    DataModeller.getNoise(20000, 1d, RandomType.SYSTEM)
+            ));
+//            TRENDS.put("Noise Fourier", new Trend("Fourier spectrum for ERN").setSeries(
+//                    DataProcessor.spectrumFourier(TRENDS.get("Main Noise").getSeries(), 1/20001d)
+//            ));
+            TRENDS.put("ExpNegNorm", new Trend().setSeries(
+                    DataProcessor.normalizeFunc(
+                            DataModeller.getExponent(10000, 0.001, 0.1d, 0.5d, false),
+                            1d)
+            ));
+            TRENDS.put("ExpPosNorm", new Trend().setSeries(
+                    DataProcessor.normalizeFunc(
+                            DataModeller.getExponent(10000, 0.001, 0.1d, 0.5d, true),
+                            1d)
+            ));
+            TRENDS.put("Trendline", new Trend("Trend").setSeries(
+                    DataModeller.getShiftedX(DataModeller.getMerged(
+                            TRENDS.get("ExpPosNorm").getSeries(),
+                            TRENDS.get("ExpNegNorm").getSeries()
+                    ), -10000d)
+            ));
+            TRENDS.put("Mult", new Trend("ENR with trend line").setSeries(
+                    DataModeller.getMultiplied(
+                            TRENDS.get("Trendline").getSeries(),
+                            TRENDS.get("Main Noise").getSeries()
+                    )
+            ));
+            TRENDS.put("EngineIO", new Trend("EngineIO Noise").setSeries(
+                    DataModeller.getShiftedX(DataProcessor.cutEdges(DataProcessor.Convolution(
+                            DataProcessor.Filtering.BPF(1710d, 1890d, 1/20001d, 512),
+                            TRENDS.get("Mult").getSeries()
+                    ), 512, 512), -512d)
+            ));
+//            TRENDS.put("EngineIO Fourier", new Trend("Fourier spectrum for EngineIO Noise", "f, Hz", "A").setSeries(
+//                    DataProcessor.spectrumFourier(TRENDS.get("EngineIO").getSeries(), 1/20001d)
+//            ));
+            TRENDS.put("TPA", new Trend("TPA").setSeries(
+                    DataModeller.getShiftedX(DataProcessor.cutEdges(DataProcessor.Convolution(
+                            DataProcessor.Filtering.BPF(961d, 1063d, 1/20001d, 512),
+                            TRENDS.get("Mult").getSeries()
+                    ), 512, 512), -512d)
+            ));
+            TRENDS.put("Turbo", new Trend("Turbo").setSeries(
+                    DataModeller.getShiftedX(DataProcessor.cutEdges(DataProcessor.Convolution(
+                            DataProcessor.Filtering.BPF(1292d, 1428d, 1/20001d, 512),
+                            TRENDS.get("Mult").getSeries()
+                    ), 512, 512), -512d)
+            ));
+            TRENDS.put("Vent", new Trend("Cooler").setSeries(
+                    DataModeller.getShiftedX(DataProcessor.cutEdges(DataProcessor.Convolution(
+                            DataProcessor.Filtering.BPF(95d, 105d, 1/20001d, 256),
+                            TRENDS.get("Mult").getSeries()
+                    ), 256, 256), -256d)
+            ));
+            TRENDS.put("Gas", new Trend("Gas").setSeries(
+                    DataModeller.getShiftedX(DataProcessor.cutEdges(DataProcessor.Convolution(
+                            DataProcessor.Filtering.BPF(148d, 164d, 1/20001d, 256),
+                            TRENDS.get("Mult").getSeries()
+                    ), 256, 256), -256d)
+            ));
+            TRENDS.put("WheelDef", new Trend("WheelDef").setSeries(
+                    DataModeller.getShiftedX(DataProcessor.cutEdges(DataProcessor.Convolution(
+                            DataProcessor.Filtering.BPF(395d, 437d, 1/20001d, 512),
+                            TRENDS.get("Mult").getSeries()
+                    ), 512, 512), -512d)
+            ));
+            TRENDS.put("WheelWeave", new Trend("WheelWeave").setSeries(
+                    DataModeller.getShiftedX(DataProcessor.cutEdges(DataProcessor.Convolution(
+                            DataProcessor.Filtering.BPF(800d, 884d, 1/20001d, 512),
+                            TRENDS.get("Mult").getSeries()
+                    ), 512, 512), -512d)
+            ));
+            TRENDS.put("Addition", new Trend("Compiled Vehicle Noise", "t, s", "Y").setSeries(
+                    DataProcessor.alterAxis(DataModeller.getAddition(
+                            TRENDS.get("EngineIO").getSeries(),
+                            TRENDS.get("TPA").getSeries(),
+                            TRENDS.get("Turbo").getSeries(),
+                            TRENDS.get("Vent").getSeries(),
+                            TRENDS.get("Gas").getSeries(),
+                            DataProcessor.amplify(TRENDS.get("WheelDef").getSeries(), 1.5d),
+                            DataProcessor.amplify(TRENDS.get("WheelWeave").getSeries(), 1.5d),
+                            DataProcessor.amplify(TRENDS.get("BackNoise").getSeries(), 0.05d)
+                    ), 1/20000d, 1d)
+            ));
+            TRENDS.put("EngineIO Fourier", new Trend("Fourier spectrum for Compiled Vehicle Noise", "f, Hz", "A").setSeries(
+                    DataProcessor.spectrumFourier(TRENDS.get("Addition").getSeries(), 1/20001d)
+            ));
+
+            IOC.writeWav(20000, DataProcessor.amplify(TRENDS.get("Addition").getSeries(), 0.35d), "TestCW");
+        }
+//        @PostConstruct
         public void populateTrends() {
 //            TRENDS.put("Straight Positive", new Trend("Straight Positive").setSeries(DataModeller.getStraight(1000, 10d, 10d, true)));
 //            TRENDS.put("Straight Negative", new Trend("Straight Negative").setSeries(DataModeller.getStraight(1000, 10d, 10d, false)));

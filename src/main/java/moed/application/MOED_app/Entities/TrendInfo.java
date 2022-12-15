@@ -12,12 +12,12 @@ import java.io.IOException;
 public class TrendInfo {
     @Getter private String trendPath;
     @NonNull @Getter private final Trend trend;
-    @Getter private String histPath;
-    @NonNull @Getter private final Trend hist;
-    @Getter private String autoCovariancePath;
-    @NonNull @Getter private final Trend autoCovariance;
-    @Getter private String normalizedAutoCovariancePath;
-    @NonNull @Getter private final Trend normalizedAutoCovariance;
+//    @Getter private String histPath;
+//    @NonNull @Getter private final Trend hist;
+//    @Getter private String autoCovariancePath;
+//    @NonNull @Getter private final Trend autoCovariance;
+//    @Getter private String normalizedAutoCovariancePath;
+//    @NonNull @Getter private final Trend normalizedAutoCovariance;
     @NonNull @Getter private final Stats stats;
     @Getter private String statsJSON;
 
@@ -34,27 +34,27 @@ public class TrendInfo {
         } catch (IOException IOE) {
             IOE.printStackTrace();
         }
-        this.hist = DataAnalyzer.Statistics.getProbDen(this.trend.getSeries());
-        try {
-            this.histPath = DataModeller.getTrend(this.hist, AppConfig.IOCConfig.DEFAULT_HIST_RATIO);
-        } catch (IOException IOE) {
-            IOE.printStackTrace();
-        }
-        this.autoCovariance = new Trend("Auto Covariance")
-                .setSeries(DataAnalyzer.Statistics.getAutoCovariance(this.trend.getSeries()));
-        try {
-            this.autoCovariancePath = DataModeller
-                    .getTrend(this.autoCovariance, AppConfig.IOCConfig.DEFAULT_HIST_RATIO);
-        } catch (IOException IOE) {
-            IOE.printStackTrace();
-        }
-        this.normalizedAutoCovariance = new Trend("Normalized Auto Covariance")
-                .setSeries(DataAnalyzer.Statistics.getNormalizedAutoCovariance(this.trend.getSeries()));
-        try {
-            this.normalizedAutoCovariancePath = DataModeller
-                    .getTrend(this.normalizedAutoCovariance, AppConfig.IOCConfig.DEFAULT_HIST_RATIO);
-        } catch (IOException IOE) {
-            IOE.printStackTrace();
-        }
+//        this.hist = DataAnalyzer.Statistics.getProbDen(this.trend.getSeries());
+//        try {
+//            this.histPath = DataModeller.getTrend(this.hist, AppConfig.IOCConfig.DEFAULT_HIST_RATIO);
+//        } catch (IOException IOE) {
+//            IOE.printStackTrace();
+//        }
+//        this.autoCovariance = new Trend("Auto Covariance")
+//                .setSeries(DataAnalyzer.Statistics.getAutoCovariance(this.trend.getSeries()));
+//        try {
+//            this.autoCovariancePath = DataModeller
+//                    .getTrend(this.autoCovariance, AppConfig.IOCConfig.DEFAULT_HIST_RATIO);
+//        } catch (IOException IOE) {
+//            IOE.printStackTrace();
+//        }
+//        this.normalizedAutoCovariance = new Trend("Normalized Auto Covariance")
+//                .setSeries(DataAnalyzer.Statistics.getNormalizedAutoCovariance(this.trend.getSeries()));
+//        try {
+//            this.normalizedAutoCovariancePath = DataModeller
+//                    .getTrend(this.normalizedAutoCovariance, AppConfig.IOCConfig.DEFAULT_HIST_RATIO);
+//        } catch (IOException IOE) {
+//            IOE.printStackTrace();
+//        }
     }
 }

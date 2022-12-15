@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Random;
 import java.util.stream.Collectors;
 
@@ -169,12 +170,17 @@ public class DataModeller implements DisposableBean {
         return series;
     }
 
-    //Соединение наборов данных
-    public static XYSeries getAddition(XYSeries series1, XYSeries series2) {
+    //Аддитивная модель
+    public static XYSeries getAddition(XYSeries... series) {
         XYSeries result = new XYSeries("");
-        int count = Math.min(series1.getItemCount(), series2.getItemCount());
+        int count = Arrays.stream(series).min(Comparator.comparingInt(XYSeries::getItemCount)).orElse(result).getItemCount();
+        double sum = 0;
         for (int i = 0; i < count; i++) {
-            result.add(series1.getX(i), (Double) series1.getY(i) + (Double) series2.getY(i));
+            sum = 0;
+            for (var ser : series) {
+                sum += ser.getY(i).doubleValue();
+            }
+            result.add(series[0].getX(i), sum);
         }
         return result;
     }
