@@ -17,6 +17,7 @@ import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import javax.annotation.PostConstruct;
+import java.io.IOException;
 import java.util.LinkedHashMap;
 
 @Configuration
@@ -41,10 +42,13 @@ public class AppConfig implements WebMvcConfigurer {
         @PostConstruct
         public void populateCW() {
             TRENDS.put("Main Noise", new Trend("Engine Reference Noise").setSeries(
-                    DataModeller.getNoise(20000, 10d, RandomType.SYSTEM)
+                    DataModeller.getNoise(20000, 1d, RandomType.SYSTEM)
             ));
             TRENDS.put("BackNoise", new Trend("Background Noise").setSeries(
-                    DataModeller.getNoise(20000, 1d, RandomType.SYSTEM)
+                    DataModeller.getNoise(20000, 0.005d, RandomType.SYSTEM)
+            ));
+            TRENDS.put("HighNoise", new Trend("Background Noise").setSeries(
+                    DataModeller.getNoise(20000, 0.2d, RandomType.SYSTEM)
             ));
 //            TRENDS.put("Noise Fourier", new Trend("Fourier spectrum for ERN").setSeries(
 //                    DataProcessor.spectrumFourier(TRENDS.get("Main Noise").getSeries(), 1/20001d)
@@ -77,62 +81,167 @@ public class AppConfig implements WebMvcConfigurer {
                             TRENDS.get("Mult").getSeries()
                     ), 512, 512), -512d)
             ));
+//            TRENDS.put("2Filter", new Trend("EngineIO + TPA").setSeries(
+//                    DataModeller.getShiftedX(DataProcessor.cutEdges(DataProcessor.Convolution(
+//                            DataProcessor.Filtering.BPF(961d, 1063d, 1/20001d, 512),
+//                            DataProcessor.Filtering.BPF(1710d, 1890d, 1/20001d, 512)
+//                    ), 512, 512), -512d)
+//            ));
+//            TRENDS.put("2FilterComp", new Trend("EngineIO + TPA").setSeries(
+//                    DataModeller.getShiftedX(DataProcessor.cutEdges(DataProcessor.Convolution(
+//                            TRENDS.get("2Filter").getSeries(),
+//                            TRENDS.get("Mult").getSeries()
+//                    ), 1024, 1024), -1024d)
+//            ));
+            TRENDS.put("CompiledF", new Trend("Compiled Filter").setSeries(
+                    DataModeller.getAddition(
+                            DataProcessor.Filtering.BPF(961d, 1063d, 1/20001d, 512),
+                            DataProcessor.Filtering.BPF(1710d, 1890d, 1/20001d, 512),
+                            DataProcessor.Filtering.BPF(1292d, 1428d, 1/20001d, 512),
+                            DataProcessor.Filtering.BPF(95d, 105d, 1/20001d, 512),
+                            DataProcessor.Filtering.BPF(148d, 164d, 1/20001d, 512),
+                            DataProcessor.Filtering.BPF(395d, 437d, 1/20001d, 512),
+                            DataProcessor.Filtering.BPF(800d, 884d, 1/20001d, 512)
+                    )
+            ));
+            TRENDS.put("Signal", new Trend("Signal").setSeries(
+                    DataModeller.getShiftedX(DataProcessor.cutEdges(DataProcessor.Convolution(
+                            TRENDS.get("CompiledF").getSeries(),
+                            TRENDS.get("Mult").getSeries()
+                    ), 512, 512), -512d)
+            ));
+            TRENDS.put("AllFilterComp", new Trend("Compiled Vehicle Noise", "t, s", "Y").setSeries(
+                    DataProcessor.alterAxis(DataModeller.getAddition(
+                            TRENDS.get("Signal").getSeries(),
+                            TRENDS.get("BackNoise").getSeries()
+                    ), 1/20000d, 1d)
+            ));
+            TRENDS.put("HighNoiseComp", new Trend("Compiled Vehicle with high Background Noise", "t, s", "Y").setSeries(
+                    DataProcessor.alterAxis(DataModeller.getAddition(
+                            TRENDS.get("Signal").getSeries(),
+                            TRENDS.get("HighNoise").getSeries()
+                    ), 1/20000d, 1d)
+            ));
+            TRENDS.put("WheelFilter", new Trend("Compiled Wheels Filter").setSeries(
+                    DataProcessor.Convolution(
+                            DataProcessor.Filtering.BSF(350d, 460d, 1/20001d, 1024),
+                            DataProcessor.Filtering.BSF(750d, 920d, 1/20001d, 1024)
+                    )
+            ));
+            TRENDS.put("VehicleNoWheels", new Trend("Compiled Vehicle Noise without Wheels Noise").setSeries(
+                    DataModeller.getShiftedX(DataProcessor.cutEdges(DataProcessor.Convolution(
+                            TRENDS.get("WheelFilter").getSeries(),
+                            TRENDS.get("AllFilterComp").getSeries()
+                    ), 1024, 1024), -1024d)
+            ));
+            TRENDS.put("Compiled FNoWheels", new Trend("Fourier spectrum for Compiled Vehicle Noise without Wheels Noise", "f, Hz", "A").setSeries(
+                    DataProcessor.spectrumFourier(TRENDS.get("VehicleNoWheels").getSeries(), 1/20001d)
+            ));
+//            TRENDS.put("Compiled FAll", new Trend("Fourier spectrum for Compiled Vehicle Noise", "f, Hz", "A").setSeries(
+//                    DataProcessor.spectrumFourier(TRENDS.get("AllFilterComp").getSeries(), 1/20001d)
+//            ));
+//            TRENDS.put("3Filter", new Trend("EngineIO + TPA + Turbo").setSeries(
+//                    DataModeller.getShiftedX(DataProcessor.cutEdges(DataProcessor.Convolution(
+//                            TRENDS.get("2Filter").getSeries(),
+//                            DataProcessor.Filtering.BPF(1292d, 1428d, 1/20001d, 512)
+//                    ), 0, 0), 0d)
+//            ));
+//            TRENDS.put("4Filter", new Trend("EngineIO + TPA + Turbo + Cooler").setSeries(
+//                    DataModeller.getShiftedX(DataProcessor.cutEdges(DataProcessor.Convolution(
+//                            TRENDS.get("3Filter").getSeries(),
+//                            DataProcessor.Filtering.BPF(95d, 105d, 1/20001d, 512)
+//                    ), 0, 0), 0d)
+//            ));
+//            TRENDS.put("5Filter", new Trend("EngineIO + TPA + Turbo + Cooler + Gas").setSeries(
+//                    DataModeller.getShiftedX(DataProcessor.cutEdges(DataProcessor.Convolution(
+//                            TRENDS.get("4Filter").getSeries(),
+//                            DataProcessor.Filtering.BPF(148d, 164d, 1/20001d, 512)
+//                    ), 0, 0), 0d)
+//            ));
+//            TRENDS.put("6Filter", new Trend("EngineIO + TPA + Turbo + Cooler + Gas + WheelDef").setSeries(
+//                    DataModeller.getShiftedX(DataProcessor.cutEdges(DataProcessor.Convolution(
+//                            TRENDS.get("5Filter").getSeries(),
+//                            DataProcessor.Filtering.BPF(395d, 437d, 1/20001d, 512)
+//                    ), 0, 0), 0d)
+//            ));
+//            TRENDS.put("7Filter", new Trend("EngineIO + TPA + Turbo + Cooler + Gas + WheelDef + WheelWeave").setSeries(
+//                    DataModeller.getShiftedX(DataProcessor.cutEdges(DataProcessor.Convolution(
+//                            TRENDS.get("6Filter").getSeries(),
+//                            DataProcessor.Filtering.BPF(800d, 884d, 1/20001d, 512)
+//                    ), 0, 0), 0d)
+//            ));
+//            TRENDS.put("Compiled Noise", new Trend("Compiled Noise", "t,s", "Y").setSeries(
+//                    DataModeller.getShiftedX(DataProcessor.cutEdges(DataProcessor.Convolution(
+//                            TRENDS.get("7Filter").getSeries(),
+//                            TRENDS.get("Mult").getSeries()
+//                    ), 512, 512), -512d)
+//            ));
+
+
 //            TRENDS.put("EngineIO Fourier", new Trend("Fourier spectrum for EngineIO Noise", "f, Hz", "A").setSeries(
 //                    DataProcessor.spectrumFourier(TRENDS.get("EngineIO").getSeries(), 1/20001d)
 //            ));
-            TRENDS.put("TPA", new Trend("TPA").setSeries(
-                    DataModeller.getShiftedX(DataProcessor.cutEdges(DataProcessor.Convolution(
-                            DataProcessor.Filtering.BPF(961d, 1063d, 1/20001d, 512),
-                            TRENDS.get("Mult").getSeries()
-                    ), 512, 512), -512d)
-            ));
-            TRENDS.put("Turbo", new Trend("Turbo").setSeries(
-                    DataModeller.getShiftedX(DataProcessor.cutEdges(DataProcessor.Convolution(
-                            DataProcessor.Filtering.BPF(1292d, 1428d, 1/20001d, 512),
-                            TRENDS.get("Mult").getSeries()
-                    ), 512, 512), -512d)
-            ));
-            TRENDS.put("Vent", new Trend("Cooler").setSeries(
-                    DataModeller.getShiftedX(DataProcessor.cutEdges(DataProcessor.Convolution(
-                            DataProcessor.Filtering.BPF(95d, 105d, 1/20001d, 256),
-                            TRENDS.get("Mult").getSeries()
-                    ), 256, 256), -256d)
-            ));
-            TRENDS.put("Gas", new Trend("Gas").setSeries(
-                    DataModeller.getShiftedX(DataProcessor.cutEdges(DataProcessor.Convolution(
-                            DataProcessor.Filtering.BPF(148d, 164d, 1/20001d, 256),
-                            TRENDS.get("Mult").getSeries()
-                    ), 256, 256), -256d)
-            ));
-            TRENDS.put("WheelDef", new Trend("WheelDef").setSeries(
-                    DataModeller.getShiftedX(DataProcessor.cutEdges(DataProcessor.Convolution(
-                            DataProcessor.Filtering.BPF(395d, 437d, 1/20001d, 512),
-                            TRENDS.get("Mult").getSeries()
-                    ), 512, 512), -512d)
-            ));
-            TRENDS.put("WheelWeave", new Trend("WheelWeave").setSeries(
-                    DataModeller.getShiftedX(DataProcessor.cutEdges(DataProcessor.Convolution(
-                            DataProcessor.Filtering.BPF(800d, 884d, 1/20001d, 512),
-                            TRENDS.get("Mult").getSeries()
-                    ), 512, 512), -512d)
-            ));
-            TRENDS.put("Addition", new Trend("Compiled Vehicle Noise", "t, s", "Y").setSeries(
-                    DataProcessor.alterAxis(DataModeller.getAddition(
-                            TRENDS.get("EngineIO").getSeries(),
-                            TRENDS.get("TPA").getSeries(),
-                            TRENDS.get("Turbo").getSeries(),
-                            TRENDS.get("Vent").getSeries(),
-                            TRENDS.get("Gas").getSeries(),
-                            DataProcessor.amplify(TRENDS.get("WheelDef").getSeries(), 1.5d),
-                            DataProcessor.amplify(TRENDS.get("WheelWeave").getSeries(), 1.5d),
-                            DataProcessor.amplify(TRENDS.get("BackNoise").getSeries(), 0.05d)
-                    ), 1/20000d, 1d)
-            ));
-            TRENDS.put("EngineIO Fourier", new Trend("Fourier spectrum for Compiled Vehicle Noise", "f, Hz", "A").setSeries(
-                    DataProcessor.spectrumFourier(TRENDS.get("Addition").getSeries(), 1/20001d)
-            ));
+//            TRENDS.put("TPA", new Trend("TPA").setSeries(
+//                    DataModeller.getShiftedX(DataProcessor.cutEdges(DataProcessor.Convolution(
+//                            DataProcessor.Filtering.BPF(961d, 1063d, 1/20001d, 512),
+//                            TRENDS.get("Mult").getSeries()
+//                    ), 512, 512), -512d)
+//            ));
+//            TRENDS.put("Turbo", new Trend("Turbo").setSeries(
+//                    DataModeller.getShiftedX(DataProcessor.cutEdges(DataProcessor.Convolution(
+//                            DataProcessor.Filtering.BPF(1292d, 1428d, 1/20001d, 512),
+//                            TRENDS.get("Mult").getSeries()
+//                    ), 512, 512), -512d)
+//            ));
+//            TRENDS.put("Vent", new Trend("Cooler").setSeries(
+//                    DataModeller.getShiftedX(DataProcessor.cutEdges(DataProcessor.Convolution(
+//                            DataProcessor.Filtering.BPF(95d, 105d, 1/20001d, 256),
+//                            TRENDS.get("Mult").getSeries()
+//                    ), 256, 256), -256d)
+//            ));
+//            TRENDS.put("Gas", new Trend("Gas").setSeries(
+//                    DataModeller.getShiftedX(DataProcessor.cutEdges(DataProcessor.Convolution(
+//                            DataProcessor.Filtering.BPF(148d, 164d, 1/20001d, 256),
+//                            TRENDS.get("Mult").getSeries()
+//                    ), 256, 256), -256d)
+//            ));
+//            TRENDS.put("WheelDef", new Trend("WheelDef").setSeries(
+//                    DataModeller.getShiftedX(DataProcessor.cutEdges(DataProcessor.Convolution(
+//                            DataProcessor.Filtering.BPF(395d, 437d, 1/20001d, 512),
+//                            TRENDS.get("Mult").getSeries()
+//                    ), 512, 512), -512d)
+//            ));
+//            TRENDS.put("WheelWeave", new Trend("WheelWeave").setSeries(
+//                    DataModeller.getShiftedX(DataProcessor.cutEdges(DataProcessor.Convolution(
+//                            DataProcessor.Filtering.BPF(800d, 884d, 1/20001d, 512),
+//                            TRENDS.get("Mult").getSeries()
+//                    ), 512, 512), -512d)
+//            ));
+//            TRENDS.put("Addition", new Trend("Compiled Vehicle Noise", "t, s", "Y").setSeries(
+//                    DataProcessor.alterAxis(DataModeller.getAddition(
+//                            TRENDS.get("EngineIO").getSeries(),
+//                            TRENDS.get("TPA").getSeries(),
+//                            TRENDS.get("Turbo").getSeries(),
+//                            TRENDS.get("Vent").getSeries(),
+//                            TRENDS.get("Gas").getSeries(),
+//                            DataProcessor.amplify(TRENDS.get("WheelDef").getSeries(), 1.5d),
+//                            DataProcessor.amplify(TRENDS.get("WheelWeave").getSeries(), 1.5d),
+//                            DataProcessor.amplify(TRENDS.get("BackNoise").getSeries(), 0.05d)
+//                    ), 1/20000d, 1d)
+//            ));
+//            TRENDS.put("Compiled Fourier", new Trend("Fourier spectrum for Compiled Vehicle Noise", "f, Hz", "A").setSeries(
+//                    DataProcessor.spectrumFourier(TRENDS.get("Addition").getSeries(), 1/20001d)
+//            ));
 
-            IOC.writeWav(20000, DataProcessor.amplify(TRENDS.get("Addition").getSeries(), 0.35d), "TestCW");
+//            TRENDS.put("Compiled Fourier", new Trend("Fourier spectrum for Compiled Vehicle Noise", "f, Hz", "A").setSeries(
+//                    DataProcessor.spectrumFourier(TRENDS.get("Compiled Noise").getSeries(), 1/20001d)
+//            ));
+
+//            IOC.writeWav(20000, DataProcessor.amplify(TRENDS.get("Addition").getSeries(), 0.35d), "TestCW");
+            IOC.writeWav(20000, DataProcessor.amplify(TRENDS.get("AllFilterComp").getSeries(), 1d), "CW_NormalNoise");
+            IOC.writeWav(20000, DataProcessor.amplify(TRENDS.get("HighNoiseComp").getSeries(), 1d), "CW_HighNoise");
+            IOC.writeWav(20000, DataProcessor.amplify(TRENDS.get("VehicleNoWheels").getSeries(), 1d), "CW_NoWheelsNoise");
+
         }
 //        @PostConstruct
         public void populateTrends() {
