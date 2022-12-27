@@ -100,7 +100,7 @@ public class DataAnalyzer {
         }
 
         //Изменить реализацию на series
-        public static Trend getProbDen(XYSeries series) {
+        public static XYSeries getProbDen(XYSeries series) {
             //Разбить на M интервалов и считать, сколько в каждый интервал попадает значений
             //Min, Max, Avg
             //Noise, SelfNoise, etc.
@@ -118,7 +118,7 @@ public class DataAnalyzer {
                 }
                 densitySeries.add((i + intervalLength) / 2, cnt);
             }
-            return new Trend("Histogram").setSeries(densitySeries);
+            return densitySeries;
         }
 
         //Автокорреляция
@@ -198,10 +198,10 @@ public class DataAnalyzer {
         return result;
     }
 
-    public static XYSeries analyzeAntiNoiseSTD(int step, int ceil) {
+    public static XYSeries analyzeAntiNoiseSTD(int step, int ceil, int R) {
         XYSeries result = new XYSeries("");
         for (int i = 1; i <= ceil; i += step) {
-            result.add(i, Statistics.getMeanDeviation(DataProcessor.antiNoise(i)));
+            result.add(i, Statistics.getMeanDeviation(DataProcessor.antiNoise(i, R)));
         }
         return result;
     }

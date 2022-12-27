@@ -40,6 +40,110 @@ public class AppConfig implements WebMvcConfigurer {
         private final LinkedHashMap<String, Trend> TRENDS = new LinkedHashMap<>();
 
         @PostConstruct
+        public void populateExam() {
+            TRENDS.put("Filedata", new Trend("Data from file").setSeries(
+                    DataModeller.getModel(IOC.readDat("v1v10.dat"))
+            ));
+            TRENDS.put("FourierFDT", new Trend("Original data spectrum", "f, Hz", "A").setSeries(
+                    DataProcessor.spectrumFourier(TRENDS.get("Filedata").getSeries(), 0.001)
+            ));
+            TRENDS.put("AutocovarFDT", new Trend("Auto covariance of original data").setSeries(
+                    DataAnalyzer.Statistics.getAutoCovariance(TRENDS.get("Filedata").getSeries())
+            ));
+            TRENDS.put("FourierAC", new Trend("Fourier auto covariance", "f, Hz", "A").setSeries(
+                    DataProcessor.spectrumFourier(TRENDS.get("AutocovarFDT").getSeries(), 0.001)
+            ));
+            TRENDS.put("HPFfdt", new Trend("HPFed original data").setSeries(
+                    DataModeller.getShiftedX(
+                            DataProcessor.cutEdges(
+                                    DataProcessor.Convolution(
+                                            DataProcessor.Filtering.HPF(50d, 0.001, 256),
+                                            TRENDS.get("Filedata").getSeries()
+                                    ), 300, 300), -256d)
+            ));
+            TRENDS.put("FourierHPF", new Trend("HPFed data spectrum", "f, Hz", "A").setSeries(
+                    DataProcessor.spectrumFourier(TRENDS.get("HPFfdt").getSeries(), 0.001)
+            ));
+//            TRENDS.put("AutocovarHPF", new Trend("Auto covariance of HPFed data").setSeries(
+//                    DataProcessor.cutEdges(
+//                            DataAnalyzer.Statistics.getNormalizedAutoCovariance(TRENDS.get("HPFfdt").getSeries()),
+//                            0, 700
+//                    )
+//            ));
+            TRENDS.put("BPFfdt", new Trend("BPFed filtered data").setSeries(
+                    DataModeller.getShiftedX(
+                        DataProcessor.cutEdges(
+                            DataProcessor.Convolution(
+                                    DataProcessor.Filtering.BPF(66d, 68d, 0.001, 1700),
+                                    TRENDS.get("HPFfdt").getSeries()
+                    ), 2000, 2000), -2000d)
+            ));
+            TRENDS.put("FourierBPF", new Trend("BPFed data spectrum", "f, Hz", "A").setSeries(
+                    DataProcessor.spectrumFourier(TRENDS.get("BPFfdt").getSeries(), 0.001)
+            ));
+            TRENDS.put("FourierBPFcut", new Trend("BPFed data spectrum cutted", "f, Hz", "A").setSeries(
+                    DataProcessor.cutEdges(
+                            DataProcessor.spectrumFourier(TRENDS.get("BPFfdt").getSeries(), 0.001),
+                            17, 130
+                    )
+            ));
+
+
+//            TRENDS.put("RT1", new Trend("Reversed Trend 1").setSeries(
+//                    DataProcessor.reverseMergeAverage(TRENDS.get("Filedata").getSeries(), 20)
+//            ));
+//            TRENDS.put("RS1", new Trend("Reversed Signal 1").setSeries(
+//                    DataModeller.removeTrend(TRENDS.get("RT1").getSeries(), TRENDS.get("Filedata").getSeries())
+//            ));
+//            TRENDS.put("RT2", new Trend("Reversed Trend 2").setSeries(
+//                    DataProcessor.reverseMergeAverage(TRENDS.get("RS1").getSeries(), 10)
+//            ));
+//            TRENDS.put("RS2", new Trend("Reversed Signal 2").setSeries(
+//                    DataModeller.removeTrend(TRENDS.get("RT2").getSeries(), TRENDS.get("RS1").getSeries())
+//            ));
+//            TRENDS.put("Deriv", new Trend("Derivative").setSeries(
+//                    DataProcessor.reverseMergeDerivative(TRENDS.get("RS2").getSeries())
+//            ));
+//            TRENDS.put("AntiSpike", new Trend("Anti Spiked").setSeries(
+//                    DataAnalyzer.getAntiSpike(TRENDS.get("Deriv").getSeries(), 50d)
+//            ));
+//            TRENDS.put("AntiNoise", new Trend("Anti Noise M=1000").setSeries(
+//                    DataProcessor.antiNoise(1000, 1500, TRENDS.get("Deriv").getSeries())
+//            ));
+//            TRENDS.put("Fourierrs", new Trend("Fourier").setSeries(
+//                    DataProcessor.spectrumFourier(TRENDS.get("RS2").getSeries(), 0.002)
+//            ));
+//            TRENDS.put("HPFfdt", new Trend("HPFed").setSeries(
+//                    DataModeller.getShiftedX(
+//                            DataProcessor.cutEdges(
+//                                    DataProcessor.Convolution(
+//                                            DataProcessor.Filtering.HPF(12d, 0.002, 128),
+//                                            TRENDS.get("Filedata").getSeries()
+//                                    ), 200, 200), -200d)
+//            ));
+//            TRENDS.put("Autocovarfdt", new Trend("Auto covariance file data").setSeries(
+//                    DataProcessor.cutEdges(
+//                            DataAnalyzer.Statistics.getNormalizedAutoCovariance(TRENDS.get("HPFfdt").getSeries()),
+//                            0, 600
+//                    )
+//            ));
+//            TRENDS.put("BPFfdt", new Trend("BPFed").setSeries(
+//                    DataModeller.getShiftedX(
+//                        DataProcessor.cutEdges(
+//                            DataProcessor.Convolution(
+//                                    DataProcessor.Filtering.BPF(26d, 27d, 0.002, 700),
+//                                    TRENDS.get("HPFfdt").getSeries()
+//                    ), 1000, 1000), -1000d)
+//            ));
+//            TRENDS.put("Fourierbpf", new Trend("Fourier BPF").setSeries(
+//                    DataProcessor.spectrumFourier(TRENDS.get("BPFfdt").getSeries(), 0.002)
+//            ));
+//            TRENDS.put("Autocovarbpf", new Trend("Auto covariance BPF").setSeries(
+//                    DataAnalyzer.Statistics.getNormalizedAutoCovariance(TRENDS.get("BPFfdt").getSeries())
+//            ));
+        }
+
+//        @PostConstruct
         public void populateCW() {
             TRENDS.put("Main Noise", new Trend("Engine Reference Noise").setSeries(
                     DataModeller.getNoise(20000, 1d, RandomType.SYSTEM)

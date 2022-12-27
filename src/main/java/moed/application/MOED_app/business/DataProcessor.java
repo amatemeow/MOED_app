@@ -19,9 +19,9 @@ public class DataProcessor {
     }
 
     //Выделение изначальных трендов из смешанных данных с помощью среднего
-    public static XYSeries reverseMergeAverage(XYSeries series) {
+    public static XYSeries reverseMergeAverage(XYSeries series, int windowSize) {
         XYSeries result = new XYSeries("");
-        int delta = series.getItemCount() / 80;
+        int delta = series.getItemCount() / windowSize;
         int windowCount = series.getItemCount() / delta;
         for (int j = 0; j < series.getItemCount() - delta; j ++) {
             if (j >= series.getItemCount()) break;
@@ -44,7 +44,7 @@ public class DataProcessor {
             }
             shifted.add(j, avg);
         }
-        Double shift = result.getMaxY() - shifted.getMinY();
+        Double shift = result.getY(result.getItemCount() - 1).doubleValue() - shifted.getY(0).doubleValue();
         for (var item : shifted.getItems()) {
             result.add(((XYDataItem) item).getX(), (Double) ((XYDataItem) item).getY() + shift);
         }
@@ -63,7 +63,7 @@ public class DataProcessor {
         return result;
     }
 
-    public static XYSeries antiNoise(int M, XYSeries... series) {
+    public static XYSeries antiNoise(int M, int R, XYSeries... series) {
         XYSeries result = new XYSeries("");
         XYSeries additive;
         int N = 1000;
@@ -75,14 +75,14 @@ public class DataProcessor {
         for (int i = 0; i < M; i++) {
             if (series.length != 0) {
                 XYSeries sysNoise = new XYSeries("");
-                Double[] noiseVals = DataModeller.getNoiseOptimized(N, 30, RandomType.SYSTEM);
+                Double[] noiseVals = DataModeller.getNoiseOptimized(N, R, RandomType.SYSTEM);
                 for (int j = 0; j < N; j++) {
                     sysNoise.add(j, noiseVals[j]);
                 }
-                additive = DataModeller.getMerged(series[0], sysNoise);
+                additive = DataModeller.getAddition(series[0], sysNoise);
                 additives.add(additive);
             } else {
-                noises.add(DataModeller.getNoiseOptimized(N, 30, RandomType.SYSTEM));
+                noises.add(DataModeller.getNoiseOptimized(N, R, RandomType.SYSTEM));
             }
         }
         for (int i = 0; i < N; i++) {
