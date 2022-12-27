@@ -42,7 +42,7 @@ public class AppConfig implements WebMvcConfigurer {
         @PostConstruct
         public void populateExam() {
             TRENDS.put("Filedata", new Trend("Data from file").setSeries(
-                    DataModeller.getModel(IOC.readDat("v1v10.dat"))
+                    DataModeller.getModel(IOC.readDat("v1x8.dat"))
             ));
             TRENDS.put("FourierFDT", new Trend("Original data spectrum", "f, Hz", "A").setSeries(
                     DataProcessor.spectrumFourier(TRENDS.get("Filedata").getSeries(), 0.001)
