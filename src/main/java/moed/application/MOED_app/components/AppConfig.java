@@ -2,7 +2,9 @@ package moed.application.MOED_app.components;
 
 import lombok.Data;
 import lombok.Getter;
+import moed.application.MOED_app.ENUM.InterpolationType;
 import moed.application.MOED_app.ENUM.RandomType;
+import moed.application.MOED_app.Entities.ImageInfo;
 import moed.application.MOED_app.Entities.Trend;
 import moed.application.MOED_app.business.DataAnalyzer;
 import moed.application.MOED_app.business.DataModeller;
@@ -39,7 +41,41 @@ public class AppConfig implements WebMvcConfigurer {
         @Getter
         private final LinkedHashMap<String, Trend> TRENDS = new LinkedHashMap<>();
 
+        @Getter
+        private final LinkedHashMap<String, ImageInfo> IMAGES = new LinkedHashMap<>();
+
+
         @PostConstruct
+        public void populateImages() {
+            IMAGES.put("Grace", new ImageInfo("grace.jpg"));
+            IMAGES.put("Grace Shifted", new ImageInfo("shifted_grace.jpg",
+                    DataProcessor.picShift(IMAGES.get("Grace").getMatrix(), -50)));
+            IMAGES.put("Grace Multiplied", new ImageInfo("multiplied_grace.jpg",
+                    DataProcessor.picMultiply(IMAGES.get("Grace").getMatrix(), 2)));
+            IMAGES.put("Grace Remade", new ImageInfo("remade_grace.jpg",
+                    DataProcessor.narrowGSRange(IMAGES.get("Grace Shifted").getMatrix())));
+            IMAGES.put("XRAY", new ImageInfo("XRAY.jpg",
+                    DataProcessor.narrowGSRange(
+                            IOC.readRAW("c12-85v.xcr", 2048, 1024, 1024, 2))));
+            IMAGES.put("Negated XRAY", new ImageInfo("Negated_XRAY",
+                    DataProcessor.negateGC(IMAGES.get("XRAY").getMatrix())));
+            IMAGES.put("NegatedGrace", new ImageInfo("Negated_Grace",
+                    DataProcessor.negateGC(IMAGES.get("Grace").getMatrix())));
+            IMAGES.put("GammedGrace", new ImageInfo("gamma-corrected_Grace",
+                    DataProcessor.gammaCorrection(IMAGES.get("Grace").getMatrix(), 0.8d, 1)));
+            IMAGES.put("LogedGrace", new ImageInfo("log-corrected_Grace",
+                    DataProcessor.logCorrection(IMAGES.get("Grace").getMatrix(), 10)));
+            IMAGES.put("NearestBiggerGrace", new ImageInfo("nearest-neighbour_bigger_Grace",
+                    DataProcessor.rescale(IMAGES.get("Grace").getMatrix(), 1.3d, InterpolationType.NEAREST_NEIGHBOUR)));
+            IMAGES.put("BilinearBiggerGrace", new ImageInfo("bilinear_bigger_Grace",
+                    DataProcessor.rescale(IMAGES.get("Grace").getMatrix(), 1.3d, InterpolationType.BILINEAR)));
+            IMAGES.put("NearestSmallerGrace", new ImageInfo("nearest-neighbour_smaller_Grace",
+                    DataProcessor.rescale(IMAGES.get("Grace").getMatrix(), 0.7d, InterpolationType.NEAREST_NEIGHBOUR)));
+            IMAGES.put("BilinearSmallerGrace", new ImageInfo("bilinear_smaller_Grace",
+                    DataProcessor.rescale(IMAGES.get("Grace").getMatrix(), 0.7d, InterpolationType.BILINEAR)));
+        }
+
+//        @PostConstruct
         public void populateExam() {
             TRENDS.put("Filedata", new Trend("Data from file").setSeries(
                     DataModeller.getModel(IOC.readDat("v1x8.dat"))
@@ -689,6 +725,6 @@ public class AppConfig implements WebMvcConfigurer {
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/images/**", "/css/**", "/img/**", "/js/**")
                 .addResourceLocations("file:" + "images" + "/", "classpath:/static/css/","classpath:/static/img/",
-                        "classpath:/static/js/");
+                        "classpath:/static/js/", "classpath:/../../..");
     }
 }

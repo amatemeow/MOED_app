@@ -10,6 +10,8 @@ import org.jfree.data.xy.XYSeries;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -119,6 +121,47 @@ public class IOC {
             return false;
         }
         return true;
+    }
+
+    public static BufferedImage readImg(String path) {
+        try {
+            return ImageIO.read(new File(AppConfig.IOCConfig.DATAFILES_FOLDER + "/" + path));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return new BufferedImage(1, 1, BufferedImage.TYPE_BYTE_GRAY);
+    }
+
+    public static Integer[][] readImgData(String path) {
+        BufferedImage image = readImg(path);
+        Integer[][] data = new Integer[image.getWidth()][image.getHeight()];
+        for (int i = 0; i < data.length; i++) {
+            for (int j = 0; j < data[0].length; j++) {
+                data[i][j] = image.getRaster().getSample(i, j, 0);
+            }
+        }
+        return data;
+    }
+
+    public static Integer[][] readRAW(String path, int off, int xSize, int ySize, int byteMultiplier) {
+        byte[] buffer = new byte[0];
+        try {
+            BufferedInputStream stream = new BufferedInputStream(
+                    new FileInputStream(AppConfig.IOCConfig.DATAFILES_FOLDER + "/" + path));
+            stream.skip(off);
+            buffer = stream.readNBytes(byteMultiplier * (xSize * ySize));
+            stream.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        Integer[][] data = new Integer[xSize][ySize];
+        int idx = 0;
+        for (int i = 0; i < data.length; i++) {
+            for (int j = 0; j < data[0].length; j++, idx+=2) {
+                data[i][j] = (buffer[idx] & 0xFF) << 8 | buffer[idx + 1] & 0xFF;
+            }
+        }
+        return data;
     }
 
     public static Path getCleanPath() {

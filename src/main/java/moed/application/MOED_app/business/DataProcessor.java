@@ -1,5 +1,6 @@
 package moed.application.MOED_app.business;
 
+import moed.application.MOED_app.ENUM.InterpolationType;
 import moed.application.MOED_app.ENUM.RandomType;
 import moed.application.MOED_app.business.DataAnalyzer.Statistics;
 
@@ -248,5 +249,112 @@ public class DataProcessor {
             initial.add(idx, append.getY(i));
             idx++;
         }
+    }
+
+    public static Integer[][] picShift(Integer[][] data, int cnst) {
+        Integer[][] shifted = new Integer[data.length][data[0].length];
+        for (int i = 0; i < data.length; i++) {
+            for (int j = 0; j < data[0].length; j++) {
+                shifted[i][j] = data[i][j] + cnst;
+            }
+        }
+        return shifted;
+    }
+
+    public static Integer[][] picMultiply(Integer[][] data, double cnst) {
+        Integer[][] multiplied = new Integer[data.length][data[0].length];
+        for (int i = 0; i < data.length; i++) {
+            for (int j = 0; j < data[0].length; j++) {
+                multiplied[i][j] = (int) (data[i][j] * cnst);
+            }
+        }
+        return multiplied;
+    }
+
+    public static Integer[][] narrowGSRange(Integer[][] data) {
+        int min = Integer.MAX_VALUE;
+        int max = Integer.MIN_VALUE;
+        Integer[][] narrowed = new Integer[data.length][data[0].length];
+        for (int i = 0; i < data.length; i++) {
+            for (int j = 0; j < data[0].length; j++) {
+                if (min > data[i][j]) min = data[i][j];
+                if (max < data[i][j]) max = data[i][j];
+            }
+        }
+        for (int i = 0; i < data.length; i++) {
+            for (int j = 0; j < data[0].length; j++) {
+                narrowed[i][j] = (int) (((double) (data[i][j] - min) / (max - min)) * 255);
+            }
+        }
+        return narrowed;
+    }
+
+    public static Integer[][] negateGC(Integer[][] data) {
+        Integer[][] negated = new Integer[data.length][data[0].length];
+        for (int i = 0; i < data.length; i++) {
+            for (int j = 0; j < data[0].length; j++) {
+                negated[i][j] = 255 - data[i][j];
+            }
+        }
+        return negated;
+    }
+
+    public static Integer[][] gammaCorrection(Integer[][] data, Double gamma, Integer constant) {
+        Integer[][] corrected = new Integer[data.length][data[0].length];
+        for (int i = 0; i < data.length; i++) {
+            for (int j = 0; j < data[0].length; j++) {
+                corrected[i][j] = (int) (constant * Math.pow(data[i][j], gamma));
+            }
+        }
+        return corrected;
+    }
+
+    public static Integer[][] logCorrection(Integer[][] data, Integer constant) {
+        Integer[][] corrected = new Integer[data.length][data[0].length];
+        for (int i = 0; i < data.length; i++) {
+            for (int j = 0; j < data[0].length; j++) {
+                corrected[i][j] = (int) (constant * Math.log(data[i][j] + 1));
+            }
+        }
+        return corrected;
+    }
+
+    public static Integer[][] rescale(Integer[][] data, Double multiplier, InterpolationType type) {
+        Integer[][] rescaled = new Integer[(int) (data.length * multiplier)][(int) (data[0].length * multiplier)];
+        switch (type) {
+            case NEAREST_NEIGHBOUR:
+                for (int i = 0; i < rescaled.length; i++) {
+                    for (int j = 0; j < rescaled[0].length; j++) {
+                        rescaled[i][j] = data[(int) (i / multiplier)][(int) (j / multiplier)];
+                    }
+                }
+                break;
+            case BILINEAR:
+                for (int i = 0; i < rescaled.length; i++) {
+                    for (int j = 0; j < rescaled[0].length; j++) {
+                        int oldX = (int) (i / multiplier);
+                        int oldY = (int) (j / multiplier);
+                        int top = 0;
+                        try {
+                            top = data[oldX][oldY - 1];
+                        } catch (RuntimeException e) {}
+                        int bot = 0;
+                        try {
+                            bot = data[oldX][oldY + 1];
+                        } catch (RuntimeException e) {}
+                        int left = 0;
+                        try {
+                            left = data[oldX - 1][oldY];
+                        } catch (RuntimeException e) {}
+                        int right = 0;
+                        try {
+                            right = data[oldX + 1][oldY];
+                        } catch (RuntimeException e) {}
+                        rescaled[i][j] = (top + bot + left + right) / 4;
+                    }
+                }
+                break;
+        }
+        return rescaled;
     }
 }

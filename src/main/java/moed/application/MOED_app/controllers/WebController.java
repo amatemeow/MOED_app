@@ -3,6 +3,7 @@ package moed.application.MOED_app.controllers;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
+import moed.application.MOED_app.Entities.ImageInfo;
 import moed.application.MOED_app.Entities.TrendInfo;
 import moed.application.MOED_app.business.DataAnalyzer;
 import moed.application.MOED_app.components.AppConfig;
@@ -34,6 +35,16 @@ public class WebController {
         }
         model.addAttribute("infos", info);
         return "index";
+    }
+
+    @GetMapping("imgs")
+    public String images(Model model) throws InterruptedException, IOException {
+//        try {
+//            PathUtils.cleanDirectory(moed.application.MOED_app.business.IOC.getCleanPath());
+//        } catch(IOException IOE) { }
+        ArrayList<ImageInfo> infos = new ArrayList<>(sampleData.getIMAGES().values());
+        model.addAttribute("infos", infos);
+        return "images";
     }
 
     @GetMapping(value = "test", produces = MediaType.APPLICATION_JSON_VALUE)
