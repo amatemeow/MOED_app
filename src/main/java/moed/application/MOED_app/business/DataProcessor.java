@@ -291,9 +291,15 @@ public class DataProcessor {
 
     public static Integer[][] negateGC(Integer[][] data) {
         Integer[][] negated = new Integer[data.length][data[0].length];
+        int max = Integer.MIN_VALUE;
         for (int i = 0; i < data.length; i++) {
             for (int j = 0; j < data[0].length; j++) {
-                negated[i][j] = 255 - data[i][j];
+                if (max < data[i][j]) max = data[i][j];
+            }
+        }
+        for (int i = 0; i < data.length; i++) {
+            for (int j = 0; j < data[0].length; j++) {
+                negated[i][j] = max - data[i][j];
             }
         }
         return negated;

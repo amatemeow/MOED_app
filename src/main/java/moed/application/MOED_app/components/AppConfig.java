@@ -73,6 +73,34 @@ public class AppConfig implements WebMvcConfigurer {
                     DataProcessor.rescale(IMAGES.get("Grace").getMatrix(), 0.7d, InterpolationType.NEAREST_NEIGHBOUR)));
             IMAGES.put("BilinearSmallerGrace", new ImageInfo("bilinear_smaller_Grace",
                     DataProcessor.rescale(IMAGES.get("Grace").getMatrix(), 0.7d, InterpolationType.BILINEAR)));
+            IMAGES.put("XCR2Smaller", new ImageInfo("xcr_2_smaller",
+                    DataProcessor.rescale(
+                            DataProcessor.negateGC(DataProcessor.narrowGSRange(
+                                    IOC.readRAW("u0_2048x2500.xcr", 2048, 2500, 2048, 2)
+                            )),
+                            0.4d,
+                            InterpolationType.BILINEAR
+                    )));
+            IMAGES.put("img1", new ImageInfo("img1", IOC.readImgData("img1.jpg")));
+            IMAGES.put("Gammedimg1", new ImageInfo("gamma-corrected_img1",
+                    DataProcessor.gammaCorrection(IMAGES.get("img1").getMatrix(), 0.5d, 8)));
+            IMAGES.put("Logedimg1", new ImageInfo("log-corrected_img1",
+                    DataProcessor.logCorrection(IMAGES.get("img1").getMatrix(), 20)));
+            IMAGES.put("img2", new ImageInfo("img2", IOC.readImgData("img2.jpg")));
+            IMAGES.put("Gammedimg2", new ImageInfo("gamma-corrected_img2",
+                    DataProcessor.gammaCorrection(IMAGES.get("img2").getMatrix(), 0.5d, 10)));
+            IMAGES.put("Logedimg2", new ImageInfo("log-corrected_img2",
+                    DataProcessor.logCorrection(IMAGES.get("img2").getMatrix(), 18)));
+            IMAGES.put("img3", new ImageInfo("img3", IOC.readImgData("img3.jpg")));
+            IMAGES.put("Gammedimg3", new ImageInfo("gamma-corrected_img3",
+                    DataProcessor.gammaCorrection(IMAGES.get("img3").getMatrix(), 0.5d, 10)));
+            IMAGES.put("Logedimg3", new ImageInfo("log-corrected_img3",
+                    DataProcessor.logCorrection(IMAGES.get("img3").getMatrix(), 15)));
+            IMAGES.put("img4", new ImageInfo("img4", IOC.readImgData("img4.jpg")));
+            IMAGES.put("Gammedimg4", new ImageInfo("gamma-corrected_img4",
+                    DataProcessor.gammaCorrection(IMAGES.get("img4").getMatrix(), 0.5d, 10)));
+            IMAGES.put("Logedimg4", new ImageInfo("log-corrected_img4",
+                    DataProcessor.logCorrection(IMAGES.get("img4").getMatrix(), 25)));
         }
 
 //        @PostConstruct
