@@ -5,6 +5,7 @@ import moed.application.MOED_app.Entities.Trend;
 import org.jfree.data.xy.XYDataItem;
 import org.jfree.data.xy.XYSeries;
 
+import java.util.Arrays;
 import java.util.List;
 
 public class DataAnalyzer {
@@ -29,6 +30,13 @@ public class DataAnalyzer {
             Double[] result = new Double[2];
             result[0] = series.getMinY();
             result[1] = series.getMaxY();
+            return result;
+        }
+
+        public static Integer[] getMinMax(Integer[] data) {
+            Integer[] result = new Integer[2];
+            result[0] = Arrays.stream(data).min(Integer::compareTo).get();
+            result[1] = Arrays.stream(data).max(Integer::compareTo).get();
             return result;
         }
 
@@ -116,9 +124,46 @@ public class DataAnalyzer {
                         cnt++;
                     }
                 }
-                densitySeries.add((i + intervalLength) / 2, cnt);
+                densitySeries.add(i + intervalLength / 2, cnt);
             }
             return densitySeries;
+        }
+
+        public static XYSeries getProbDen(Integer[] data) {
+            XYSeries densitySeries = new XYSeries("");
+            int N = data.length;
+            Integer[] borders = getMinMax(data);
+            int intervalLength = (int) Math.ceil((borders[1] - borders[0]) / 100.0);
+            for (int i = borders[0]; i < borders[1]; i += intervalLength) {
+                int cnt = 0;
+                for (int item : data) {
+                    if (item >= i && item < i + intervalLength) {
+                        cnt++;
+                    }
+                }
+                densitySeries.add(i + intervalLength / 2, cnt);
+            }
+            return densitySeries;
+        }
+
+        public static Double[] getDensityVector(Integer[] data) {
+            int N = data.length;
+            Integer[] borders = getMinMax(data);
+            int intervals = borders[1] - borders[0];
+            Double[] density = new Double[borders[1] + 1];
+            int intervalLength = (int) Math.ceil((borders[1] - borders[0]) / (double) intervals);
+//            int intervalLength = 1;
+            int iter = 0;
+            for (int i = borders[0]; i <= borders[1]; i += intervalLength) {
+                int cnt = 0;
+                for (int item : data) {
+                    if (item >= i && item < i + intervalLength) {
+                        cnt++;
+                    }
+                }
+                density[i] = cnt / (double) N;
+            }
+            return density;
         }
 
         //Автокорреляция

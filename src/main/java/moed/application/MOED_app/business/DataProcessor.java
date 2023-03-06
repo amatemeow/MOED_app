@@ -2,6 +2,7 @@ package moed.application.MOED_app.business;
 
 import moed.application.MOED_app.ENUM.InterpolationType;
 import moed.application.MOED_app.ENUM.RandomType;
+import moed.application.MOED_app.ENUM.RotationType;
 import moed.application.MOED_app.business.DataAnalyzer.Statistics;
 
 import org.jfree.data.xy.XYDataItem;
@@ -362,5 +363,92 @@ public class DataProcessor {
                 break;
         }
         return rescaled;
+    }
+
+    public static Integer[][] rotate(Integer[][] data, RotationType rotation) {
+        Integer[][] rotated = null;
+        switch (rotation) {
+            case RIGHT:
+                rotated = new Integer[data[0].length][data.length];
+                for (int i = 0; i < rotated.length; i++) {
+                    for (int j = 0; j < rotated[0].length; j++) {
+                        rotated[i][j] = data[j][rotated.length - 1 - i];
+                    }
+                }
+                break;
+            case LEFT:
+                rotated = new Integer[data[0].length][data.length];
+                for (int i = 0; i < rotated.length; i++) {
+                    for (int j = 0; j < rotated[0].length; j++) {
+                        rotated[i][j] = data[rotated[0].length - 1 - j][i];
+                    }
+                }
+                break;
+            case UPSIDE:
+                rotated = new Integer[data.length][data[0].length];
+                for (int i = 0; i < rotated.length; i++) {
+                    for (int j = 0; j < rotated[0].length; j++) {
+                        rotated[i][j] = data[rotated.length - 1 - i][rotated[0].length - 1 - j];
+                    }
+                }
+                break;
+        }
+        return rotated;
+    }
+
+    public static Integer[] toIntVector(Integer[][] data) {
+        Integer[] vector = new Integer[data.length * data[0].length];
+        int iter = 0;
+        for (int i = 0; i < data.length; i++) {
+            for (int j = 0; j < data[0].length; j++, iter++) {
+                vector[iter] = data[i][j];
+            }
+        }
+        return vector;
+    }
+
+    public static Integer[][] toIntMatrix(Integer[] data, Integer dim1, Integer dim2) {
+        Integer[][] matrix = new Integer[dim1][dim2];
+        int iter = 0;
+        for (int i = 0; i < dim1; i++) {
+            for (int j = 0; j < dim2; j++, iter++) {
+                matrix[i][j] = data[iter];
+            }
+        }
+        return matrix;
+    }
+
+    public static Double[] getCDF(Integer[][] data) {
+        Double[] denVec = DataAnalyzer.Statistics.getDensityVector(toIntVector(data));
+        Double[] CDFed = new Double[denVec.length];
+        for (int i = 0; i < CDFed.length; i++) {
+            double sum = 0;
+            for (int j = 0; j < i; j++) {
+                sum += denVec[j] == null ? 0.0 : denVec[j];
+            }
+            CDFed[i] = sum;
+        }
+        return CDFed;
+    }
+
+    public static Integer[][] translateCDF(Integer[][] data) {
+        Integer[][] translated = new Integer[data.length][data[0].length];
+        Double[] CDF = getCDF(data);
+        for (int i = 0; i < data.length; i++) {
+            for (int j = 0; j < data[0].length; j++) {
+                translated[i][j] = (int) Math.round(data[i][j] * CDF[data[i][j]]);
+            }
+        }
+        return translated;
+    }
+
+    public static Integer[][] getDiff(Integer[][] data1, Integer[][] data2) {
+        Integer[][] diff = new Integer[data1.length][data1[0].length];
+        for (int i = 0; i < diff.length; i++) {
+            for (int j = 0; j < diff[0].length; j++) {
+                diff[i][j] = Math.abs(data1[i][j] - data2[i][j]);
+            }
+        }
+        return diff;
     }
 }

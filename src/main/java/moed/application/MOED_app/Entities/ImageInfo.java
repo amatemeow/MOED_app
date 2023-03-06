@@ -1,6 +1,10 @@
 package moed.application.MOED_app.Entities;
 
 import lombok.Getter;
+import lombok.Setter;
+import moed.application.MOED_app.business.DataAnalyzer;
+import moed.application.MOED_app.business.DataModeller;
+import moed.application.MOED_app.business.DataProcessor;
 import moed.application.MOED_app.business.IOC;
 import moed.application.MOED_app.components.AppConfig;
 
@@ -16,19 +20,19 @@ public class ImageInfo {
     private String name;
     @Getter
     private String imagePath;
+    private String histPath;
     @Getter
     private final BufferedImage image;
     @Getter
     private Integer[][] matrix;
-    @Getter
-    private String textMatrix;
+    @Setter
+    private boolean showHist = false;
 
     public ImageInfo(String path) {
         this.name = path.replace(".jpg", "");
         this.image = IOC.readImg(path);
         this.imagePath = createFile(path);
         this.matrix = IOC.readImgData(path);
-        this.textMatrix = matrixToString();
     }
 
     public ImageInfo(String path, Integer[][] data) {
@@ -36,7 +40,19 @@ public class ImageInfo {
         this.matrix = data;
         this.image = buildImage();
         this.imagePath = createFile(path);
-        this.textMatrix = matrixToString();
+    }
+
+    public ImageInfo(String path, Integer[][] data, boolean showHist) {
+        this.name = path.replace(".jpg", "");
+        this.matrix = data;
+        this.showHist = showHist;
+        if (showHist) {
+            buildHist();
+            this.image = null;
+        } else {
+            this.image = buildImage();
+            this.imagePath = createFile(path);
+        }
     }
 
     private String createFile(String path) {
@@ -47,17 +63,6 @@ public class ImageInfo {
             e.printStackTrace();
         }
         return output.getPath();
-    }
-
-    private String matrixToString() {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < matrix.length; i++) {
-            for (int j = 0; j < matrix[i].length; j++) {
-                sb.append(matrix[i][j]).append(" ");
-            }
-            sb.append("\n");
-        }
-        return sb.toString();
     }
 
     private BufferedImage buildImage() {
@@ -73,5 +78,22 @@ public class ImageInfo {
         raster.setPixels(0, 0, this.matrix.length, this.matrix[0].length, pixels);
         img.setData(raster);
         return img;
+    }
+
+    private void buildHist() {
+        try {
+            histPath = DataModeller.getTrend(
+                    new Trend("Density").setSeries(DataAnalyzer.Statistics.getProbDen(
+                            DataProcessor.toIntVector(this.getMatrix())
+                    )),
+                    new Integer[] {720, 480}
+            );
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+        }
+    }
+
+    public String getImagePath() {
+        return showHist ? histPath : imagePath;
     }
 }
