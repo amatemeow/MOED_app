@@ -49,6 +49,15 @@ public class DataAnalyzer {
             return xSum / N;
         }
 
+        public static Double getAverage(Integer[] data) {
+            int N = data.length;
+            double xSum = 0;
+            for (Integer item : data) {
+                xSum += item;
+            }
+            return xSum / N;
+        }
+
         public static Double getMomentum(int pow, XYSeries series, boolean... withAverage) {
             double avg = (withAverage.length == 0 || withAverage[0]) ? getAverage(series) : 0;
             int N = series.getItemCount();
@@ -182,9 +191,33 @@ public class DataAnalyzer {
             return result;
         }
 
+        public static XYSeries getAutoCovariance(Integer[] data) {
+            XYSeries result = new XYSeries("");
+            Double R;
+            int N = data.length;
+            Double avg = getAverage(data);
+            for (int l = 0; l < N - 1; l++) {
+                R = 0d;
+                for (int i = 0; i < N - l; i++) {
+                    R += 1d/N * (data[i].doubleValue() - avg) * (data[i + l].doubleValue() - avg);
+                }
+                result.add(l, R);
+            }
+            return result;
+        }
+
         //Нормализованная корреляция
         public static XYSeries getNormalizedAutoCovariance(XYSeries series) {
             XYSeries result = getAutoCovariance(series);
+            Double maxR = getMinMax(result)[1];
+            for (int i = 0; i < result.getItemCount(); i++) {
+                result.updateByIndex(i, (Double) result.getY(i) / maxR);
+            }
+            return result;
+        }
+
+        public static XYSeries getNormalizedAutoCovariance(Integer[] data) {
+            XYSeries result = getAutoCovariance(data);
             Double maxR = getMinMax(result)[1];
             for (int i = 0; i < result.getItemCount(); i++) {
                 result.updateByIndex(i, (Double) result.getY(i) / maxR);
@@ -205,6 +238,31 @@ public class DataAnalyzer {
                     R += 1d/N * ((Double) series1.getY(i) - xAvg) * ((Double) series2.getY(i + l) - yAvg);
                 }
                 result.add(l, R);
+            }
+            return result;
+        }
+
+        public static XYSeries getCovariance(Integer[] data1, Integer[] data2) {
+            XYSeries result = new XYSeries("");
+            Double R;
+            int N = Math.min(data1.length, data2.length);
+            Double xAvg = getAverage(data1);
+            Double yAvg = getAverage(data2);
+            for (int l = 0; l < N - 1; l++) {
+                R = 0d;
+                for (int i = 0; i < N - l; i++) {
+                    R += 1d/N * (data1[i].doubleValue() - xAvg) * (data2[i + l].doubleValue() - yAvg);
+                }
+                result.add(l, R);
+            }
+            return result;
+        }
+
+        public static XYSeries getNormalizedCovariance(Integer[] data1, Integer[] data2) {
+            XYSeries result = getCovariance(data1, data2);
+            Double maxR = getMinMax(result)[1];
+            for (int i = 0; i < result.getItemCount(); i++) {
+                result.updateByIndex(i, (Double) result.getY(i) / maxR);
             }
             return result;
         }

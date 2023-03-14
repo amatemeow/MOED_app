@@ -58,9 +58,6 @@ public class AppConfig implements WebMvcConfigurer {
 //                    DataProcessor.picMultiply(IMAGES.get("Grace").getMatrix(), 2)));
 //            IMAGES.put("Grace Remade", new ImageInfo("remade_grace.jpg",
 //                    DataProcessor.narrowGSRange(IMAGES.get("Grace Shifted").getMatrix())));
-//            IMAGES.put("XRAY", new ImageInfo("XRAY.jpg",
-//                    DataProcessor.narrowGSRange(
-//                            IOC.readRAW("c12-85v.xcr", 2048, 1024, 1024, 2))));
 //            IMAGES.put("Negated XRAY", new ImageInfo("Negated_XRAY",
 //                    DataProcessor.negateGC(IMAGES.get("XRAY").getMatrix())));
 //            IMAGES.put("NegatedGrace", new ImageInfo("Negated_Grace",
@@ -77,14 +74,6 @@ public class AppConfig implements WebMvcConfigurer {
 //                    DataProcessor.rescale(IMAGES.get("Grace").getMatrix(), 0.7d, InterpolationType.NEAREST_NEIGHBOUR)));
 //            IMAGES.put("BilinearSmallerGrace", new ImageInfo("bilinear_smaller_Grace",
 //                    DataProcessor.rescale(IMAGES.get("Grace").getMatrix(), 0.7d, InterpolationType.BILINEAR)));
-//            IMAGES.put("XCR2Smaller", new ImageInfo("xcr_2_smaller",
-//                    DataProcessor.rotate(DataProcessor.rescale(
-//                            DataProcessor.negateGC(DataProcessor.narrowGSRange(
-//                                    IOC.readRAW("u0_2048x2500.xcr", 2048, 2500, 2048, 2)
-//                            )),
-//                            0.4d,
-//                            InterpolationType.BILINEAR
-//                    ), RotationType.UPSIDE)));
             IMAGES.put("img1", new ImageInfo("img1", IOC.readImgData("img1.jpg")));
             IMAGES.put("img1CDF", new ImageInfo("img1_CDF",
                     DataProcessor.translateCDF(IMAGES.get("img1").getMatrix())));
@@ -119,11 +108,26 @@ public class AppConfig implements WebMvcConfigurer {
             IMAGES.put("BilinearBiggerGrace", new ImageInfo("bilinear_bigger_Grace",
                     DataProcessor.rescale(IMAGES.get("BilinearSmallerGrace").getMatrix(), 2d, InterpolationType.BILINEAR)));
             IMAGES.put("DiffGrace", new ImageInfo("grace_difference",
-                    DataProcessor.getDiff(IMAGES.get("Grace").getMatrix(), IMAGES.get("BilinearBiggerGrace").getMatrix())));
+                    DataProcessor.narrowGSRange(DataProcessor.getDiff(IMAGES.get("Grace").getMatrix(), IMAGES.get("BilinearBiggerGrace").getMatrix()))));
             IMAGES.put("DiffGraceCDF", new ImageInfo("grace_difference_CDF",
                     DataProcessor.translateCDF(IMAGES.get("DiffGrace").getMatrix())));
             IMAGES.put("DiffGraceHist", new ImageInfo("grace_difference_hist",
                     IMAGES.get("DiffGrace").getMatrix(), true));
+            IMAGES.put("XRAY", new ImageInfo("XRAY.jpg",
+                    DataProcessor.narrowGSRange(
+                            IOC.readRAW("c12-85v.xcr", 2048, 1024, 1024, 2))));
+            IMAGES.put("XRAYSup", new ImageInfo("XRAY_suppressed",
+                    DataProcessor.suppressor(IMAGES.get("XRAY").getMatrix(), 10, 32, 1d)));
+//            IMAGES.put("XCR2Smaller", new ImageInfo("xcr_2_smaller",
+//                    DataProcessor.rotate(DataProcessor.rescale(
+//                            DataProcessor.negateGC(DataProcessor.narrowGSRange(
+//                                    IOC.readRAW("u0_2048x2500.xcr", 2048, 2500, 2048, 2)
+//                            )),
+//                            0.4d,
+//                            InterpolationType.BILINEAR
+//                    ), RotationType.UPSIDE)));
+//            IMAGES.put("XCR2Sup", new ImageInfo("XRAY2_suppressed",
+//                    DataProcessor.suppressor(IMAGES.get("XCR2Smaller").getMatrix(), 10, 32, 1d)));
         }
 
 //        @PostConstruct

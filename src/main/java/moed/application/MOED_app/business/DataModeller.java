@@ -7,12 +7,15 @@ import moed.application.MOED_app.components.Charts;
 import moed.application.MOED_app.utils.SelfRandom;
 import org.apache.commons.io.file.PathUtils;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.xy.XYDataItem;
 import org.jfree.data.xy.XYSeries;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.awt.*;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -31,6 +34,15 @@ public class DataModeller implements DisposableBean {
                 trend.getSeries()
         );
         return IOC.saveChartAsPNG(chart, ratio);
+    }
+
+    public static JFreeChart getChart(Trend trend, Integer[] ration) {
+        return Charts.getLineChart(
+                trend.getChartName(),
+                trend.getXAxisName(),
+                trend.getYAxisName(),
+                trend.getSeries()
+        );
     }
 
     public static XYSeries getModel(ArrayList<Number> points, Double... axisDividers) {
@@ -246,6 +258,37 @@ public class DataModeller implements DisposableBean {
             listRe.add(Re);
             listIm.add(Im);
             result.add(windowedSeries.getX(i), Math.sqrt(Math.pow(Re, 2) + Math.pow(Im, 2)));
+        }
+        return result;
+    }
+
+    public static XYSeries fourier(Integer[] data, int... windowSize) {
+        int N = data.length;
+        Integer[] resultData;
+        if (windowSize.length != 0) {
+            resultData = new Integer[N + windowSize[0]];
+            for (int i = 0; i < N; i++) {
+                resultData[i] = data[i];
+            }
+            N = resultData.length;
+        } else {
+            resultData = data;
+        }
+        XYSeries result = new XYSeries("");
+        ArrayList<Double> listRe = new ArrayList<>();
+        ArrayList<Double> listIm = new ArrayList<>();
+        for (int i = 0; i < N; i++) {
+            Double Re = 0d;
+            Double Im = 0d;
+            for (int j = 0; j < N; j++) {
+                Re += resultData[i].doubleValue() * Math.cos(2*Math.PI*i*j/N);
+                Im += resultData[j].doubleValue() * Math.sin(2*Math.PI*i*j/N);
+            }
+            Re /= N;
+            Im /= N;
+            listRe.add(Re);
+            listIm.add(Im);
+            result.add(resultData[i].doubleValue(), Math.sqrt(Math.pow(Re, 2) + Math.pow(Im, 2)));
         }
         return result;
     }

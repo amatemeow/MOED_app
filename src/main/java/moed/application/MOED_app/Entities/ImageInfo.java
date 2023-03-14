@@ -7,6 +7,7 @@ import moed.application.MOED_app.business.DataModeller;
 import moed.application.MOED_app.business.DataProcessor;
 import moed.application.MOED_app.business.IOC;
 import moed.application.MOED_app.components.AppConfig;
+import org.jfree.data.xy.XYSeries;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -20,13 +21,13 @@ public class ImageInfo {
     private String name;
     @Getter
     private String imagePath;
-    private String histPath;
+    private String trendPath;
     @Getter
     private final BufferedImage image;
     @Getter
     private Integer[][] matrix;
     @Setter
-    private boolean showHist = false;
+    private boolean isTrend = false;
 
     public ImageInfo(String path) {
         this.name = path.replace(".jpg", "");
@@ -45,9 +46,21 @@ public class ImageInfo {
     public ImageInfo(String path, Integer[][] data, boolean showHist) {
         this.name = path.replace(".jpg", "");
         this.matrix = data;
-        this.showHist = showHist;
-        if (showHist) {
+        this.isTrend = showHist;
+        if (this.isTrend) {
             buildHist();
+            this.image = null;
+        } else {
+            this.image = buildImage();
+            this.imagePath = createFile(path);
+        }
+    }
+
+    public ImageInfo(String path, XYSeries series, boolean isTrend) {
+        this.name = path.replace(".jpg", "");
+        this.isTrend = isTrend;
+        if (this.isTrend) {
+            buildTrend(series, path);
             this.image = null;
         } else {
             this.image = buildImage();
@@ -82,7 +95,7 @@ public class ImageInfo {
 
     private void buildHist() {
         try {
-            histPath = DataModeller.getTrend(
+            trendPath = DataModeller.getTrend(
                     new Trend("Density").setSeries(DataAnalyzer.Statistics.getProbDen(
                             DataProcessor.toIntVector(this.getMatrix())
                     )),
@@ -93,7 +106,18 @@ public class ImageInfo {
         }
     }
 
+    private void buildTrend(XYSeries series, String name) {
+        try {
+            trendPath = DataModeller.getTrend(
+                    new Trend(name).setSeries(series),
+                    new Integer[] {720, 480}
+            );
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+        }
+    }
+
     public String getImagePath() {
-        return showHist ? histPath : imagePath;
+        return isTrend ? trendPath : imagePath;
     }
 }

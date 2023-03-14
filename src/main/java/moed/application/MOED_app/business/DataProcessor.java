@@ -3,12 +3,20 @@ package moed.application.MOED_app.business;
 import moed.application.MOED_app.ENUM.InterpolationType;
 import moed.application.MOED_app.ENUM.RandomType;
 import moed.application.MOED_app.ENUM.RotationType;
+import moed.application.MOED_app.Entities.Trend;
 import moed.application.MOED_app.business.DataAnalyzer.Statistics;
 
+import moed.application.MOED_app.components.LineChartBox;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.xy.XYDataItem;
 import org.jfree.data.xy.XYSeries;
 
+import javax.swing.*;
+import java.awt.*;
 import java.util.ArrayList;
+import java.util.List;
 
 public class DataProcessor {
     //Выделение изначальных трендов из смешанных данных с помощью производной
@@ -59,6 +67,18 @@ public class DataProcessor {
         double rate = 1/dt;
         double df = rate/N;
         XYSeries spectrum = DataModeller.fourier(series, windowSize);
+        for (int i = 0; i < N/2; i++) {
+            result.add(i * df, spectrum.getY(i));
+        }
+        return result;
+    }
+
+    public static XYSeries spectrumFourier(Integer[] data, Double dt, int... windowSize) {
+        XYSeries result = new XYSeries("");
+        int N = data.length;
+        double rate = 1/dt;
+        double df = rate/N;
+        XYSeries spectrum = DataModeller.fourier(data, windowSize);
         for (int i = 0; i < N/2; i++) {
             result.add(i * df, spectrum.getY(i));
         }
@@ -139,6 +159,36 @@ public class DataProcessor {
                 val += (Double) series1.getY(m) * (Double) series2.getY(k - m);
             }
             result.add(k, val);
+        }
+        return result;
+    }
+
+    public static Integer[] ConvolutionIntF(Integer[] series1, XYSeries series2) {
+        int N = series2.getItemCount();
+        int M = series1.length;
+        Integer[] result = new Integer[N + M];
+        for (int k = 0; k < N + M; k++) {
+            Integer val = 0;
+            for (int m = 0; m < M; m++) {
+                if (k - m < 0 || k - m >= N) continue;
+                val += (int) (series1[m] * series2.getY(k - m).doubleValue());
+            }
+            result[k] = val;
+        }
+        return result;
+    }
+
+    public static Integer[] ConvolutionIntF2(Integer[] series2, XYSeries series1) {
+        int N = series2.length;
+        int M = series1.getItemCount();
+        Integer[] result = new Integer[N + M];
+        for (int k = 0; k < N + M; k++) {
+            Integer val = 0;
+            for (int m = 0; m < M; m++) {
+                if (k - m < 0 || k - m >= N) continue;
+                val += (int) (series1.getY(m).doubleValue() * series2[k - m]);
+            }
+            result[k] = val;
         }
         return result;
     }
@@ -226,6 +276,21 @@ public class DataProcessor {
                     bsw.add(k, 1 + ipw1.getY(k).doubleValue() - ipw2.getY(k).doubleValue());
                 } else {
                     bsw.add(k, ipw1.getY(k).doubleValue() - ipw2.getY(k).doubleValue());
+                }
+            }
+            return bsw;
+        }
+
+        public static Integer[] BSFInt(Double f1, Double f2, Double dt, int m) {
+            XYSeries ipw1 = LPF(f1, dt, m);
+            XYSeries ipw2 = LPF(f2, dt, m);
+            int looper = 2 * m + 1;
+            Integer[] bsw = new Integer[looper];
+            for (int k = 0; k < looper; k++) {
+                if (k == m) {
+                    bsw[k] = (int) (1 + ipw1.getY(k).doubleValue() - ipw2.getY(k).doubleValue());
+                } else {
+                    bsw[k] = (int) (ipw1.getY(k).doubleValue() - ipw2.getY(k).doubleValue());
                 }
             }
             return bsw;
@@ -372,7 +437,7 @@ public class DataProcessor {
                 rotated = new Integer[data[0].length][data.length];
                 for (int i = 0; i < rotated.length; i++) {
                     for (int j = 0; j < rotated[0].length; j++) {
-                        rotated[i][j] = data[j][rotated.length - 1 - i];
+                        rotated[i][j] = data[j] == null ? 0 : data[j][rotated.length - 1 - i];
                     }
                 }
                 break;
@@ -446,9 +511,119 @@ public class DataProcessor {
         Integer[][] diff = new Integer[data1.length][data1[0].length];
         for (int i = 0; i < diff.length; i++) {
             for (int j = 0; j < diff[0].length; j++) {
-                diff[i][j] = Math.abs(data1[i][j] - data2[i][j]);
+                diff[i][j] = data1[i][j] - data2[i][j];
             }
         }
         return diff;
+    }
+
+    public static Integer[] getFirstDeriv(Integer[] data) {
+        Integer[] result = new Integer[data.length];
+        for (int i = 0; i < data.length; i++) {
+            if (i == 0) {
+                result[i] = (data[i + 1] - data[i]) / 2;
+            } else if (i == data.length - 1) {
+                result[i] = (data[i] - data[i - 1]) / 2;
+            } else {
+                result[i] = (data[i + 1] - data[i - 1]) / 2;
+            }
+        }
+        return result;
+    }
+
+    public static Double detector(Integer[][] data, int incr, double dt) {
+        int rown = data.length / incr;
+        data = rotate(data, RotationType.LEFT);
+        Integer[][] firstderivs = new Integer[rown][];
+        for (int i = 0; i < rown; i++) {
+            firstderivs[i] = getFirstDeriv(data[Math.min(i * incr, data.length - 1)]);
+        }
+//        XYSeries[] spectrums = new XYSeries[rown];
+//        for (int i = 0; i < rown; i++) {
+//            spectrums[i] = spectrumFourier(firstderivs[i], dt);
+//        }
+        XYSeries[] acfs = new XYSeries[rown];
+        for (int i = 0; i < rown; i++) {
+            acfs[i] = DataAnalyzer.Statistics.getNormalizedAutoCovariance(firstderivs[i]);
+        }
+        XYSeries[] cfs = new XYSeries[rown - 1];
+        for (int i = 0; i < rown - 1; i++) {
+            cfs[i] = DataAnalyzer.Statistics.getNormalizedCovariance(firstderivs[i], firstderivs[i + 1]);
+        }
+        XYSeries[] acfspectrums = new XYSeries[rown];
+        for (int i = 0; i < rown; i++) {
+            acfspectrums[i] = spectrumFourier(acfs[i], dt);
+        }
+        XYSeries[] cfspectrums = new XYSeries[rown - 1];
+        for (int i = 0; i < rown - 1; i++) {
+            cfspectrums[i] = spectrumFourier(cfs[i], dt);
+        }
+        int splitter = acfspectrums[0].getItemCount() / 2;
+        Double[] maxacfs = new Double[rown];
+        for (int i = 0; i < rown; i++) {
+            maxacfs[i] = Math.round(findMaxValKey(DataProcessor.cutEdges(acfspectrums[i], splitter, 0)).doubleValue() * 100) / 100d;
+        }
+        Double[] maxcfs = new Double[rown - 1];
+        for (int i = 0; i < rown - 1; i++) {
+            maxcfs[i] = Math.round(findMaxValKey(DataProcessor.cutEdges(cfspectrums[i], splitter, 0)).doubleValue() * 100) / 100d;
+        }
+        Double maxacfsVal = findMostDenVal(maxacfs).doubleValue();
+        Double maxcfsVal = findMostDenVal(maxcfs).doubleValue();
+        double f0 = Math.round(((maxacfsVal + maxcfsVal) / 2) * 100) / 100d;
+
+        SwingUtilities.invokeLater(() -> {
+            new LineChartBox(acfspectrums[0], "ACF Spectrum 1").setVisible(true);
+            new LineChartBox(acfspectrums[1], "ACF Spectrum 2").setVisible(true);
+            new LineChartBox(cfspectrums[0], "CF Spectrum 1").setVisible(true);
+            new LineChartBox(cfspectrums[1], "CF Spectrum 2").setVisible(true);
+        });
+
+        return f0;
+    }
+
+    private static Number findMaxValKey(XYSeries series) {
+        Number maxKey = 0;
+        double maxVal = Double.MIN_VALUE;
+        for (int i = 0; i < series.getItemCount(); i++) {
+            if (series.getY(i).doubleValue() > maxVal) {
+                maxVal = series.getY(i).doubleValue();
+                maxKey = series.getX(i).doubleValue();
+            }
+        }
+        return maxKey;
+    }
+
+    private static Number findMostDenVal(Number[] data) {
+        Number mostVal = 0;
+        int mostDen = 0;
+        int currentDen = 0;
+        for (int i = 0; i < data.length; i++) {
+            Number currVal = data[i];
+            for (int j = 0; j < data.length; j++) {
+                if (currVal == data[i]) {
+                    currentDen++;
+                }
+            }
+            if (currentDen > mostDen) {
+                mostDen = currentDen;
+                mostVal = currVal;
+                currentDen = 0;
+            }
+        }
+        return mostVal;
+    }
+
+    public static Integer[][] suppressor(Integer[][] data, int incr, int m, double dt) {
+        Integer[][] result = new Integer[data.length][];
+        double f0 = detector(data, incr, dt);
+        double f1 = f0 - 0.15;
+        double f2 = f0 + 0.15;
+        System.out.println("f0: " + f0);
+        data = rotate(data, RotationType.LEFT);
+        for (int i = 0; i < data.length; i++) {
+            result[i] = ConvolutionIntF(data[i], Filtering.BSF(f1, f2, dt, m));
+        }
+        result = rotate(result, RotationType.RIGHT);
+        return result;
     }
 }
