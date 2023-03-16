@@ -155,22 +155,18 @@ public class DataAnalyzer {
             return densitySeries;
         }
 
-        public static Double[] getDensityVector(Integer[] data) {
+        public static XYSeries getDensityVector(Integer[] data) {
             int N = data.length;
-            Integer[] borders = getMinMax(data);
-            int intervals = borders[1] - borders[0];
-            Double[] density = new Double[borders[1] + 1];
-            int intervalLength = (int) Math.ceil((borders[1] - borders[0]) / (double) intervals);
-//            int intervalLength = 1;
-            int iter = 0;
-            for (int i = borders[0]; i <= borders[1]; i += intervalLength) {
+            int max = Arrays.stream(data).max(Integer::compareTo).get();
+            XYSeries density = new XYSeries("");
+            for (int i = 0; i <= max; i ++) {
                 int cnt = 0;
                 for (int item : data) {
-                    if (item >= i && item < i + intervalLength) {
+                    if (item == i) {
                         cnt++;
                     }
                 }
-                density[i] = cnt / (double) N;
+                density.add(i, cnt / (double) N);
             }
             return density;
         }

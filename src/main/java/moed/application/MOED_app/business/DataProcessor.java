@@ -15,7 +15,7 @@ import org.jfree.data.xy.XYSeries;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.List;
 
 public class DataProcessor {
@@ -483,28 +483,30 @@ public class DataProcessor {
         return matrix;
     }
 
-    public static Double[] getCDF(Integer[][] data) {
-        Double[] denVec = DataAnalyzer.Statistics.getDensityVector(toIntVector(data));
-        Double[] CDFed = new Double[denVec.length];
-        for (int i = 0; i < CDFed.length; i++) {
-            double sum = 0;
-            for (int j = 0; j < i; j++) {
-                sum += denVec[j] == null ? 0.0 : denVec[j];
-            }
-            CDFed[i] = sum;
+    public static Map<Double, Double> getCDF(Integer[][] data) {
+        XYSeries denVec = DataAnalyzer.Statistics.getDensityVector(toIntVector(data));
+        HashMap<Double, Double> CDFed = new HashMap<>();
+        for (int i = 1; i < denVec.getItemCount(); i++) {
+            denVec.updateByIndex(i, denVec.getY(i).doubleValue() + denVec.getY(i - 1).doubleValue());
+        }
+        for (int i = 0; i < denVec.getItemCount(); i++) {
+            CDFed.put(denVec.getX(i).doubleValue(), denVec.getY(i).doubleValue());
         }
         return CDFed;
     }
 
     public static Integer[][] translateCDF(Integer[][] data) {
         Integer[][] translated = new Integer[data.length][data[0].length];
-        Double[] CDF = getCDF(data);
+        int max = Arrays.stream(toIntVector(data)).max(Integer::compareTo).get();
+        var CDF = getCDF(data);
         for (int i = 0; i < data.length; i++) {
             for (int j = 0; j < data[0].length; j++) {
-                translated[i][j] = (int) Math.round(data[i][j] * CDF[data[i][j]]);
+                int curr = data[i][j];
+                double currcdf = CDF.getOrDefault(data[i][j].doubleValue(), 1d);
+                translated[i][j] = (int) Math.round((double) max * (double) curr * currcdf);
             }
         }
-        return translated;
+        return narrowGSRange(translated);
     }
 
     public static Integer[][] getDiff(Integer[][] data1, Integer[][] data2) {
@@ -614,7 +616,8 @@ public class DataProcessor {
     }
 
     public static Integer[][] suppressor(Integer[][] data, int incr, int m, double dt) {
-        Integer[][] result = new Integer[data.length][];
+        Integer[][] result = new Integer[data.length][data[0].length];
+        result = rotate(result, RotationType.LEFT);
         double f0 = detector(data, incr, dt);
         double f1 = f0 - 0.15;
         double f2 = f0 + 0.15;

@@ -20,6 +20,7 @@ import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import javax.annotation.PostConstruct;
+import javax.swing.*;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 
@@ -52,6 +53,7 @@ public class AppConfig implements WebMvcConfigurer {
             IMAGES.put("HWHist", new ImageInfo("HW_hist", IMAGES.get("Hollywood").getMatrix(), true));
             IMAGES.put("HWCDF", new ImageInfo("HW_CDF",
                     DataProcessor.translateCDF(IMAGES.get("Hollywood").getMatrix())));
+            IMAGES.put("HWCDFHist", new ImageInfo("HW_CDF_hist", IMAGES.get("HWCDF").getMatrix(), true));
 //            IMAGES.put("Grace Shifted", new ImageInfo("shifted_grace.jpg",
 //                    DataProcessor.picShift(IMAGES.get("Grace").getMatrix(), -50)));
 //            IMAGES.put("Grace Multiplied", new ImageInfo("multiplied_grace.jpg",
@@ -113,11 +115,11 @@ public class AppConfig implements WebMvcConfigurer {
                     DataProcessor.translateCDF(IMAGES.get("DiffGrace").getMatrix())));
             IMAGES.put("DiffGraceHist", new ImageInfo("grace_difference_hist",
                     IMAGES.get("DiffGrace").getMatrix(), true));
-            IMAGES.put("XRAY", new ImageInfo("XRAY.jpg",
-                    DataProcessor.narrowGSRange(
-                            IOC.readRAW("c12-85v.xcr", 2048, 1024, 1024, 2))));
-            IMAGES.put("XRAYSup", new ImageInfo("XRAY_suppressed",
-                    DataProcessor.suppressor(IMAGES.get("XRAY").getMatrix(), 10, 32, 1d)));
+//            IMAGES.put("XRAY", new ImageInfo("XRAY.jpg",
+//                    DataProcessor.narrowGSRange(
+//                            IOC.readRAW("c12-85v.xcr", 2048, 1024, 1024, 2))));
+//            IMAGES.put("XRAYSup", new ImageInfo("XRAY_suppressed",
+//                    DataProcessor.suppressor(IMAGES.get("XRAY").getMatrix(), 10, 32, 1d)));
 //            IMAGES.put("XCR2Smaller", new ImageInfo("xcr_2_smaller",
 //                    DataProcessor.rotate(DataProcessor.rescale(
 //                            DataProcessor.negateGC(DataProcessor.narrowGSRange(
@@ -128,7 +130,9 @@ public class AppConfig implements WebMvcConfigurer {
 //                    ), RotationType.UPSIDE)));
 //            IMAGES.put("XCR2Sup", new ImageInfo("XRAY2_suppressed",
 //                    DataProcessor.suppressor(IMAGES.get("XCR2Smaller").getMatrix(), 10, 32, 1d)));
+//            DataProcessor.detector(IMAGES.get("XRAYSup").getMatrix(), 10, 1);
         }
+
 
 //        @PostConstruct
         public void populateExam() {
