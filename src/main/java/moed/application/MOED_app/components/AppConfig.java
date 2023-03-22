@@ -2,6 +2,7 @@ package moed.application.MOED_app.components;
 
 import lombok.Data;
 import lombok.Getter;
+import moed.application.MOED_app.ENUM.ImgFIlterType;
 import moed.application.MOED_app.ENUM.InterpolationType;
 import moed.application.MOED_app.ENUM.RandomType;
 import moed.application.MOED_app.ENUM.RotationType;
@@ -11,7 +12,10 @@ import moed.application.MOED_app.business.DataAnalyzer;
 import moed.application.MOED_app.business.DataModeller;
 import moed.application.MOED_app.business.DataProcessor;
 import moed.application.MOED_app.business.IOC;
+
+import org.apache.commons.io.file.PathUtils;
 import org.jfree.data.xy.XYSeries;
+import org.springframework.beans.factory.DisposableBean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
@@ -27,7 +31,7 @@ import java.util.LinkedHashMap;
 @Configuration
 @EnableWebMvc
 @ComponentScan
-public class AppConfig implements WebMvcConfigurer {
+public class AppConfig implements WebMvcConfigurer, DisposableBean {
 
     @Component
     public static class IOCConfig {
@@ -49,11 +53,6 @@ public class AppConfig implements WebMvcConfigurer {
 
         @PostConstruct
         public void populateImages() {
-            IMAGES.put("Hollywood", new ImageInfo("HollywoodLC.jpg"));
-            IMAGES.put("HWHist", new ImageInfo("HW_hist", IMAGES.get("Hollywood").getMatrix(), true));
-            IMAGES.put("HWCDF", new ImageInfo("HW_CDF",
-                    DataProcessor.translateCDF(IMAGES.get("Hollywood").getMatrix())));
-            IMAGES.put("HWCDFHist", new ImageInfo("HW_CDF_hist", IMAGES.get("HWCDF").getMatrix(), true));
 //            IMAGES.put("Grace Shifted", new ImageInfo("shifted_grace.jpg",
 //                    DataProcessor.picShift(IMAGES.get("Grace").getMatrix(), -50)));
 //            IMAGES.put("Grace Multiplied", new ImageInfo("multiplied_grace.jpg",
@@ -76,45 +75,22 @@ public class AppConfig implements WebMvcConfigurer {
 //                    DataProcessor.rescale(IMAGES.get("Grace").getMatrix(), 0.7d, InterpolationType.NEAREST_NEIGHBOUR)));
 //            IMAGES.put("BilinearSmallerGrace", new ImageInfo("bilinear_smaller_Grace",
 //                    DataProcessor.rescale(IMAGES.get("Grace").getMatrix(), 0.7d, InterpolationType.BILINEAR)));
-            IMAGES.put("img1", new ImageInfo("img1", IOC.readImgData("img1.jpg")));
-            IMAGES.put("img1CDF", new ImageInfo("img1_CDF",
-                    DataProcessor.translateCDF(IMAGES.get("img1").getMatrix())));
 //            IMAGES.put("Gammedimg1", new ImageInfo("gamma-corrected_img1",
 //                    DataProcessor.gammaCorrection(IMAGES.get("img1").getMatrix(), 0.5d, 8)));
 //            IMAGES.put("Logedimg1", new ImageInfo("log-corrected_img1",
 //                    DataProcessor.logCorrection(IMAGES.get("img1").getMatrix(), 20)));
-            IMAGES.put("img2", new ImageInfo("img2", IOC.readImgData("img2.jpg")));
-            IMAGES.put("img2CDF", new ImageInfo("img2_CDF",
-                    DataProcessor.translateCDF(IMAGES.get("img2").getMatrix())));
 //            IMAGES.put("Gammedimg2", new ImageInfo("gamma-corrected_img2",
 //                    DataProcessor.gammaCorrection(IMAGES.get("img2").getMatrix(), 0.5d, 10)));
 //            IMAGES.put("Logedimg2", new ImageInfo("log-corrected_img2",
 //                    DataProcessor.logCorrection(IMAGES.get("img2").getMatrix(), 18)));
-            IMAGES.put("img3", new ImageInfo("img3", IOC.readImgData("img3.jpg")));
-            IMAGES.put("img3CDF", new ImageInfo("img3_CDF",
-                    DataProcessor.translateCDF(IMAGES.get("img3").getMatrix())));
 //            IMAGES.put("Gammedimg3", new ImageInfo("gamma-corrected_img3",
 //                    DataProcessor.gammaCorrection(IMAGES.get("img3").getMatrix(), 0.5d, 10)));
 //            IMAGES.put("Logedimg3", new ImageInfo("log-corrected_img3",
 //                    DataProcessor.logCorrection(IMAGES.get("img3").getMatrix(), 15)));
-            IMAGES.put("img4", new ImageInfo("img4", IOC.readImgData("img4.jpg")));
-            IMAGES.put("img4CDF", new ImageInfo("img4_CDF",
-                    DataProcessor.translateCDF(IMAGES.get("img4").getMatrix())));
 //            IMAGES.put("Gammedimg4", new ImageInfo("gamma-corrected_img4",
 //                    DataProcessor.gammaCorrection(IMAGES.get("img4").getMatrix(), 0.5d, 10)));
 //            IMAGES.put("Logedimg4", new ImageInfo("log-corrected_img4",
 //                    DataProcessor.logCorrection(IMAGES.get("img4").getMatrix(), 25)));
-            IMAGES.put("Grace", new ImageInfo("grace.jpg"));
-            IMAGES.put("BilinearSmallerGrace", new ImageInfo("bilinear_smaller_Grace",
-                    DataProcessor.rescale(IMAGES.get("Grace").getMatrix(), 0.5d, InterpolationType.BILINEAR)));
-            IMAGES.put("BilinearBiggerGrace", new ImageInfo("bilinear_bigger_Grace",
-                    DataProcessor.rescale(IMAGES.get("BilinearSmallerGrace").getMatrix(), 2d, InterpolationType.BILINEAR)));
-            IMAGES.put("DiffGrace", new ImageInfo("grace_difference",
-                    DataProcessor.narrowGSRange(DataProcessor.getDiff(IMAGES.get("Grace").getMatrix(), IMAGES.get("BilinearBiggerGrace").getMatrix()))));
-            IMAGES.put("DiffGraceCDF", new ImageInfo("grace_difference_CDF",
-                    DataProcessor.translateCDF(IMAGES.get("DiffGrace").getMatrix())));
-            IMAGES.put("DiffGraceHist", new ImageInfo("grace_difference_hist",
-                    IMAGES.get("DiffGrace").getMatrix(), true));
 //            IMAGES.put("XRAY", new ImageInfo("XRAY.jpg",
 //                    DataProcessor.narrowGSRange(
 //                            IOC.readRAW("c12-85v.xcr", 2048, 1024, 1024, 2))));
@@ -131,6 +107,83 @@ public class AppConfig implements WebMvcConfigurer {
 //            IMAGES.put("XCR2Sup", new ImageInfo("XRAY2_suppressed",
 //                    DataProcessor.suppressor(IMAGES.get("XCR2Smaller").getMatrix(), 10, 32, 1d)));
 //            DataProcessor.detector(IMAGES.get("XRAYSup").getMatrix(), 10, 1);
+
+
+
+            //LAB 5 ---------------------------------------------------------------
+
+            // IMAGES.put("Hollywood", new ImageInfo("HollywoodLC.jpg"));
+            // IMAGES.put("HWHist", new ImageInfo("HW_hist", IMAGES.get("Hollywood").getMatrix(), true));
+            // IMAGES.put("HWCDF", new ImageInfo("HW_CDF",
+            //         DataProcessor.translateCDF(IMAGES.get("Hollywood").getMatrix())));
+            // IMAGES.put("HWCDFHist", new ImageInfo("HW_CDF_hist", IMAGES.get("HWCDF").getMatrix(), true));
+            // IMAGES.put("img1", new ImageInfo("img1", IOC.readImgData("img1.jpg")));
+            // IMAGES.put("img1CDF", new ImageInfo("img1_CDF",
+            //         DataProcessor.translateCDF(IMAGES.get("img1").getMatrix())));
+            // IMAGES.put("img2", new ImageInfo("img2", IOC.readImgData("img2.jpg")));
+            // IMAGES.put("img2CDF", new ImageInfo("img2_CDF",
+            //         DataProcessor.translateCDF(IMAGES.get("img2").getMatrix())));
+            // IMAGES.put("img3", new ImageInfo("img3", IOC.readImgData("img3.jpg")));
+            // IMAGES.put("img3CDF", new ImageInfo("img3_CDF",
+            //         DataProcessor.translateCDF(IMAGES.get("img3").getMatrix())));
+            // IMAGES.put("img4", new ImageInfo("img4", IOC.readImgData("img4.jpg")));
+            // IMAGES.put("img4CDF", new ImageInfo("img4_CDF",
+            //         DataProcessor.translateCDF(IMAGES.get("img4").getMatrix())));
+            // IMAGES.put("Grace", new ImageInfo("grace.jpg"));
+            // IMAGES.put("BilinearSmallerGrace", new ImageInfo("bilinear_smaller_Grace",
+            //         DataProcessor.rescale(IMAGES.get("Grace").getMatrix(), 0.5d, InterpolationType.BILINEAR)));
+            // IMAGES.put("BilinearBiggerGrace", new ImageInfo("bilinear_bigger_Grace",
+            //         DataProcessor.rescale(IMAGES.get("BilinearSmallerGrace").getMatrix(), 2d, InterpolationType.BILINEAR)));
+            // IMAGES.put("DiffGrace", new ImageInfo("grace_difference",
+            //         DataProcessor.narrowGSRange(DataProcessor.getDiff(IMAGES.get("Grace").getMatrix(), IMAGES.get("BilinearBiggerGrace").getMatrix()))));
+            // IMAGES.put("DiffGraceCDF", new ImageInfo("grace_difference_CDF",
+            //         DataProcessor.translateCDF(IMAGES.get("DiffGrace").getMatrix())));
+            // IMAGES.put("DiffGraceHist", new ImageInfo("grace_difference_hist",
+            //         IMAGES.get("DiffGrace").getMatrix(), true));
+
+
+            //LAB 6 ---------------------------------------------------------------
+
+        //    IMAGES.put("XRAY", new ImageInfo("XRAY.jpg",
+        //            DataProcessor.narrowGSRange(
+        //                    IOC.readRAW("c12-85v.xcr", 2048, 1024, 1024, 2))));
+        //    IMAGES.put("XRAYSup", new ImageInfo("XRAY_suppressed",
+        //            DataProcessor.suppressor(IMAGES.get("XRAY").getMatrix(), 10, 32, 1d)));
+        //    IMAGES.put("XCR2Smaller", new ImageInfo("xcr_2_smaller",
+        //            DataProcessor.rotate(DataProcessor.rescale(
+        //                    DataProcessor.negateGC(DataProcessor.narrowGSRange(
+        //                            IOC.readRAW("u0_2048x2500.xcr", 2048, 2500, 2048, 2)
+        //                    )),
+        //                    0.4d,
+        //                    InterpolationType.BILINEAR
+        //            ), RotationType.UPSIDE)));
+        //    IMAGES.put("XCR2Sup", new ImageInfo("XRAY2_suppressed",
+        //            DataProcessor.suppressor(IMAGES.get("XCR2Smaller").getMatrix(), 10, 32, 1d)));
+        //    DataProcessor.detector(IMAGES.get("XRAYSup").getMatrix(), 10, 1);
+
+
+
+            //LAB 7 ---------------------------------------------------------------
+
+            IMAGES.put("MODELFORNOISE", new ImageInfo("MODELimage.jpg"));
+            IMAGES.put("MODELRNDNOISE", new ImageInfo("Random_Noise",
+                DataProcessor.randomNoiseImg(IMAGES.get("MODELFORNOISE").getMatrix(), 50d)));
+            IMAGES.put("MODELIMPNOISE", new ImageInfo("Impulse_Noise",
+                DataProcessor.impulseNoiseImg(IMAGES.get("MODELFORNOISE").getMatrix(), 100d, 255d, 0.01)));
+            IMAGES.put("MODELCMBNOISE", new ImageInfo("Combined_Noise",
+                DataProcessor.combinedNoiseImg(IMAGES.get("MODELFORNOISE").getMatrix(), 10d, 100d, 255d, 0.01)));
+            IMAGES.put("ArifRND", new ImageInfo("Rnd_Noise_Arif_Filtered", 
+                DataProcessor.Filtering.filterImg(IMAGES.get("MODELRNDNOISE").getMatrix(), 5, 5, ImgFIlterType.ARIFMETHIC_MEAN_FILTER)));
+            IMAGES.put("ArifIMP", new ImageInfo("Impulse_Noise_Arif_Filtered", 
+                DataProcessor.Filtering.filterImg(IMAGES.get("MODELIMPNOISE").getMatrix(), 9, 9, ImgFIlterType.ARIFMETHIC_MEAN_FILTER)));
+            IMAGES.put("ArifCMB", new ImageInfo("Combined_Noise_Arif_Filtered", 
+                DataProcessor.Filtering.filterImg(IMAGES.get("MODELCMBNOISE").getMatrix(), 9, 9, ImgFIlterType.ARIFMETHIC_MEAN_FILTER)));
+            IMAGES.put("MedianRND", new ImageInfo("Rnd_Noise_Median_Filtered", 
+                DataProcessor.Filtering.filterImg(IMAGES.get("MODELRNDNOISE").getMatrix(), 3, 3, ImgFIlterType.MEDIAN_FILTER)));
+            IMAGES.put("MedianIMP", new ImageInfo("Impulse_Noise_Median_Filtered", 
+                DataProcessor.Filtering.filterImg(IMAGES.get("MODELIMPNOISE").getMatrix(), 3, 3, ImgFIlterType.MEDIAN_FILTER)));
+            IMAGES.put("MedianCMB", new ImageInfo("Combined_Noise_Median_Filtered", 
+                DataProcessor.Filtering.filterImg(IMAGES.get("MODELCMBNOISE").getMatrix(), 3, 3, ImgFIlterType.MEDIAN_FILTER)));
         }
 
 
@@ -785,5 +838,9 @@ public class AppConfig implements WebMvcConfigurer {
         registry.addResourceHandler("/images/**", "/css/**", "/img/**", "/js/**")
                 .addResourceLocations("file:" + "images" + "/", "classpath:/static/css/","classpath:/static/img/",
                         "classpath:/static/js/", "classpath:/../../..");
+    }
+
+    public void destroy() throws IOException {
+        PathUtils.cleanDirectory(IOC.getCleanPath());
     }
 }

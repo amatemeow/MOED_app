@@ -1,5 +1,6 @@
 package moed.application.MOED_app.business;
 
+import moed.application.MOED_app.ENUM.ImgFIlterType;
 import moed.application.MOED_app.ENUM.InterpolationType;
 import moed.application.MOED_app.ENUM.RandomType;
 import moed.application.MOED_app.ENUM.RotationType;
@@ -295,6 +296,78 @@ public class DataProcessor {
             }
             return bsw;
         }
+
+        public static Integer[][] filterImg(Integer[][] data, int maskSizeX, int maskSizeY, ImgFIlterType filterType) {
+            int M = data.length;
+            int N = data[0].length;
+            Integer[][] filtered = Arrays.stream(data).map(Integer[]::clone).toArray(Integer[][]::new);
+            switch (filterType) {
+                case ARIFMETHIC_MEAN_FILTER:
+                    for (int i = 0; i < M; i++) {
+                        for (int j = 0; j < N; j++) {
+                            filtered[i][j] = arifMask(filtered, i, j, maskSizeX, maskSizeY);
+                        }
+                    }
+                    break;
+                case MEDIAN_FILTER:
+                    for (int i = 0; i < M; i++) {
+                        for (int j = 0; j < N; j++) {
+                            filtered[i][j] = medianMask(filtered, i, j, maskSizeX, maskSizeY);
+                        }
+                    }
+                    break;
+            }
+            return filtered;
+        }
+
+        private static int arifMask(Integer[][] data, int pX, int pY, int maskSizeX, int maskSizeY) {
+            int sum = 0;
+            int minusCount = 0;
+            for (int i = -maskSizeX / 2; i <= maskSizeX / 2; i++) {
+                for (int j = -maskSizeY / 2; j <= maskSizeY / 2; j++) {
+                    if (i == 0 && j == 0) continue;
+                    try {
+                        int value = Optional.ofNullable(data[pX + i][pY + j]).orElse(0);
+                        if (value > 255) {
+                            value = 255;
+                        } else if (value < 0) {
+                            value = 0;
+                        }
+                        sum += value;
+                    } catch(IndexOutOfBoundsException e) {
+                        minusCount++;
+                    }
+                }
+            }
+            int result = (int) ((double) sum / (maskSizeX * maskSizeY - minusCount));
+            if (result > 255) {
+                result = 255;
+            } else if (result < 0) {
+                result = 0;
+            }
+            return result;
+        }
+
+        private static int medianMask(Integer[][] data, int pX, int pY, int maskSizeX, int maskSizeY) {
+            ArrayList<Integer> arr = new ArrayList<>();
+            for (int i = -maskSizeX / 2; i <= maskSizeX / 2; i++) {
+                for (int j = -maskSizeY / 2; j <= maskSizeY / 2; j++) {
+                    if (i == 0 && j == 0) continue;
+                    try {
+                        arr.add(Optional.ofNullable(data[pX + i][pY + j]).orElse(0));
+                    } catch(IndexOutOfBoundsException e) {}
+                }
+            }
+            arr.sort(Integer::compareTo);
+            int size = arr.size();
+            int result = size % 2 == 0 ? (arr.get(size / 2 - 1) + arr.get(size / 2)) / 2 : arr.get(size / 2);
+            if (result > 255) {
+                result = 255;
+            } else if (result < 0) {
+                result = 0;
+            }
+            return result;
+        }
     }
 
     //reverse series
@@ -338,15 +411,9 @@ public class DataProcessor {
     }
 
     public static Integer[][] narrowGSRange(Integer[][] data) {
-        int min = Integer.MAX_VALUE;
-        int max = Integer.MIN_VALUE;
+        int min = Arrays.stream(DataProcessor.toIntVector(data)).min(Integer::compareTo).get();
+        int max = Arrays.stream(DataProcessor.toIntVector(data)).max(Integer::compareTo).get();;
         Integer[][] narrowed = new Integer[data.length][data[0].length];
-        for (int i = 0; i < data.length; i++) {
-            for (int j = 0; j < data[0].length; j++) {
-                if (min > data[i][j]) min = data[i][j];
-                if (max < data[i][j]) max = data[i][j];
-            }
-        }
         for (int i = 0; i < data.length; i++) {
             for (int j = 0; j < data[0].length; j++) {
                 narrowed[i][j] = (int) (((double) (data[i][j] - min) / (max - min)) * 255);
@@ -627,6 +694,43 @@ public class DataProcessor {
             result[i] = ConvolutionIntF(data[i], Filtering.BSF(f1, f2, dt, m));
         }
         result = rotate(result, RotationType.RIGHT);
+        return result;
+    }
+
+    public static Integer[][] randomNoiseImg(Integer[][] data, double R) {
+        int N = data[0].length;
+        Integer[][] result = new Integer[data.length][N];
+        for (int i = 0; i < data.length; i++) {
+            XYSeries noise = DataModeller.getNoise(N, R, RandomType.SYSTEM);
+            for (int j = 0; j < N; j++) {
+                result[i][j] = data[i][j] + noise.getY(j).intValue();
+            }
+        }
+        return result;
+    }
+
+    public static Integer[][] impulseNoiseImg(Integer[][] data, double R, double shift, double percentile) {
+        int N = data[0].length;
+        Integer[][] result = new Integer[data.length][N];
+        for (int i = 0; i < data.length; i++) {
+            XYSeries noise = DataModeller.getImpulseNoise(N, shift, percentile, R);
+            for (int j = 0; j < N; j++) {
+                result[i][j] = data[i][j] + noise.getY(j).intValue();
+            }
+        }
+        return result;
+    }
+
+    public static Integer[][] combinedNoiseImg(Integer[][] data, double rndR, double impR, double shift, double percentile) {
+        int N = data[0].length;
+        Integer[][] result = new Integer[data.length][N];
+        for (int i = 0; i < data.length; i++) {
+            XYSeries impNoise = DataModeller.getImpulseNoise(N, shift, percentile, impR);
+            XYSeries rndNoise = DataModeller.getNoise(N, rndR, RandomType.SYSTEM);
+            for (int j = 0; j < N; j++) {
+                result[i][j] = data[i][j] + rndNoise.getY(j).intValue() + impNoise.getY(j).intValue();
+            }
+        }
         return result;
     }
 }
