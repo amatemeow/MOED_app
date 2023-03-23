@@ -112,34 +112,34 @@ public class AppConfig implements WebMvcConfigurer, DisposableBean {
 
             //LAB 5 ---------------------------------------------------------------
 
-            // IMAGES.put("Hollywood", new ImageInfo("HollywoodLC.jpg"));
-            // IMAGES.put("HWHist", new ImageInfo("HW_hist", IMAGES.get("Hollywood").getMatrix(), true));
-            // IMAGES.put("HWCDF", new ImageInfo("HW_CDF",
-            //         DataProcessor.translateCDF(IMAGES.get("Hollywood").getMatrix())));
-            // IMAGES.put("HWCDFHist", new ImageInfo("HW_CDF_hist", IMAGES.get("HWCDF").getMatrix(), true));
-            // IMAGES.put("img1", new ImageInfo("img1", IOC.readImgData("img1.jpg")));
-            // IMAGES.put("img1CDF", new ImageInfo("img1_CDF",
-            //         DataProcessor.translateCDF(IMAGES.get("img1").getMatrix())));
-            // IMAGES.put("img2", new ImageInfo("img2", IOC.readImgData("img2.jpg")));
-            // IMAGES.put("img2CDF", new ImageInfo("img2_CDF",
-            //         DataProcessor.translateCDF(IMAGES.get("img2").getMatrix())));
-            // IMAGES.put("img3", new ImageInfo("img3", IOC.readImgData("img3.jpg")));
-            // IMAGES.put("img3CDF", new ImageInfo("img3_CDF",
-            //         DataProcessor.translateCDF(IMAGES.get("img3").getMatrix())));
-            // IMAGES.put("img4", new ImageInfo("img4", IOC.readImgData("img4.jpg")));
-            // IMAGES.put("img4CDF", new ImageInfo("img4_CDF",
-            //         DataProcessor.translateCDF(IMAGES.get("img4").getMatrix())));
-            // IMAGES.put("Grace", new ImageInfo("grace.jpg"));
-            // IMAGES.put("BilinearSmallerGrace", new ImageInfo("bilinear_smaller_Grace",
-            //         DataProcessor.rescale(IMAGES.get("Grace").getMatrix(), 0.5d, InterpolationType.BILINEAR)));
-            // IMAGES.put("BilinearBiggerGrace", new ImageInfo("bilinear_bigger_Grace",
-            //         DataProcessor.rescale(IMAGES.get("BilinearSmallerGrace").getMatrix(), 2d, InterpolationType.BILINEAR)));
-            // IMAGES.put("DiffGrace", new ImageInfo("grace_difference",
-            //         DataProcessor.narrowGSRange(DataProcessor.getDiff(IMAGES.get("Grace").getMatrix(), IMAGES.get("BilinearBiggerGrace").getMatrix()))));
-            // IMAGES.put("DiffGraceCDF", new ImageInfo("grace_difference_CDF",
-            //         DataProcessor.translateCDF(IMAGES.get("DiffGrace").getMatrix())));
-            // IMAGES.put("DiffGraceHist", new ImageInfo("grace_difference_hist",
-            //         IMAGES.get("DiffGrace").getMatrix(), true));
+//             IMAGES.put("Hollywood", new ImageInfo("HollywoodLC.jpg"));
+//             IMAGES.put("HWHist", new ImageInfo("HW_hist", IMAGES.get("Hollywood").getMatrix(), true));
+//             IMAGES.put("HWCDF", new ImageInfo("HW_CDF",
+//                     DataProcessor.translateCDF(IMAGES.get("Hollywood").getMatrix())));
+//             IMAGES.put("HWCDFHist", new ImageInfo("HW_CDF_hist", IMAGES.get("HWCDF").getMatrix(), true));
+//             IMAGES.put("img1", new ImageInfo("img1", IOC.readImgData("img1.jpg")));
+//             IMAGES.put("img1CDF", new ImageInfo("img1_CDF",
+//                     DataProcessor.translateCDF(IMAGES.get("img1").getMatrix())));
+//             IMAGES.put("img2", new ImageInfo("img2", IOC.readImgData("img2.jpg")));
+//             IMAGES.put("img2CDF", new ImageInfo("img2_CDF",
+//                     DataProcessor.translateCDF(IMAGES.get("img2").getMatrix())));
+//             IMAGES.put("img3", new ImageInfo("img3", IOC.readImgData("img3.jpg")));
+//             IMAGES.put("img3CDF", new ImageInfo("img3_CDF",
+//                     DataProcessor.translateCDF(IMAGES.get("img3").getMatrix())));
+//             IMAGES.put("img4", new ImageInfo("img4", IOC.readImgData("img4.jpg")));
+//             IMAGES.put("img4CDF", new ImageInfo("img4_CDF",
+//                     DataProcessor.translateCDF(IMAGES.get("img4").getMatrix())));
+//             IMAGES.put("Grace", new ImageInfo("grace.jpg"));
+//             IMAGES.put("BilinearSmallerGrace", new ImageInfo("bilinear_smaller_Grace",
+//                     DataProcessor.rescale(IMAGES.get("Grace").getMatrix(), 0.5d, InterpolationType.BILINEAR)));
+//             IMAGES.put("BilinearBiggerGrace", new ImageInfo("bilinear_bigger_Grace",
+//                     DataProcessor.rescale(IMAGES.get("BilinearSmallerGrace").getMatrix(), 2d, InterpolationType.BILINEAR)));
+//             IMAGES.put("DiffGrace", new ImageInfo("grace_difference",
+//                     DataProcessor.narrowGSRange(DataProcessor.getDiff(IMAGES.get("Grace").getMatrix(), IMAGES.get("BilinearBiggerGrace").getMatrix()))));
+//             IMAGES.put("DiffGraceCDF", new ImageInfo("grace_difference_CDF",
+//                     DataProcessor.translateCDF(IMAGES.get("DiffGrace").getMatrix())));
+//             IMAGES.put("DiffGraceHist", new ImageInfo("grace_difference_hist",
+//                     IMAGES.get("DiffGrace").getMatrix(), true));
 
 
             //LAB 6 ---------------------------------------------------------------
@@ -165,25 +165,25 @@ public class AppConfig implements WebMvcConfigurer, DisposableBean {
 
             //LAB 7 ---------------------------------------------------------------
 
-            IMAGES.put("MODELFORNOISE", new ImageInfo("MODELimage.jpg"));
-            IMAGES.put("MODELRNDNOISE", new ImageInfo("Random_Noise",
-                DataProcessor.randomNoiseImg(IMAGES.get("MODELFORNOISE").getMatrix(), 50d)));
-            IMAGES.put("MODELIMPNOISE", new ImageInfo("Impulse_Noise",
-                DataProcessor.impulseNoiseImg(IMAGES.get("MODELFORNOISE").getMatrix(), 100d, 255d, 0.01)));
-            IMAGES.put("MODELCMBNOISE", new ImageInfo("Combined_Noise",
-                DataProcessor.combinedNoiseImg(IMAGES.get("MODELFORNOISE").getMatrix(), 10d, 100d, 255d, 0.01)));
-            IMAGES.put("ArifRND", new ImageInfo("Rnd_Noise_Arif_Filtered", 
-                DataProcessor.Filtering.filterImg(IMAGES.get("MODELRNDNOISE").getMatrix(), 5, 5, ImgFIlterType.ARIFMETHIC_MEAN_FILTER)));
-            IMAGES.put("ArifIMP", new ImageInfo("Impulse_Noise_Arif_Filtered", 
-                DataProcessor.Filtering.filterImg(IMAGES.get("MODELIMPNOISE").getMatrix(), 9, 9, ImgFIlterType.ARIFMETHIC_MEAN_FILTER)));
-            IMAGES.put("ArifCMB", new ImageInfo("Combined_Noise_Arif_Filtered", 
-                DataProcessor.Filtering.filterImg(IMAGES.get("MODELCMBNOISE").getMatrix(), 9, 9, ImgFIlterType.ARIFMETHIC_MEAN_FILTER)));
-            IMAGES.put("MedianRND", new ImageInfo("Rnd_Noise_Median_Filtered", 
-                DataProcessor.Filtering.filterImg(IMAGES.get("MODELRNDNOISE").getMatrix(), 3, 3, ImgFIlterType.MEDIAN_FILTER)));
-            IMAGES.put("MedianIMP", new ImageInfo("Impulse_Noise_Median_Filtered", 
-                DataProcessor.Filtering.filterImg(IMAGES.get("MODELIMPNOISE").getMatrix(), 3, 3, ImgFIlterType.MEDIAN_FILTER)));
-            IMAGES.put("MedianCMB", new ImageInfo("Combined_Noise_Median_Filtered", 
-                DataProcessor.Filtering.filterImg(IMAGES.get("MODELCMBNOISE").getMatrix(), 3, 3, ImgFIlterType.MEDIAN_FILTER)));
+//            IMAGES.put("MODELFORNOISE", new ImageInfo("MODELimage.jpg"));
+//            IMAGES.put("MODELRNDNOISE", new ImageInfo("Random_Noise",
+//                DataProcessor.randomNoiseImg(IMAGES.get("MODELFORNOISE").getMatrix(), 20d)));
+//            IMAGES.put("MODELIMPNOISE", new ImageInfo("Impulse_Noise",
+//                DataProcessor.impulseNoiseImg(IMAGES.get("MODELFORNOISE").getMatrix(), 100d, 255d, 0.01)));
+//            IMAGES.put("MODELCMBNOISE", new ImageInfo("Combined_Noise",
+//                DataProcessor.combinedNoiseImg(IMAGES.get("MODELFORNOISE").getMatrix(), 15d, 100d, 255d, 0.01)));
+//            IMAGES.put("ArifRND", new ImageInfo("Rnd_Noise_Arif_Filtered",
+//                DataProcessor.Filtering.filterImg(IMAGES.get("MODELRNDNOISE").getMatrix(), 5, 5, ImgFIlterType.ARIFMETHIC_MEAN_FILTER)));
+//            IMAGES.put("ArifIMP", new ImageInfo("Impulse_Noise_Arif_Filtered",
+//                DataProcessor.Filtering.filterImg(IMAGES.get("MODELIMPNOISE").getMatrix(), 9, 9, ImgFIlterType.ARIFMETHIC_MEAN_FILTER)));
+//            IMAGES.put("ArifCMB", new ImageInfo("Combined_Noise_Arif_Filtered",
+//                DataProcessor.Filtering.filterImg(IMAGES.get("MODELCMBNOISE").getMatrix(), 9, 9, ImgFIlterType.ARIFMETHIC_MEAN_FILTER)));
+//            IMAGES.put("MedianRND", new ImageInfo("Rnd_Noise_Median_Filtered",
+//                DataProcessor.Filtering.filterImg(IMAGES.get("MODELRNDNOISE").getMatrix(), 3, 3, ImgFIlterType.MEDIAN_FILTER)));
+//            IMAGES.put("MedianIMP", new ImageInfo("Impulse_Noise_Median_Filtered",
+//                DataProcessor.Filtering.filterImg(IMAGES.get("MODELIMPNOISE").getMatrix(), 3, 3, ImgFIlterType.MEDIAN_FILTER)));
+//            IMAGES.put("MedianCMB", new ImageInfo("Combined_Noise_Median_Filtered",
+//                DataProcessor.Filtering.filterImg(IMAGES.get("MODELCMBNOISE").getMatrix(), 3, 3, ImgFIlterType.MEDIAN_FILTER)));
         }
 
 
