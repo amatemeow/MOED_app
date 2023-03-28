@@ -85,6 +85,37 @@ public class DataProcessor {
         }
         return result;
     }
+    public static Number[][] spectrumFourier2D(Integer[][] data) {
+        int N = data.length;
+        int M = data[0].length;
+        Number[][] result = new Number[N][M];
+        Double[][] spectrum = DataModeller.fourier2D(data);
+        spectrum = Num2Double(cycleShift2D(spectrum, N/2, M/2));
+        for (int i = 0; i < N; i++) {
+            for (int j = 0; j < M; j++) {
+                result[i][j] = spectrum[i][j];
+            }
+        }
+//        return result;
+        return narrowGSRange(Num2Int(result));
+    }
+
+    public static Number[][] inverseFourier2D(Integer[][] data) {
+        int N = data.length;
+        int M = data[0].length;
+        Number[][] result = new Number[N][M];
+        Double[][] spectrum = Num2Double(cycleShift2D(data, N - N/2, M - M/2));
+        spectrum = DataModeller.inverseFourier2D(spectrum);
+//        Double[][] spectrum = DataModeller.inverseFourier2D(data);
+        spectrum = Num2Double(cycleShift2D(spectrum, N/2, M/2));
+        for (int i = 0; i < N; i++) {
+            for (int j = 0; j < M; j++) {
+                result[i][j] = spectrum[i][j];
+            }
+        }
+//        return result;
+        return narrowGSRange(Num2Int(result));
+    }
 
     public static XYSeries antiNoise(int M, int R, XYSeries... series) {
         XYSeries result = new XYSeries("");
@@ -497,27 +528,29 @@ public class DataProcessor {
         return rescaled;
     }
 
-    public static Integer[][] rotate(Integer[][] data, RotationType rotation) {
-        Integer[][] rotated = null;
+    public static Number[][] rotate(Number[][] data, RotationType rotation) {
+        Number[][] rotated = null;
+        int N = data.length;
+        int M = data[0].length;
         switch (rotation) {
             case RIGHT:
-                rotated = new Integer[data[0].length][data.length];
-                for (int i = 0; i < rotated.length; i++) {
-                    for (int j = 0; j < rotated[0].length; j++) {
-                        rotated[i][j] = data[j] == null ? 0 : data[j][rotated.length - 1 - i];
+                rotated = new Number[M][N];
+                for (int i = 0; i < M; i++) {
+                    for (int j = 0; j < N; j++) {
+                        rotated[i][j] = data[j] == null ? 0 : data[j][M - 1 - i];
                     }
                 }
                 break;
             case LEFT:
-                rotated = new Integer[data[0].length][data.length];
-                for (int i = 0; i < rotated.length; i++) {
-                    for (int j = 0; j < rotated[0].length; j++) {
-                        rotated[i][j] = data[rotated[0].length - 1 - j][i];
+                rotated = new Number[M][N];
+                for (int i = 0; i < M; i++) {
+                    for (int j = 0; j < N; j++) {
+                        rotated[i][j] = data[N - 1 - j][i];
                     }
                 }
                 break;
             case UPSIDE:
-                rotated = new Integer[data.length][data[0].length];
+                rotated = new Number[data.length][data[0].length];
                 for (int i = 0; i < rotated.length; i++) {
                     for (int j = 0; j < rotated[0].length; j++) {
                         rotated[i][j] = data[rotated.length - 1 - i][rotated[0].length - 1 - j];
@@ -602,7 +635,7 @@ public class DataProcessor {
 
     public static Double detector(Integer[][] data, int incr, double dt) {
         int rown = data.length / incr;
-        data = rotate(data, RotationType.LEFT);
+        data = (Integer[][]) rotate(data, RotationType.LEFT);
         Integer[][] firstderivs = new Integer[rown][];
         for (int i = 0; i < rown; i++) {
             firstderivs[i] = getFirstDeriv(data[Math.min(i * incr, data.length - 1)]);
@@ -684,16 +717,16 @@ public class DataProcessor {
 
     public static Integer[][] suppressor(Integer[][] data, int incr, int m, double dt) {
         Integer[][] result = new Integer[data.length][data[0].length];
-        result = rotate(result, RotationType.LEFT);
+        result = (Integer[][]) rotate(result, RotationType.LEFT);
         double f0 = detector(data, incr, dt);
         double f1 = f0 - 0.15;
         double f2 = f0 + 0.15;
         System.out.println("f0: " + f0);
-        data = rotate(data, RotationType.LEFT);
+        data = (Integer[][]) rotate(data, RotationType.LEFT);
         for (int i = 0; i < data.length; i++) {
             result[i] = ConvolutionIntF(data[i], Filtering.BSF(f1, f2, dt, m));
         }
-        result = rotate(result, RotationType.RIGHT);
+        result = (Integer[][]) rotate(result, RotationType.RIGHT);
         return result;
     }
 
@@ -732,5 +765,31 @@ public class DataProcessor {
             }
         }
         return result;
+    }
+
+    public static Double[][] Num2Double(Number[][] data) {
+        return Arrays.stream(data)
+                .map(ar -> Arrays.stream(ar).map(Number::doubleValue).toArray(Double[]::new))
+                .toArray(Double[][]::new);
+    }
+
+    public static Integer[][] Num2Int(Number[][] data) {
+        return Arrays.stream(data)
+                .map(ar -> Arrays.stream(ar).map(Number::intValue).toArray(Integer[]::new))
+                .toArray(Integer[][]::new);
+    }
+
+    public static Number[][] cycleShift2D(Number[][] data, int shiftX, int shiftY) {
+        int N = data.length;
+        int M = data[0].length;
+        Number[][] shifted = new Number[N][M];
+        for (int i = 0; i < N; i++) {
+            for (int j = 0; j < M; j++) {
+                int sX = i - shiftX < 0 ? N - 1 + i - shiftX : i - shiftX;
+                int sY = j - shiftY < 0 ? M - 1 + j - shiftY : j - shiftY;
+                shifted[i][j] = data[sX][sY];
+            }
+        }
+        return shifted;
     }
 }

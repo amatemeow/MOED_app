@@ -26,9 +26,6 @@ public class WebController {
     private AppConfig.SampleData sampleData;
     @GetMapping("main")
     public String display(Model model) throws InterruptedException, IOException {
-        try {
-            PathUtils.cleanDirectory(moed.application.MOED_app.business.IOC.getCleanPath());
-        } catch(IOException IOE) { }
         ArrayList<TrendInfo> info = new ArrayList<>();
         for (var trend : sampleData.getTRENDS().values()) {
             info.add(new TrendInfo(trend));

@@ -184,6 +184,39 @@ public class AppConfig implements WebMvcConfigurer, DisposableBean {
 //                DataProcessor.Filtering.filterImg(IMAGES.get("MODELIMPNOISE").getMatrix(), 3, 3, ImgFIlterType.MEDIAN_FILTER)));
 //            IMAGES.put("MedianCMB", new ImageInfo("Combined_Noise_Median_Filtered",
 //                DataProcessor.Filtering.filterImg(IMAGES.get("MODELCMBNOISE").getMatrix(), 3, 3, ImgFIlterType.MEDIAN_FILTER)));
+
+
+
+            //LAB 8 ---------------------------------------------------------------
+
+//            new LineChartBox(DataModeller.getHarm(1000, 10, 30, 1d), "harm");
+            TRENDS.put("initHarm", new Trend("Harm")
+                    .setSeries(DataModeller.getHarm(1000, 10, 30, 0.001)));
+            TRENDS.put("inverseFourHarm", new Trend("Inversed Fourier Harm")
+                    .setSeries(DataModeller
+                            .inverseFourier(DataModeller
+                                    .fourier(TRENDS.get("initHarm").getSeries()))));
+            IMAGES.put("BWsquare", new ImageInfo("BWsquare256.jpg"));
+            IMAGES.put("BWS_ASpectrum", new ImageInfo("BWS_Aspectrum",
+                    DataProcessor.Num2Int(DataProcessor
+                            .spectrumFourier2D(IMAGES.get("BWsquare").getMatrix()))));
+            IMAGES.put("BWSAS_log", new ImageInfo("BWS_Spectrum_Log_Corrected",
+                    DataProcessor.logCorrection(DataProcessor.Num2Int(DataProcessor
+                            .spectrumFourier2D(IMAGES.get("BWsquare").getMatrix())), 40)));
+            IMAGES.put("BWS_Inversed", new ImageInfo("BWS_Inversed",
+                    DataProcessor.Num2Int(DataProcessor
+                            .inverseFourier2D(IMAGES.get("BWS_ASpectrum").getMatrix()))));
+            IMAGES.put("grace", new ImageInfo("grace.jpg"));
+            IMAGES.put("grace_as", new ImageInfo("Grace_ASpectrum",
+                    DataProcessor.Num2Int(DataProcessor
+                            .spectrumFourier2D(IMAGES.get("grace").getMatrix()))));
+            IMAGES.put("grace_as_log", new ImageInfo("Grace_Spectrum_Log_Corrected",
+                    DataProcessor.logCorrection(DataProcessor.Num2Int(DataProcessor
+                            .spectrumFourier2D(IMAGES.get("grace").getMatrix())), 40)));
+            IMAGES.put("grace_inversed", new ImageInfo("Grace_Inversed",
+                    DataProcessor.Num2Int(DataProcessor
+                            .inverseFourier2D(IMAGES.get("grace_as").getMatrix()))));
+
         }
 
 

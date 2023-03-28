@@ -1,6 +1,7 @@
 package moed.application.MOED_app.business;
 
 import moed.application.MOED_app.ENUM.RandomType;
+import moed.application.MOED_app.ENUM.RotationType;
 import moed.application.MOED_app.Entities.Trend;
 import moed.application.MOED_app.components.AppConfig;
 import moed.application.MOED_app.components.Charts;
@@ -243,21 +244,18 @@ public class DataModeller implements DisposableBean {
             }
         }
         XYSeries result = new XYSeries("");
-        ArrayList<Double> listRe = new ArrayList<>();
-        ArrayList<Double> listIm = new ArrayList<>();
         N = windowedSeries.getItemCount();
         for (int i = 0; i < N; i++) {
-            Double Re = 0d;
-            Double Im = 0d;
+            double Re = 0d;
+            double Im = 0d;
             for (int j = 0; j < N; j++) {
-                Re += (Double) windowedSeries.getY(j) * Math.cos(2*Math.PI*i*j/N);
-                Im += (Double) windowedSeries.getY(j) * Math.sin(2*Math.PI*i*j/N);
+                Re += (Double) windowedSeries.getY(j) * Math.cos(2d*Math.PI*i*j/N);
+                Im += (Double) windowedSeries.getY(j) * Math.sin(2d*Math.PI*i*j/N);
             }
             Re /= N;
             Im /= N;
-            listRe.add(Re);
-            listIm.add(Im);
-            result.add(windowedSeries.getX(i), Math.sqrt(Math.pow(Re, 2) + Math.pow(Im, 2)));
+//            result.add(windowedSeries.getX(i), Math.sqrt(Math.pow(Re, 2) + Math.pow(Im, 2)));
+            result.add(windowedSeries.getX(i), Re + Im);
         }
         return result;
     }
@@ -275,22 +273,117 @@ public class DataModeller implements DisposableBean {
             resultData = data;
         }
         XYSeries result = new XYSeries("");
-        ArrayList<Double> listRe = new ArrayList<>();
-        ArrayList<Double> listIm = new ArrayList<>();
         for (int i = 0; i < N; i++) {
-            Double Re = 0d;
-            Double Im = 0d;
+            double Re = 0d;
+            double Im = 0d;
             for (int j = 0; j < N; j++) {
-                Re += resultData[i].doubleValue() * Math.cos(2*Math.PI*i*j/N);
-                Im += resultData[j].doubleValue() * Math.sin(2*Math.PI*i*j/N);
+                Re += resultData[j].doubleValue() * Math.cos(2d*Math.PI*i*j/N);
+                Im += resultData[j].doubleValue() * Math.sin(2d*Math.PI*i*j/N);
             }
             Re /= N;
             Im /= N;
-            listRe.add(Re);
-            listIm.add(Im);
             result.add(resultData[i].doubleValue(), Math.sqrt(Math.pow(Re, 2) + Math.pow(Im, 2)));
         }
         return result;
+    }
+
+    public static Number[] fourierNum(Number[] data, int... windowSize) {
+        int N = data.length;
+        Number[] resultData;
+        if (windowSize.length != 0) {
+            resultData = new Integer[N + windowSize[0]];
+            for (int i = 0; i < N; i++) {
+                resultData[i] = data[i];
+            }
+            N = resultData.length;
+        } else {
+            resultData = data;
+        }
+        Number[] result = new Double[N];
+        for (int i = 0; i < N; i++) {
+            double Re = 0d;
+            double Im = 0d;
+            for (int j = 0; j < N; j++) {
+                Re += resultData[j].doubleValue() * Math.cos(2d*Math.PI*i*j/N);
+                Im += resultData[j].doubleValue() * Math.sin(2d*Math.PI*i*j/N);
+            }
+//            Re /= N;
+//            Im /= N;
+            result[i] = Math.sqrt(Math.pow(Re, 2) + Math.pow(Im, 2));
+        }
+        return result;
+    }
+
+    public static XYSeries inverseFourier(XYSeries series, int... windowSize) {
+        int N = series.getItemCount();
+        XYSeries windowedSeries = new XYSeries("");
+        try {
+            windowedSeries = series.createCopy(0, N - 1);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        if (windowSize.length != 0) {
+            for (int i = N; i < N + windowSize[0]; i++) {
+                windowedSeries.add(i, 0);
+            }
+        }
+        XYSeries result = new XYSeries("");
+        N = windowedSeries.getItemCount();
+        for (int i = 0; i < N; i++) {
+            double Re = 0d;
+            double Im = 0d;
+            for (int j = 0; j < N; j++) {
+                Re += windowedSeries.getY(j).doubleValue() * Math.cos(2d*Math.PI*i*j/N);
+                Im += windowedSeries.getY(j).doubleValue() * Math.sin(2d*Math.PI*i*j/N);
+            }
+            result.add(windowedSeries.getX(i), Re + Im);
+        }
+        return result;
+    }
+
+    public static Number[] inverseFourier(Number[] data) {
+        int N = data.length;
+        Number[] result = new Number[N];
+        for (int i = 0; i < N; i++) {
+            double Re = 0d;
+            double Im = 0d;
+            for (int j = 0; j < N; j++) {
+                Re += data[j].doubleValue() * Math.cos(2d*Math.PI*i*j/N);
+                Im += data[j].doubleValue() * Math.sin(2d*Math.PI*i*j/N);
+            }
+            result[i] = Re + Im;
+        }
+        return result;
+    }
+
+    public static Double[][] fourier2D(Integer[][] data) {
+        int N = data.length;
+        int M = data[0].length;
+        Double[][] resultData = new Double[N][M];
+        for (int i = 0; i < N; i++) {
+            resultData[i] = (Double[]) fourierNum(data[i]);
+        }
+        resultData = DataProcessor.Num2Double(DataProcessor.rotate(resultData, RotationType.LEFT));
+        for (int i = 0; i < M; i++) {
+            resultData[i] = (Double[]) fourierNum(resultData[i]);
+        }
+        resultData = DataProcessor.Num2Double(DataProcessor.rotate(resultData, RotationType.RIGHT));
+        return resultData;
+    }
+
+    public static Double[][] inverseFourier2D(Number[][] data) {
+        int N = data.length;
+        int M = data[0].length;
+        Double[][] resultData = new Double[M][N];
+        data = DataProcessor.rotate(data, RotationType.LEFT);
+        for (int i = 0; i < M; i++) {
+            resultData[i] = Arrays.stream(inverseFourier(data[i])).map(Number::doubleValue).toArray(Double[]::new);
+        }
+        resultData = DataProcessor.Num2Double(DataProcessor.rotate(resultData, RotationType.RIGHT));
+        for (int i = 0; i < N; i++) {
+            resultData[i] = Arrays.stream(inverseFourier(resultData[i])).map(Number::doubleValue).toArray(Double[]::new);
+        }
+        return resultData;
     }
 
     //window looks like: { x1, x2, y }
