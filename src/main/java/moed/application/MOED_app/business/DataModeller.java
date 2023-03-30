@@ -20,6 +20,7 @@ import java.awt.*;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Random;
 import java.util.stream.Collectors;
@@ -230,7 +231,7 @@ public class DataModeller implements DisposableBean {
         return result;
     }
 
-    public static XYSeries fourier(XYSeries series, int... windowSize) {
+    public static XYSeries fourier(XYSeries series, boolean complex, int... windowSize) {
         int N = series.getItemCount();
         XYSeries windowedSeries = new XYSeries("");
         try {
@@ -255,12 +256,12 @@ public class DataModeller implements DisposableBean {
             Re /= N;
             Im /= N;
 //            result.add(windowedSeries.getX(i), Math.sqrt(Math.pow(Re, 2) + Math.pow(Im, 2)));
-            result.add(windowedSeries.getX(i), Re + Im);
+            result.add(windowedSeries.getX(i), complex ? Re + Im : Math.sqrt(Math.pow(Re, 2) + Math.pow(Im, 2)));
         }
         return result;
     }
 
-    public static XYSeries fourier(Integer[] data, int... windowSize) {
+    public static XYSeries fourier(Integer[] data, boolean complex, int... windowSize) {
         int N = data.length;
         Integer[] resultData;
         if (windowSize.length != 0) {
@@ -282,16 +283,16 @@ public class DataModeller implements DisposableBean {
             }
             Re /= N;
             Im /= N;
-            result.add(resultData[i].doubleValue(), Math.sqrt(Math.pow(Re, 2) + Math.pow(Im, 2)));
+            result.add(resultData[i].doubleValue(), complex ? Re + Im : Math.sqrt(Math.pow(Re, 2) + Math.pow(Im, 2)));
         }
         return result;
     }
 
-    public static Number[] fourierNum(Number[] data, int... windowSize) {
+    public static Number[] fourierNum(Number[] data, boolean complex, int... windowSize) {
         int N = data.length;
         Number[] resultData;
         if (windowSize.length != 0) {
-            resultData = new Integer[N + windowSize[0]];
+            resultData = new Number[N + windowSize[0]];
             for (int i = 0; i < N; i++) {
                 resultData[i] = data[i];
             }
@@ -299,7 +300,7 @@ public class DataModeller implements DisposableBean {
         } else {
             resultData = data;
         }
-        Number[] result = new Double[N];
+        Number[] result = new Number[N];
         for (int i = 0; i < N; i++) {
             double Re = 0d;
             double Im = 0d;
@@ -307,9 +308,11 @@ public class DataModeller implements DisposableBean {
                 Re += resultData[j].doubleValue() * Math.cos(2d*Math.PI*i*j/N);
                 Im += resultData[j].doubleValue() * Math.sin(2d*Math.PI*i*j/N);
             }
-//            Re /= N;
-//            Im /= N;
-            result[i] = Math.sqrt(Math.pow(Re, 2) + Math.pow(Im, 2));
+            if (complex) {
+                // Re /= N;
+                // Im /= N;
+            }
+            result[i] = complex ? Re + Im : Math.sqrt(Math.pow(Re, 2) + Math.pow(Im, 2));
         }
         return result;
     }
@@ -350,38 +353,40 @@ public class DataModeller implements DisposableBean {
             for (int j = 0; j < N; j++) {
                 Re += data[j].doubleValue() * Math.cos(2d*Math.PI*i*j/N);
                 Im += data[j].doubleValue() * Math.sin(2d*Math.PI*i*j/N);
+                if (Re + Im > 8000000) {
+                    boolean some = false;
+                }
             }
             result[i] = Re + Im;
         }
         return result;
     }
 
-    public static Double[][] fourier2D(Integer[][] data) {
+    public static Number[][] fourier2D(Number[][] data, boolean complex) {
         int N = data.length;
         int M = data[0].length;
-        Double[][] resultData = new Double[N][M];
+        Number[][] resultData = new Number[N][M];
         for (int i = 0; i < N; i++) {
-            resultData[i] = (Double[]) fourierNum(data[i]);
+            resultData[i] = fourierNum(data[i], complex);
         }
-        resultData = DataProcessor.Num2Double(DataProcessor.rotate(resultData, RotationType.LEFT));
+        resultData = DataProcessor.rotate(resultData, RotationType.LEFT);
         for (int i = 0; i < M; i++) {
-            resultData[i] = (Double[]) fourierNum(resultData[i]);
+            resultData[i] = fourierNum(resultData[i], complex);
         }
-        resultData = DataProcessor.Num2Double(DataProcessor.rotate(resultData, RotationType.RIGHT));
+        resultData = DataProcessor.rotate(resultData, RotationType.RIGHT);
         return resultData;
     }
 
-    public static Double[][] inverseFourier2D(Number[][] data) {
+    public static Number[][] inverseFourier2D(Number[][] data) {
         int N = data.length;
         int M = data[0].length;
-        Double[][] resultData = new Double[M][N];
-        data = DataProcessor.rotate(data, RotationType.LEFT);
+        var resultData = DataProcessor.rotate(data, RotationType.LEFT);
         for (int i = 0; i < M; i++) {
-            resultData[i] = Arrays.stream(inverseFourier(data[i])).map(Number::doubleValue).toArray(Double[]::new);
+            resultData[i] = inverseFourier(resultData[i]);
         }
-        resultData = DataProcessor.Num2Double(DataProcessor.rotate(resultData, RotationType.RIGHT));
+        resultData = DataProcessor.rotate(resultData, RotationType.RIGHT);
         for (int i = 0; i < N; i++) {
-            resultData[i] = Arrays.stream(inverseFourier(resultData[i])).map(Number::doubleValue).toArray(Double[]::new);
+            resultData[i] = inverseFourier(resultData[i]);
         }
         return resultData;
     }

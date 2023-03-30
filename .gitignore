@@ -35,3 +35,10 @@ out/
 
 ### VS Code ###
 .vscode/
+
+
+### LIBS ###
+src/main/resources/node_modules
+
+### Other ###
+**/.DS_Store

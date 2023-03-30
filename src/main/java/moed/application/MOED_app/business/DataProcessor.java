@@ -17,7 +17,7 @@ import org.jfree.data.xy.XYSeries;
 import javax.swing.*;
 import java.awt.*;
 import java.util.*;
-import java.util.List;
+import java.util.stream.*;
 
 public class DataProcessor {
     //Выделение изначальных трендов из смешанных данных с помощью производной
@@ -62,59 +62,37 @@ public class DataProcessor {
         return result;
     }
 
-    public static XYSeries spectrumFourier(XYSeries series, Double dt, int... windowSize) {
+    public static XYSeries spectrumFourier(XYSeries series, Double dt, boolean complex, int... windowSize) {
         XYSeries result = new XYSeries("");
         int N = series.getItemCount();
         double rate = 1/dt;
         double df = rate/N;
-        XYSeries spectrum = DataModeller.fourier(series, windowSize);
+        XYSeries spectrum = DataModeller.fourier(series, complex, windowSize);
         for (int i = 0; i < N/2; i++) {
             result.add(i * df, spectrum.getY(i));
         }
         return result;
     }
 
-    public static XYSeries spectrumFourier(Integer[] data, Double dt, int... windowSize) {
+    public static XYSeries spectrumFourier(Integer[] data, Double dt, boolean complex, int... windowSize) {
         XYSeries result = new XYSeries("");
         int N = data.length;
         double rate = 1/dt;
         double df = rate/N;
-        XYSeries spectrum = DataModeller.fourier(data, windowSize);
+        XYSeries spectrum = DataModeller.fourier(data, complex, windowSize);
         for (int i = 0; i < N/2; i++) {
             result.add(i * df, spectrum.getY(i));
         }
         return result;
     }
-    public static Number[][] spectrumFourier2D(Integer[][] data) {
-        int N = data.length;
-        int M = data[0].length;
-        Number[][] result = new Number[N][M];
-        Double[][] spectrum = DataModeller.fourier2D(data);
-        spectrum = Num2Double(cycleShift2D(spectrum, N/2, M/2));
-        for (int i = 0; i < N; i++) {
-            for (int j = 0; j < M; j++) {
-                result[i][j] = spectrum[i][j];
-            }
-        }
-//        return result;
-        return narrowGSRange(Num2Int(result));
+    public static Number[][] spectrumFourier2D(Integer[][] data,  boolean complex) {
+        Number[][] spectrum = DataModeller.fourier2D(data, complex);
+        if (!complex) spectrum = Num2Double(cycleShift2D(spectrum, spectrum.length/2, spectrum[0].length/2));
+        return spectrum;
     }
 
     public static Number[][] inverseFourier2D(Integer[][] data) {
-        int N = data.length;
-        int M = data[0].length;
-        Number[][] result = new Number[N][M];
-        Double[][] spectrum = Num2Double(cycleShift2D(data, N - N/2, M - M/2));
-        spectrum = DataModeller.inverseFourier2D(spectrum);
-//        Double[][] spectrum = DataModeller.inverseFourier2D(data);
-        spectrum = Num2Double(cycleShift2D(spectrum, N/2, M/2));
-        for (int i = 0; i < N; i++) {
-            for (int j = 0; j < M; j++) {
-                result[i][j] = spectrum[i][j];
-            }
-        }
-//        return result;
-        return narrowGSRange(Num2Int(result));
+        return DataModeller.inverseFourier2D(data);
     }
 
     public static XYSeries antiNoise(int M, int R, XYSeries... series) {
@@ -443,11 +421,11 @@ public class DataProcessor {
 
     public static Integer[][] narrowGSRange(Integer[][] data) {
         int min = Arrays.stream(DataProcessor.toIntVector(data)).min(Integer::compareTo).get();
-        int max = Arrays.stream(DataProcessor.toIntVector(data)).max(Integer::compareTo).get();;
+        int max = Arrays.stream(DataProcessor.toIntVector(data)).max(Integer::compareTo).get();
         Integer[][] narrowed = new Integer[data.length][data[0].length];
         for (int i = 0; i < data.length; i++) {
             for (int j = 0; j < data[0].length; j++) {
-                narrowed[i][j] = (int) (((double) (data[i][j] - min) / (max - min)) * 255);
+                narrowed[i][j] = (int) (((data[i][j] - min) / (double) (max - min)) * 255);
             }
         }
         return narrowed;
@@ -654,11 +632,11 @@ public class DataProcessor {
         }
         XYSeries[] acfspectrums = new XYSeries[rown];
         for (int i = 0; i < rown; i++) {
-            acfspectrums[i] = spectrumFourier(acfs[i], dt);
+            acfspectrums[i] = spectrumFourier(acfs[i], dt, false);
         }
         XYSeries[] cfspectrums = new XYSeries[rown - 1];
         for (int i = 0; i < rown - 1; i++) {
-            cfspectrums[i] = spectrumFourier(cfs[i], dt);
+            cfspectrums[i] = spectrumFourier(cfs[i], dt, false);
         }
         int splitter = acfspectrums[0].getItemCount() / 2;
         Double[] maxacfs = new Double[rown];
@@ -774,9 +752,10 @@ public class DataProcessor {
     }
 
     public static Integer[][] Num2Int(Number[][] data) {
-        return Arrays.stream(data)
-                .map(ar -> Arrays.stream(ar).map(Number::intValue).toArray(Integer[]::new))
-                .toArray(Integer[][]::new);
+        Integer[][] arr = Arrays.stream(data)
+        .map(ar -> Arrays.stream(ar).map(Number::intValue).toArray(Integer[]::new))
+        .toArray(Integer[][]::new);
+        return arr;
     }
 
     public static Number[][] cycleShift2D(Number[][] data, int shiftX, int shiftY) {

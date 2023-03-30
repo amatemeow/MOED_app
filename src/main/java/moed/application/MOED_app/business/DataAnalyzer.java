@@ -307,7 +307,7 @@ public class DataAnalyzer {
 
     public static XYSeries filterFreq(XYSeries filter, Double dt, int m) {
         XYSeries result = new XYSeries("");
-        XYSeries spectrum = DataProcessor.spectrumFourier(filter, dt);
+        XYSeries spectrum = DataProcessor.spectrumFourier(filter, dt, false);
         for (int i = 0; i < spectrum.getItemCount(); i++) {
             result.add(i, spectrum.getY(i).doubleValue() * (2 * m + 1));
         }
