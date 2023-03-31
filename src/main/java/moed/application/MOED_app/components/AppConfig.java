@@ -1,7 +1,7 @@
 package moed.application.MOED_app.components;
 
-import lombok.Data;
 import lombok.Getter;
+import moed.application.MOED_app.ENUM.FileType;
 import moed.application.MOED_app.ENUM.ImgFIlterType;
 import moed.application.MOED_app.ENUM.InterpolationType;
 import moed.application.MOED_app.ENUM.RandomType;
@@ -24,7 +24,6 @@ import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import javax.annotation.PostConstruct;
-import javax.swing.*;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 
@@ -189,32 +188,74 @@ public class AppConfig implements WebMvcConfigurer, DisposableBean {
 
             //LAB 8 ---------------------------------------------------------------
 
-            TRENDS.put("initHarm", new Trend("Harm")
-                    .setSeries(DataModeller.getHarm(1000, 10, 30, 0.001)));
-            TRENDS.put("inverseFourHarm", new Trend("Inversed Fourier Harm")
-                    .setSeries(DataModeller
-                            .inverseFourier(DataModeller
-                                    .fourier(TRENDS.get("initHarm").getSeries(), true))));
-            IMAGES.put("BWsquare", new ImageInfo("BWsquare256.jpg"));
-            IMAGES.put("BWS_ASpectrum", new ImageInfo("BWS_Aspectrum",
-                    DataProcessor.narrowGSRange(DataProcessor.Num2Int(DataProcessor
-                            .spectrumFourier2D(IMAGES.get("BWsquare").getMatrix(), false)))));
-            IMAGES.put("BWSAS_log", new ImageInfo("BWS_Spectrum_Log_Corrected",
-                    DataProcessor.logCorrection(IMAGES.get("BWS_ASpectrum").getMatrix(), 40)));
-            IMAGES.put("BWS_Inversed", new ImageInfo("BWS_Inversed",
-                    DataProcessor.narrowGSRange(DataProcessor.Num2Int(DataProcessor
-                            .inverseFourier2D(DataProcessor.Num2Int(DataProcessor
-                            .spectrumFourier2D(IMAGES.get("BWsquare").getMatrix(), true)))))));
-            IMAGES.put("grace", new ImageInfo("grace.jpg"));
-            IMAGES.put("grace_as", new ImageInfo("Grace_ASpectrum",
-                    DataProcessor.narrowGSRange(DataProcessor.Num2Int(DataProcessor
-                            .spectrumFourier2D(IMAGES.get("grace").getMatrix(), false)))));
-            IMAGES.put("grace_as_log", new ImageInfo("Grace_Spectrum_Log_Corrected",
-                    DataProcessor.logCorrection(IMAGES.get("grace_as").getMatrix(), 40)));
-            IMAGES.put("grace_inversed", new ImageInfo("Grace_Inversed",
-                    DataProcessor.narrowGSRange(DataProcessor.Num2Int(DataProcessor
-                            .inverseFourier2D(DataProcessor.Num2Int(DataProcessor
-                            .spectrumFourier2D(IMAGES.get("grace").getMatrix(), true)))))));
+            // TRENDS.put("initHarm", new Trend("Harm")
+            //         .setSeries(DataModeller.getHarm(1000, 10, 30, 0.001)));
+            // TRENDS.put("inverseFourHarm", new Trend("Inversed Fourier Harm")
+            //         .setSeries(DataModeller
+            //                 .inverseFourier(DataModeller
+            //                         .fourier(TRENDS.get("initHarm").getSeries(), true))));
+            // IMAGES.put("BWsquare", new ImageInfo("BWsquare256.jpg"));
+            // IMAGES.put("BWS_ASpectrum", new ImageInfo("BWS_Aspectrum",
+            //         DataProcessor.narrowGSRange(DataProcessor.Num2Int(DataProcessor
+            //                 .spectrumFourier2D(IMAGES.get("BWsquare").getMatrix(), false)))));
+            // IMAGES.put("BWSAS_log", new ImageInfo("BWS_Spectrum_Log_Corrected",
+            //         DataProcessor.logCorrection(IMAGES.get("BWS_ASpectrum").getMatrix(), 40)));
+            // IMAGES.put("BWS_Inversed", new ImageInfo("BWS_Inversed",
+            //         DataProcessor.narrowGSRange(DataProcessor.Num2Int(DataProcessor
+            //                 .inverseFourier2D(DataProcessor.Num2Int(DataProcessor
+            //                 .spectrumFourier2D(IMAGES.get("BWsquare").getMatrix(), true)))))));
+            // IMAGES.put("grace", new ImageInfo("grace.jpg"));
+            // IMAGES.put("grace_as", new ImageInfo("Grace_ASpectrum",
+            //         DataProcessor.narrowGSRange(DataProcessor.Num2Int(DataProcessor
+            //                 .spectrumFourier2D(IMAGES.get("grace").getMatrix(), false)))));
+            // IMAGES.put("grace_as_log", new ImageInfo("Grace_Spectrum_Log_Corrected",
+            //         DataProcessor.logCorrection(IMAGES.get("grace_as").getMatrix(), 40)));
+            // IMAGES.put("grace_inversed", new ImageInfo("Grace_Inversed",
+            //         DataProcessor.narrowGSRange(DataProcessor.Num2Int(DataProcessor
+            //                 .inverseFourier2D(DataProcessor.Num2Int(DataProcessor
+            //                 .spectrumFourier2D(IMAGES.get("grace").getMatrix(), true)))))));
+
+
+            //LAB 9 ---------------------------------------------------------------
+
+            //TRASH BLOCK (for Rhyme Function)
+               XYSeries trashSeries = DataModeller.getStraight(1000, 0d, 0d, true);
+               trashSeries.updateByIndex(200, 1d);
+               trashSeries.updateByIndex(400, 1.1);
+               trashSeries.updateByIndex(600, 1d);
+               trashSeries.updateByIndex(800, 0.9);
+
+               XYSeries heartFunc = new Trend("").setSeries(
+                    DataProcessor.normalizeFunc(
+                        DataModeller.getMultiplied(
+                                DataModeller.getHarm(200, 1, 7, 0.005),
+                                DataModeller.getExponent(200, 0.005, 1d, 30d, false)),
+                        120d
+                    )
+               ).getSeries();
+           //END OF TRASH BLOCK
+            TRENDS.put("Cardiogram", new Trend("Cardiogram").setSeries(
+                   DataProcessor.cutEdges(
+                           DataProcessor.Convolution(
+                                heartFunc,
+                                trashSeries),
+                           0,
+                           200)));
+            TRENDS.put("InversedCardFunc", new Trend("Inversed Cardio Function").setSeries(
+                DataProcessor.inverseFilter(TRENDS.get("Cardiogram").getSeries(), heartFunc, false)
+            ));
+            TRENDS.put("KernInit", new Trend("Kern").setSeries(
+                   DataModeller.getModel(IOC.readDat("kern76D.dat"))));
+            IMAGES.put("BlurInit", new ImageInfo("Blur", 
+                DataProcessor.Num2Int(
+                    DataProcessor.rotate(
+                        IOC.imageWrapper("blur307x221D.dat", 221, 307, FileType.DAT), 
+                        RotationType.RIGHT))));
+            IMAGES.put("BlurNoiseInit", new ImageInfo("BlurNoise", 
+                DataProcessor.Num2Int(
+                    DataProcessor.rotate(
+                        IOC.imageWrapper("blur307x221D_N.dat", 221, 307, FileType.DAT), 
+                        RotationType.RIGHT))));
 
         }
 

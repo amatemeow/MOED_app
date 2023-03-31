@@ -4,20 +4,14 @@ import moed.application.MOED_app.ENUM.ImgFIlterType;
 import moed.application.MOED_app.ENUM.InterpolationType;
 import moed.application.MOED_app.ENUM.RandomType;
 import moed.application.MOED_app.ENUM.RotationType;
-import moed.application.MOED_app.Entities.Trend;
 import moed.application.MOED_app.business.DataAnalyzer.Statistics;
 
 import moed.application.MOED_app.components.LineChartBox;
-import org.jfree.chart.JFreeChart;
-import org.jfree.chart.plot.XYPlot;
-import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.xy.XYDataItem;
 import org.jfree.data.xy.XYSeries;
 
 import javax.swing.*;
-import java.awt.*;
 import java.util.*;
-import java.util.stream.*;
 
 public class DataProcessor {
     //Выделение изначальных трендов из смешанных данных с помощью производной
@@ -743,6 +737,30 @@ public class DataProcessor {
             }
         }
         return result;
+    }
+
+    public static XYSeries inverseFilter(XYSeries original, XYSeries part, boolean hasNoise, double... alpha) {
+        XYSeries resultSeries = new XYSeries("");
+        int N = original.getItemCount();
+        int M = part.getItemCount();
+        XYSeries partFilled = new XYSeries("");
+        for (int i = 0; i < N; i++) {
+            if (i < M) {
+                partFilled.add(i, part.getY(i));
+            } else {
+                partFilled.add(i, 0);
+            }
+        }
+        XYSeries originalSpectrum = DataModeller.fourier(original, true);
+        XYSeries partFilledSpectrum = DataModeller.fourier(partFilled, true);
+        for (int i = 0; i < N; i++) {
+            resultSeries.add(i, hasNoise ? 
+                originalSpectrum.getY(i).doubleValue() * 
+                    (partFilledSpectrum.getY(i).doubleValue() / 
+                    Math.pow(partFilledSpectrum.getY(i).doubleValue(), 2) + Math.pow(alpha[0], 2)) : 
+                originalSpectrum.getY(i).doubleValue() / partFilledSpectrum.getY(i).doubleValue());
+        }
+        return DataModeller.inverseFourier(resultSeries);
     }
 
     public static Double[][] Num2Double(Number[][] data) {

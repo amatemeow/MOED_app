@@ -8,22 +8,16 @@ import moed.application.MOED_app.components.Charts;
 import moed.application.MOED_app.utils.SelfRandom;
 import org.apache.commons.io.file.PathUtils;
 import org.jfree.chart.JFreeChart;
-import org.jfree.chart.plot.XYPlot;
-import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.xy.XYDataItem;
 import org.jfree.data.xy.XYSeries;
 import org.springframework.beans.factory.DisposableBean;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.awt.*;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Random;
-import java.util.stream.Collectors;
 
 @Component
 public class DataModeller implements DisposableBean {
@@ -308,10 +302,10 @@ public class DataModeller implements DisposableBean {
                 Re += resultData[j].doubleValue() * Math.cos(2d*Math.PI*i*j/N);
                 Im += resultData[j].doubleValue() * Math.sin(2d*Math.PI*i*j/N);
             }
-            if (complex) {
-                // Re /= N;
-                // Im /= N;
-            }
+            // if (complex) {
+            //     Re /= N;
+            //     Im /= N;
+            // }
             result[i] = complex ? Re + Im : Math.sqrt(Math.pow(Re, 2) + Math.pow(Im, 2));
         }
         return result;

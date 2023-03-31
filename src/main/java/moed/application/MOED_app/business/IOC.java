@@ -2,12 +2,13 @@ package moed.application.MOED_app.business;
 
 import com.github.psambit9791.wavfile.WavFile;
 import com.github.psambit9791.wavfile.WavFileException;
+
+import moed.application.MOED_app.ENUM.FileType;
 import moed.application.MOED_app.components.AppConfig;
 import org.apache.commons.io.FileUtils;
 import org.jfree.chart.ChartUtils;
 import org.jfree.chart.JFreeChart;
 import org.jfree.data.xy.XYSeries;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.imageio.ImageIO;
@@ -17,7 +18,6 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Scanner;
 import java.util.UUID;
 
 @Component
@@ -40,7 +40,7 @@ public class IOC {
     public static ArrayList<Number> readDat(String path) {
         File file = new File(AppConfig.IOCConfig.DATAFILES_FOLDER + "/" + path);
         DataInputStream stream;
-        ArrayList<Number> dataY = null;
+        ArrayList<Number> dataY = new ArrayList<>();
         try {
             stream = new DataInputStream(new FileInputStream(file));
             dataY = new ArrayList<>();
@@ -58,6 +58,23 @@ public class IOC {
             e.printStackTrace();
         }
         return dataY;
+    }
+
+    public static Number[][] imageWrapper(String path, int sizeX, int sizeY, FileType fileType) {
+        Number[][] resultData = new Number[sizeX][sizeY];
+        switch (fileType) {
+            case DAT: 
+                var data = readDat(path);
+                int cnt = 0;
+                for (int i = 0; i < sizeX; i++) {
+                    for (int j = 0; j < sizeY; j++, cnt++) {
+                        resultData[i][j] = data.get(cnt);
+                    }
+                }
+            case JPG:
+                break;
+        }
+        return resultData;
     }
 
     public static ArrayList<Number> readWav(String path) {
