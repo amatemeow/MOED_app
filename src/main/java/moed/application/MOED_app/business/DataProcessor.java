@@ -61,7 +61,7 @@ public class DataProcessor {
         int N = series.getItemCount();
         double rate = 1/dt;
         double df = rate/N;
-        XYSeries spectrum = DataModeller.fourier(series, complex, windowSize);
+        XYSeries spectrum = DataModeller.fourier(series, complex, false, windowSize);
         for (int i = 0; i < N/2; i++) {
             result.add(i * df, spectrum.getY(i));
         }
@@ -73,7 +73,7 @@ public class DataProcessor {
         int N = data.length;
         double rate = 1/dt;
         double df = rate/N;
-        XYSeries spectrum = DataModeller.fourier(data, complex, windowSize);
+        XYSeries spectrum = DataModeller.fourier(data, complex, false, windowSize);
         for (int i = 0; i < N/2; i++) {
             result.add(i * df, spectrum.getY(i));
         }
@@ -751,8 +751,9 @@ public class DataProcessor {
                 partFilled.add(i, 0);
             }
         }
-        XYSeries originalSpectrum = DataModeller.fourier(original, true);
-        XYSeries partFilledSpectrum = DataModeller.fourier(partFilled, true);
+        XYSeries originalSpectrum = DataModeller.fourier(original, true, false);
+        XYSeries partFilledSpectrum = DataModeller.fourier(partFilled, true, false);
+        XYSeries partErmitSpectrum = hasNoise ? DataModeller.fourier(partFilled, true, true) : null;
         for (int i = 0; i < N; i++) {
             resultSeries.add(i, hasNoise ? 
                 originalSpectrum.getY(i).doubleValue() * 
@@ -761,6 +762,39 @@ public class DataProcessor {
                 originalSpectrum.getY(i).doubleValue() / partFilledSpectrum.getY(i).doubleValue());
         }
         return DataModeller.inverseFourier(resultSeries);
+    }
+
+    public static Number[][] inverseFilter2D(Number[][] data, XYSeries function, boolean hasNoise, double... alpha) {
+        int M = data.length;
+        int N = data[0].length;
+        int fN = function.getItemCount();
+        Number[][] resultData = new Number[N][M];
+        XYSeries funcFilled = new XYSeries("");
+        for (int i = 0; i < M; i++) {
+            if (i < fN) {
+                funcFilled.add(i, function.getY(i));
+            } else {
+                funcFilled.add(i, 0);
+            }
+        }
+        data = rotate(data, RotationType.LEFT);
+        XYSeries partFilledSpectrum = DataModeller.fourier(funcFilled, true, false);
+        XYSeries partErmitSpectrum = hasNoise ? DataModeller.fourier(funcFilled, true, true) : null;
+        for (int i = 0; i < N; i++) {
+            XYSeries originalSpectrum = DataModeller.fourier(data[i], true, false);
+            for (int j = 0; j < M; j++) {
+                resultData[i][j] = hasNoise ? 
+                    originalSpectrum.getY(j).doubleValue() * 
+                        (partErmitSpectrum.getY(j).doubleValue() / 
+                        Math.pow(partFilledSpectrum.getY(j).doubleValue(), 2) + Math.pow(alpha[0], 2)) : 
+                    originalSpectrum.getY(j).doubleValue() / partFilledSpectrum.getY(j).doubleValue();
+            }
+        }
+        for (int i = 0; i < N; i++) {
+            resultData[i] = DataModeller.inverseFourier(resultData[i]);
+        }
+        return rotate(resultData, RotationType.RIGHT);
+        // return resultData;
     }
 
     public static Double[][] Num2Double(Number[][] data) {
@@ -788,5 +822,20 @@ public class DataProcessor {
             }
         }
         return shifted;
+    }
+
+    public static Number[][] recomputeGSRange(Number[][] data) {
+        int N = data.length;
+        int M = data[0].length;
+        Number[][] resultData = new Number[N][M];
+        for (int i = 0; i < N; i++) {
+            for (int j = 0; j < M; j++) {
+                Number value = data[i][j];
+                if (value.doubleValue() > 255) value = 255;
+                if (value.doubleValue() < 0) value = 0;
+                resultData[i][j] = value;
+            }
+        }
+        return resultData;
     }
 }

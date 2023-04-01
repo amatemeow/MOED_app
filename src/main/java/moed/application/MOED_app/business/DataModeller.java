@@ -225,7 +225,7 @@ public class DataModeller implements DisposableBean {
         return result;
     }
 
-    public static XYSeries fourier(XYSeries series, boolean complex, int... windowSize) {
+    public static XYSeries fourier(XYSeries series, boolean complex, boolean ermit, int... windowSize) {
         int N = series.getItemCount();
         XYSeries windowedSeries = new XYSeries("");
         try {
@@ -249,17 +249,16 @@ public class DataModeller implements DisposableBean {
             }
             Re /= N;
             Im /= N;
-//            result.add(windowedSeries.getX(i), Math.sqrt(Math.pow(Re, 2) + Math.pow(Im, 2)));
-            result.add(windowedSeries.getX(i), complex ? Re + Im : Math.sqrt(Math.pow(Re, 2) + Math.pow(Im, 2)));
+            result.add(windowedSeries.getX(i), complex ? (ermit ? Re - Im : Re + Im) : Math.sqrt(Math.pow(Re, 2) + Math.pow(Im, 2)));
         }
         return result;
     }
 
-    public static XYSeries fourier(Integer[] data, boolean complex, int... windowSize) {
+    public static XYSeries fourier(Number[] data, boolean complex, boolean ermit, int... windowSize) {
         int N = data.length;
-        Integer[] resultData;
+        Number[] resultData;
         if (windowSize.length != 0) {
-            resultData = new Integer[N + windowSize[0]];
+            resultData = new Number[N + windowSize[0]];
             for (int i = 0; i < N; i++) {
                 resultData[i] = data[i];
             }
@@ -277,7 +276,7 @@ public class DataModeller implements DisposableBean {
             }
             Re /= N;
             Im /= N;
-            result.add(resultData[i].doubleValue(), complex ? Re + Im : Math.sqrt(Math.pow(Re, 2) + Math.pow(Im, 2)));
+            result.add(resultData[i], complex ? (ermit ? Re - Im : Re + Im) : Math.sqrt(Math.pow(Re, 2) + Math.pow(Im, 2)));
         }
         return result;
     }
