@@ -5,8 +5,10 @@ import moed.application.MOED_app.ENUM.RotationType;
 import moed.application.MOED_app.Entities.Trend;
 import moed.application.MOED_app.components.AppConfig;
 import moed.application.MOED_app.components.Charts;
+import moed.application.MOED_app.utils.MyComplex;
 import moed.application.MOED_app.utils.SelfRandom;
 import org.apache.commons.io.file.PathUtils;
+import org.apache.commons.math3.complex.Complex;
 import org.jfree.chart.JFreeChart;
 import org.jfree.data.xy.XYDataItem;
 import org.jfree.data.xy.XYSeries;
@@ -225,6 +227,56 @@ public class DataModeller implements DisposableBean {
         return result;
     }
 
+    public static MyComplex[] fourierComplexes(XYSeries series, boolean normalize, int... windowSize) {
+        int N = series.getItemCount();
+        XYSeries windowedSeries = new XYSeries("");
+        try {
+           windowedSeries = series.createCopy(0, N - 1);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        if (windowSize.length != 0) {
+            for (int i = N; i < N + windowSize[0]; i++) {
+                windowedSeries.add(i, 0);
+            }
+        }
+        N = windowedSeries.getItemCount();
+        MyComplex[] result = new MyComplex[N];
+        for (int i = 0; i < N; i++) {
+            double Re = 0d;
+            double Im = 0d;
+            for (int j = 0; j < N; j++) {
+                Re += windowedSeries.getY(j).doubleValue() * Math.cos(2d*Math.PI*i*j/N);
+                Im += windowedSeries.getY(j).doubleValue() * Math.sin(2d*Math.PI*i*j/N);
+            }
+            if (normalize) {
+                Re /= N;
+                Im /= N;
+            }
+            result[i] = new MyComplex(Re, Im);
+        }
+        return result;
+    }
+
+    public static MyComplex[] fourierComplexes(Number[] data, boolean normalize) {
+        int N = data.length;
+        MyComplex[] result = new MyComplex[N];
+        for (int i = 0; i < N; i++) {
+            double Re = 0d;
+            double Im = 0d;
+            for (int j = 0; j < N; j++) {
+                Re += data[j].doubleValue() * Math.cos(2d*Math.PI*i*j/N);
+                Im += data[j].doubleValue() * Math.sin(2d*Math.PI*i*j/N);
+            }
+            if (normalize) {
+                Re /= N;
+                Im /= N;
+            }
+            result[i] = new MyComplex(Re, Im);
+        }
+        return result;
+    }
+
     public static XYSeries fourier(XYSeries series, boolean complex, boolean ermit, int... windowSize) {
         int N = series.getItemCount();
         XYSeries windowedSeries = new XYSeries("");
@@ -346,9 +398,6 @@ public class DataModeller implements DisposableBean {
             for (int j = 0; j < N; j++) {
                 Re += data[j].doubleValue() * Math.cos(2d*Math.PI*i*j/N);
                 Im += data[j].doubleValue() * Math.sin(2d*Math.PI*i*j/N);
-                if (Re + Im > 8000000) {
-                    boolean some = false;
-                }
             }
             result[i] = Re + Im;
         }

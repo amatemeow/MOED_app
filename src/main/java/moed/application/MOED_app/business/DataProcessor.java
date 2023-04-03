@@ -7,11 +7,17 @@ import moed.application.MOED_app.ENUM.RotationType;
 import moed.application.MOED_app.business.DataAnalyzer.Statistics;
 
 import moed.application.MOED_app.components.LineChartBox;
+import moed.application.MOED_app.utils.MyComplex;
+
+import org.apache.commons.math3.complex.Complex;
 import org.jfree.data.xy.XYDataItem;
 import org.jfree.data.xy.XYSeries;
 
 import javax.swing.*;
+
+import java.rmi.dgc.VMID;
 import java.util.*;
+import java.util.function.Supplier;
 
 public class DataProcessor {
     //Выделение изначальных трендов из смешанных данных с помощью производной
@@ -739,7 +745,37 @@ public class DataProcessor {
         return result;
     }
 
-    public static XYSeries inverseFilter(XYSeries original, XYSeries part, boolean hasNoise, double... alpha) {
+    public static XYSeries spectrumFourierSeries(Complex[] data, boolean complex, boolean ermit) {
+        int N = data.length;
+        XYSeries resultData = new XYSeries("");
+        if (complex) {
+            for (int i = 0; i < N; i++) {
+                resultData.add(i, ermit ? data[i].getReal() - data[i].getImaginary() : data[i].getReal() + data[i].getImaginary());
+            }
+        } else {
+            for (int i = 0; i < N; i++) {
+                resultData.add(i, Math.sqrt(Math.pow(data[i].getReal(), 2) + Math.pow(data[i].getImaginary(), 2)));
+            }
+        }
+        return resultData;
+    }
+
+    public static Number[] spectrumFourierNum(Complex[] data, boolean complex, boolean ermit) {
+        int N = data.length;
+        Number[] resultData = new Number[N];
+        if (complex) {
+            for (int i = 0; i < N; i++) {
+                resultData[i] = ermit ? data[i].getReal() - data[i].getImaginary() : data[i].getReal() + data[i].getImaginary();
+            }
+        } else {
+            for (int i = 0; i < N; i++) {
+                resultData[i] = Math.sqrt(Math.pow(data[i].getReal(), 2) + Math.pow(data[i].getImaginary(), 2));
+            }
+        }
+        return resultData;
+    }
+
+    public static XYSeries inverseFilter(XYSeries original, XYSeries part, boolean hasNoise, double alpha) {
         XYSeries resultSeries = new XYSeries("");
         int N = original.getItemCount();
         int M = part.getItemCount();
@@ -751,50 +787,57 @@ public class DataProcessor {
                 partFilled.add(i, 0);
             }
         }
-        XYSeries originalSpectrum = DataModeller.fourier(original, true, false);
-        XYSeries partFilledSpectrum = DataModeller.fourier(partFilled, true, false);
-        XYSeries partErmitSpectrum = hasNoise ? DataModeller.fourier(partFilled, true, true) : null;
-        for (int i = 0; i < N; i++) {
-            resultSeries.add(i, hasNoise ? 
-                originalSpectrum.getY(i).doubleValue() * 
-                    (partFilledSpectrum.getY(i).doubleValue() / 
-                    Math.pow(partFilledSpectrum.getY(i).doubleValue(), 2) + Math.pow(alpha[0], 2)) : 
-                originalSpectrum.getY(i).doubleValue() / partFilledSpectrum.getY(i).doubleValue());
+        // XYSeries originalSpectrum = DataModeller.fourier(original, true, false);
+        MyComplex[] originalComplexes = DataModeller.fourierComplexes(original, true);
+        MyComplex[] partComplexes = DataModeller.fourierComplexes(partFilled, true);
+        if (hasNoise) {
+            for (int i = 0; i < N; i++) {
+                Complex ermit = partComplexes[i].conjugate();
+                Complex dividend = originalComplexes[i].multiply(ermit);
+                var divider = Math.pow(partComplexes[i].abs(), 2) + Math.pow(alpha, 2);
+                resultSeries.add(i, new MyComplex(dividend.divide(divider)).getComplexSpectrum());
+            }
+        } else {
+            for (int i = 0; i < N; i++) {
+                // Complex dividend = (new Complex(1));
+                // Complex divider = partComplexes[i];
+                // resultSeries.add(i, new MyComplex(dividend.divide(divider)).getComplexSpectrum());
+                resultSeries.add(i, new MyComplex(originalComplexes[i].divide(partComplexes[i])).getComplexSpectrum());
+            }
         }
+        // XYSeries convol = new XYSeries("");
+        // try {
+        //     convol = Convolution(originalSpectrum, resultSeries).createCopy(0, N);
+        // } catch (CloneNotSupportedException e) {
+        //     // TODO Auto-generated catch block
+        //     e.printStackTrace();
+        // }
         return DataModeller.inverseFourier(resultSeries);
     }
 
-    public static Number[][] inverseFilter2D(Number[][] data, XYSeries function, boolean hasNoise, double... alpha) {
+    public static Number[][] inverseFilter2D(Number[][] data, XYSeries function, boolean hasNoise, double alpha) {
         int M = data.length;
         int N = data[0].length;
-        int fN = function.getItemCount();
         Number[][] resultData = new Number[N][M];
-        XYSeries funcFilled = new XYSeries("");
-        for (int i = 0; i < M; i++) {
-            if (i < fN) {
-                funcFilled.add(i, function.getY(i));
-            } else {
-                funcFilled.add(i, 0);
-            }
-        }
-        data = rotate(data, RotationType.LEFT);
-        XYSeries partFilledSpectrum = DataModeller.fourier(funcFilled, true, false);
-        XYSeries partErmitSpectrum = hasNoise ? DataModeller.fourier(funcFilled, true, true) : null;
+        data = rotate(data, RotationType.RIGHT);
         for (int i = 0; i < N; i++) {
-            XYSeries originalSpectrum = DataModeller.fourier(data[i], true, false);
-            for (int j = 0; j < M; j++) {
-                resultData[i][j] = hasNoise ? 
-                    originalSpectrum.getY(j).doubleValue() * 
-                        (partErmitSpectrum.getY(j).doubleValue() / 
-                        Math.pow(partFilledSpectrum.getY(j).doubleValue(), 2) + Math.pow(alpha[0], 2)) : 
-                    originalSpectrum.getY(j).doubleValue() / partFilledSpectrum.getY(j).doubleValue();
-            }
+            resultData[i] = Series2Array(inverseFilter(Array2Series(data[i]), function, hasNoise, alpha), () -> new Number[M]);
         }
-        for (int i = 0; i < N; i++) {
-            resultData[i] = DataModeller.inverseFourier(resultData[i]);
-        }
-        return rotate(resultData, RotationType.RIGHT);
+        return rotate(resultData, RotationType.LEFT);
         // return resultData;
+    }
+
+    public static <T> XYSeries Array2Series(T[] arr) {
+        XYSeries result = new XYSeries("");
+        for (int i = 0; i < arr.length; i++) result.add(i, (Number) arr[i]);
+        return result;
+    }
+
+    public static <T> T[] Series2Array(XYSeries series, Supplier<T[]> supplier) {
+        int N = series.getItemCount();
+        T[] result = supplier.get();
+        for (int i = 0; i < N; i++) result[i] = (T) series.getY(i);
+        return result;
     }
 
     public static Double[][] Num2Double(Number[][] data) {

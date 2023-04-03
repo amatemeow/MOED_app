@@ -245,21 +245,22 @@ public class AppConfig implements WebMvcConfigurer, DisposableBean {
 			DataProcessor.inverseFilter(
 					TRENDS.get("Cardiogram").getSeries(),
 					heartFunc,
-					false
+					false,
+					0
 				)
 		));
 		TRENDS.put("CardioNoise", new Trend("Cardiogram with noise").setSeries(
 			DataModeller.getAddition(
 				TRENDS.get("Cardiogram").getSeries(),
-				DataModeller.getNoise(1000, 2, RandomType.SYSTEM)
+				DataModeller.getNoise(1000, 1, RandomType.SYSTEM)
 			)
 		));
 		TRENDS.put("InversedCardFuncNoise", new Trend("Inversed Cardio Function with noise").setSeries(
 			DataProcessor.inverseFilter(
 					TRENDS.get("CardioNoise").getSeries(), 
-					heartFunc, 
+					heartFunc,
 					true,
-					0.05
+					0.1
 				)
 		));
 		TRENDS.put("KernInit", new Trend("Kern").setSeries(
@@ -267,13 +268,19 @@ public class AppConfig implements WebMvcConfigurer, DisposableBean {
 		IMAGES.put("BlurInit", new ImageInfo("Blur", 
 			DataProcessor.Num2Int(
 				DataProcessor.rotate(
-					IOC.imageWrapper("blur307x221D.dat", 221, 307, FileType.DAT), 
-					RotationType.RIGHT))));
+					IOC.imageWrapper("blur307x221D.dat", 221, 307, FileType.DAT),
+					RotationType.LEFT
+				)
+			)
+		));
 		IMAGES.put("BlurNoiseInit", new ImageInfo("BlurNoise", 
 			DataProcessor.Num2Int(
 				DataProcessor.rotate(
 					IOC.imageWrapper("blur307x221D_N.dat", 221, 307, FileType.DAT), 
-					RotationType.RIGHT))));
+					RotationType.LEFT
+				)
+			)
+		));
 		IMAGES.put("BlurInversed", new ImageInfo(
 			"Blur Inversed",
 			DataProcessor.narrowGSRange(
@@ -281,7 +288,8 @@ public class AppConfig implements WebMvcConfigurer, DisposableBean {
 					DataProcessor.inverseFilter2D(
 						IMAGES.get("BlurInit").getMatrix(),
 						TRENDS.get("KernInit").getSeries(),
-						false
+						true,
+						0.0025
 					)
 				)
 			)
@@ -294,7 +302,7 @@ public class AppConfig implements WebMvcConfigurer, DisposableBean {
 						IMAGES.get("BlurNoiseInit").getMatrix(),
 						TRENDS.get("KernInit").getSeries(),
 						true,
-						0.1
+						0.015
 					)
 				)
 			)
