@@ -227,50 +227,50 @@ public class DataModeller implements DisposableBean {
         return result;
     }
 
-    public static MyComplex[] fourierComplexes(XYSeries series, boolean normalize, int... windowSize) {
+    public static MyComplex[] fourierComplexes(XYSeries series, boolean normalize, boolean inverse) {
         int N = series.getItemCount();
-        XYSeries windowedSeries = new XYSeries("");
-        try {
-           windowedSeries = series.createCopy(0, N - 1);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        if (windowSize.length != 0) {
-            for (int i = N; i < N + windowSize[0]; i++) {
-                windowedSeries.add(i, 0);
-            }
-        }
-        N = windowedSeries.getItemCount();
         MyComplex[] result = new MyComplex[N];
         for (int i = 0; i < N; i++) {
             double Re = 0d;
             double Im = 0d;
             for (int j = 0; j < N; j++) {
-                Re += windowedSeries.getY(j).doubleValue() * Math.cos(2d*Math.PI*i*j/N);
-                Im += windowedSeries.getY(j).doubleValue() * Math.sin(2d*Math.PI*i*j/N);
+                double base = (2d * Math.PI * i * j) / (double) N;
+                Re += series.getY(j).doubleValue() * Math.cos(base);
+                Im += series.getY(j).doubleValue() * Math.sin(base);
             }
             if (normalize) {
-                Re /= N;
-                Im /= N;
+                if (inverse) {
+                    Re *= N;
+                    Im *= N;
+                } else {
+                    Re /= N;
+                    Im /= N;
+                }
             }
             result[i] = new MyComplex(Re, Im);
         }
         return result;
     }
 
-    public static MyComplex[] fourierComplexes(Number[] data, boolean normalize) {
+    public static MyComplex[] fourierComplexes(Number[] data, boolean normalize, boolean inverse) {
         int N = data.length;
         MyComplex[] result = new MyComplex[N];
         for (int i = 0; i < N; i++) {
             double Re = 0d;
             double Im = 0d;
             for (int j = 0; j < N; j++) {
-                Re += data[j].doubleValue() * Math.cos(2d*Math.PI*i*j/N);
-                Im += data[j].doubleValue() * Math.sin(2d*Math.PI*i*j/N);
+                double base = (2d * Math.PI * i * j) / (double) N;
+                Re += data[j].doubleValue() * Math.cos(base);
+                Im += data[j].doubleValue() * Math.sin(base);
             }
             if (normalize) {
-                Re /= N;
-                Im /= N;
+                if (inverse) {
+                    Re *= N;
+                    Im *= N;
+                } else {
+                    Re /= N;
+                    Im /= N;
+                }
             }
             result[i] = new MyComplex(Re, Im);
         }
@@ -384,7 +384,7 @@ public class DataModeller implements DisposableBean {
                 Re += windowedSeries.getY(j).doubleValue() * Math.cos(2d*Math.PI*i*j/N);
                 Im += windowedSeries.getY(j).doubleValue() * Math.sin(2d*Math.PI*i*j/N);
             }
-            result.add(windowedSeries.getX(i), Re + Im);
+            result.add(windowedSeries.getX(i), Re * N + Im * N);
         }
         return result;
     }

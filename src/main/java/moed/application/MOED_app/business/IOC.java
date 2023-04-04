@@ -18,6 +18,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.UUID;
 
 @Component
@@ -52,7 +53,7 @@ public class IOC {
                 curr[1] = bytes[i + 1];
                 curr[2] = bytes[i + 2];
                 curr[3] = bytes[i + 3];
-                dataY.add((double) ByteBuffer.wrap(curr).order(ByteOrder.LITTLE_ENDIAN).getFloat());
+                dataY.add(ByteBuffer.wrap(curr).order(ByteOrder.LITTLE_ENDIAN).getFloat());
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -179,6 +180,21 @@ public class IOC {
             }
         }
         return data;
+    }
+
+    public static String writeTextMatrix(Number[][] arr, String path) {
+        File file = new File(AppConfig.IOCConfig.DATAFILES_FOLDER + "/" + path);
+        try {
+            PrintWriter writer = new PrintWriter(file);
+            for (int i = 0; i < arr.length; i++) {
+                writer.println(Arrays.deepToString(arr[i]));
+            }
+            writer.close();
+        } catch (FileNotFoundException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        return file.getPath();
     }
 
     public static Path getCleanPath() {

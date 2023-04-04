@@ -111,34 +111,48 @@ public class AppConfig implements WebMvcConfigurer, DisposableBean {
 
 		//LAB 5 ---------------------------------------------------------------
 
-//             IMAGES.put("Hollywood", new ImageInfo("HollywoodLC.jpg"));
-//             IMAGES.put("HWHist", new ImageInfo("HW_hist", IMAGES.get("Hollywood").getMatrix(), true));
-//             IMAGES.put("HWCDF", new ImageInfo("HW_CDF",
-//                     DataProcessor.translateCDF(IMAGES.get("Hollywood").getMatrix())));
-//             IMAGES.put("HWCDFHist", new ImageInfo("HW_CDF_hist", IMAGES.get("HWCDF").getMatrix(), true));
-//             IMAGES.put("img1", new ImageInfo("img1", IOC.readImgData("img1.jpg")));
-//             IMAGES.put("img1CDF", new ImageInfo("img1_CDF",
-//                     DataProcessor.translateCDF(IMAGES.get("img1").getMatrix())));
-//             IMAGES.put("img2", new ImageInfo("img2", IOC.readImgData("img2.jpg")));
-//             IMAGES.put("img2CDF", new ImageInfo("img2_CDF",
-//                     DataProcessor.translateCDF(IMAGES.get("img2").getMatrix())));
-//             IMAGES.put("img3", new ImageInfo("img3", IOC.readImgData("img3.jpg")));
-//             IMAGES.put("img3CDF", new ImageInfo("img3_CDF",
-//                     DataProcessor.translateCDF(IMAGES.get("img3").getMatrix())));
-//             IMAGES.put("img4", new ImageInfo("img4", IOC.readImgData("img4.jpg")));
-//             IMAGES.put("img4CDF", new ImageInfo("img4_CDF",
-//                     DataProcessor.translateCDF(IMAGES.get("img4").getMatrix())));
-//             IMAGES.put("Grace", new ImageInfo("grace.jpg"));
-//             IMAGES.put("BilinearSmallerGrace", new ImageInfo("bilinear_smaller_Grace",
-//                     DataProcessor.rescale(IMAGES.get("Grace").getMatrix(), 0.5d, InterpolationType.BILINEAR)));
-//             IMAGES.put("BilinearBiggerGrace", new ImageInfo("bilinear_bigger_Grace",
-//                     DataProcessor.rescale(IMAGES.get("BilinearSmallerGrace").getMatrix(), 2d, InterpolationType.BILINEAR)));
-//             IMAGES.put("DiffGrace", new ImageInfo("grace_difference",
-//                     DataProcessor.narrowGSRange(DataProcessor.getDiff(IMAGES.get("Grace").getMatrix(), IMAGES.get("BilinearBiggerGrace").getMatrix()))));
-//             IMAGES.put("DiffGraceCDF", new ImageInfo("grace_difference_CDF",
-//                     DataProcessor.translateCDF(IMAGES.get("DiffGrace").getMatrix())));
-//             IMAGES.put("DiffGraceHist", new ImageInfo("grace_difference_hist",
-//                     IMAGES.get("DiffGrace").getMatrix(), true));
+            // IMAGES.put("Hollywood", new ImageInfo("HollywoodLC.jpg"));
+			// IMAGES.put("HWCDF", new ImageInfo("HW_CDF",
+			// 	DataProcessor.narrowGSRange(DataProcessor.translateCDF(IMAGES.get("Hollywood").getMatrix()))));
+			// TRENDS.put("HWHist",  new Trend("HW Histogram").setSeries(
+			// 	DataAnalyzer.Statistics.getHist2D(IMAGES.get("Hollywood").getMatrix(), true)
+			// ));
+			// TRENDS.put("HWCDF", new Trend("HW CDF").setSeries(
+			// 	DataProcessor.getCDFSeries(IMAGES.get("Hollywood").getMatrix())
+			// ));
+			// TRENDS.put("HWCDFHist",  new Trend("HW Translated Histogram").setSeries(
+			// 	DataAnalyzer.Statistics.getHist2D(IMAGES.get("HWCDF").getMatrix(), true)
+			// ));
+            // IMAGES.put("img1", new ImageInfo("img1", IOC.readImgData("img1.jpg")));
+            // IMAGES.put("img1CDF", new ImageInfo("img1_CDF",
+			// 	DataProcessor.narrowGSRange(DataProcessor.translateCDF(IMAGES.get("img1").getMatrix()))));
+            // IMAGES.put("img2", new ImageInfo("img2", IOC.readImgData("img2.jpg")));
+            // IMAGES.put("img2CDF", new ImageInfo("img2_CDF",
+			// 	DataProcessor.narrowGSRange(DataProcessor.translateCDF(IMAGES.get("img2").getMatrix()))));
+            // IMAGES.put("img3", new ImageInfo("img3", IOC.readImgData("img3.jpg")));
+            // IMAGES.put("img3CDF", new ImageInfo("img3_CDF",
+			// 	DataProcessor.narrowGSRange(DataProcessor.translateCDF(IMAGES.get("img3").getMatrix()))));
+            // IMAGES.put("img4", new ImageInfo("img4", IOC.readImgData("img4.jpg")));
+            // IMAGES.put("img4CDF", new ImageInfo("img4_CDF",
+			// 	DataProcessor.narrowGSRange(DataProcessor.translateCDF(IMAGES.get("img4").getMatrix()))));
+            // IMAGES.put("Grace", new ImageInfo("grace.jpg"));
+            // IMAGES.put("BilinearSmallerGrace", new ImageInfo("bilinear_smaller_Grace",
+			// 	DataProcessor.rescale(IMAGES.get("Grace").getMatrix(), 0.5d, InterpolationType.BILINEAR)));
+            // IMAGES.put("BilinearBiggerGrace", new ImageInfo("bilinear_bigger_Grace",
+			// 	DataProcessor.rescale(IMAGES.get("BilinearSmallerGrace").getMatrix(), 2d, InterpolationType.BILINEAR)));
+            // IMAGES.put("DiffGrace", new ImageInfo("grace_difference",
+			// 	DataProcessor.narrowGSRange(DataProcessor.getDiff(IMAGES.get("Grace").getMatrix(), IMAGES.get("BilinearBiggerGrace").getMatrix()))));
+			// IMAGES.put("DiffGraceCDF", new ImageInfo("grace_difference_CDF",
+			// 	DataProcessor.narrowGSRange(DataProcessor.translateCDF(IMAGES.get("DiffGrace").getMatrix()))));
+            // TRENDS.put("DiffGraceHist", new Trend("Grace Difference Histogram").setSeries(
+			// 	DataAnalyzer.Statistics.getHist2D(IMAGES.get("DiffGrace").getMatrix(), true)
+			// ));
+			// TRENDS.put("DiffGraceCDF", new Trend("Grace Difference CDF").setSeries(
+			// 	DataProcessor.getCDFSeries(IMAGES.get("DiffGrace").getMatrix())
+			// ));
+			// TRENDS.put("DiffGraceCDFHist", new Trend("Grace Difference Translated Histogram").setSeries(
+			// 	DataAnalyzer.Statistics.getHist2D(IMAGES.get("DiffGraceCDF").getMatrix(), true)
+			// ));
 
 
 		//LAB 6 ---------------------------------------------------------------
@@ -150,9 +164,13 @@ public class AppConfig implements WebMvcConfigurer, DisposableBean {
 	//            DataProcessor.suppressor(IMAGES.get("XRAY").getMatrix(), 10, 32, 1d)));
 	//    IMAGES.put("XCR2Smaller", new ImageInfo("xcr_2_smaller",
 	//            DataProcessor.rotate(DataProcessor.rescale(
-	//                    DataProcessor.negateGC(DataProcessor.narrowGSRange(
-	//                            IOC.readRAW("u0_2048x2500.xcr", 2048, 2500, 2048, 2)
-	//                    )),
+	//                    DataProcessor.negateGC(
+	// 						DataProcessor.Num2Int(
+	// 							DataProcessor.narrowGSRange(
+	// 								IOC.readRAW("u0_2048x2500.xcr", 2048, 2500, 2048, 2)
+	// 							)
+	// 						)
+	// 				   ),
 	//                    0.4d,
 	//                    InterpolationType.BILINEAR
 	//            ), RotationType.UPSIDE)));
@@ -164,25 +182,25 @@ public class AppConfig implements WebMvcConfigurer, DisposableBean {
 
 		//LAB 7 ---------------------------------------------------------------
 
-//            IMAGES.put("MODELFORNOISE", new ImageInfo("MODELimage.jpg"));
-//            IMAGES.put("MODELRNDNOISE", new ImageInfo("Random_Noise",
-//                DataProcessor.randomNoiseImg(IMAGES.get("MODELFORNOISE").getMatrix(), 20d)));
-//            IMAGES.put("MODELIMPNOISE", new ImageInfo("Impulse_Noise",
-//                DataProcessor.impulseNoiseImg(IMAGES.get("MODELFORNOISE").getMatrix(), 100d, 255d, 0.01)));
-//            IMAGES.put("MODELCMBNOISE", new ImageInfo("Combined_Noise",
-//                DataProcessor.combinedNoiseImg(IMAGES.get("MODELFORNOISE").getMatrix(), 15d, 100d, 255d, 0.01)));
-//            IMAGES.put("ArifRND", new ImageInfo("Rnd_Noise_Arif_Filtered",
-//                DataProcessor.Filtering.filterImg(IMAGES.get("MODELRNDNOISE").getMatrix(), 5, 5, ImgFIlterType.ARIFMETHIC_MEAN_FILTER)));
-//            IMAGES.put("ArifIMP", new ImageInfo("Impulse_Noise_Arif_Filtered",
-//                DataProcessor.Filtering.filterImg(IMAGES.get("MODELIMPNOISE").getMatrix(), 9, 9, ImgFIlterType.ARIFMETHIC_MEAN_FILTER)));
-//            IMAGES.put("ArifCMB", new ImageInfo("Combined_Noise_Arif_Filtered",
-//                DataProcessor.Filtering.filterImg(IMAGES.get("MODELCMBNOISE").getMatrix(), 9, 9, ImgFIlterType.ARIFMETHIC_MEAN_FILTER)));
-//            IMAGES.put("MedianRND", new ImageInfo("Rnd_Noise_Median_Filtered",
-//                DataProcessor.Filtering.filterImg(IMAGES.get("MODELRNDNOISE").getMatrix(), 3, 3, ImgFIlterType.MEDIAN_FILTER)));
-//            IMAGES.put("MedianIMP", new ImageInfo("Impulse_Noise_Median_Filtered",
-//                DataProcessor.Filtering.filterImg(IMAGES.get("MODELIMPNOISE").getMatrix(), 3, 3, ImgFIlterType.MEDIAN_FILTER)));
-//            IMAGES.put("MedianCMB", new ImageInfo("Combined_Noise_Median_Filtered",
-//                DataProcessor.Filtering.filterImg(IMAGES.get("MODELCMBNOISE").getMatrix(), 3, 3, ImgFIlterType.MEDIAN_FILTER)));
+        //    IMAGES.put("MODELFORNOISE", new ImageInfo("MODELimage.jpg"));
+        //    IMAGES.put("MODELRNDNOISE", new ImageInfo("Random_Noise",
+        //        DataProcessor.randomNoiseImg(IMAGES.get("MODELFORNOISE").getMatrix(), 20d)));
+        //    IMAGES.put("MODELIMPNOISE", new ImageInfo("Impulse_Noise",
+        //        DataProcessor.impulseNoiseImg(IMAGES.get("MODELFORNOISE").getMatrix(), 100d, 255d, 0.01)));
+        //    IMAGES.put("MODELCMBNOISE", new ImageInfo("Combined_Noise",
+        //        DataProcessor.combinedNoiseImg(IMAGES.get("MODELFORNOISE").getMatrix(), 15d, 100d, 255d, 0.01)));
+        //    IMAGES.put("ArifRND", new ImageInfo("Rnd_Noise_Arif_Filtered",
+        //        DataProcessor.Filtering.filterImg(IMAGES.get("MODELRNDNOISE").getMatrix(), 5, 5, ImgFIlterType.ARIFMETHIC_MEAN_FILTER)));
+        //    IMAGES.put("ArifIMP", new ImageInfo("Impulse_Noise_Arif_Filtered",
+        //        DataProcessor.Filtering.filterImg(IMAGES.get("MODELIMPNOISE").getMatrix(), 9, 9, ImgFIlterType.ARIFMETHIC_MEAN_FILTER)));
+        //    IMAGES.put("ArifCMB", new ImageInfo("Combined_Noise_Arif_Filtered",
+        //        DataProcessor.Filtering.filterImg(IMAGES.get("MODELCMBNOISE").getMatrix(), 9, 9, ImgFIlterType.ARIFMETHIC_MEAN_FILTER)));
+        //    IMAGES.put("MedianRND", new ImageInfo("Rnd_Noise_Median_Filtered",
+        //        DataProcessor.Filtering.filterImg(IMAGES.get("MODELRNDNOISE").getMatrix(), 3, 3, ImgFIlterType.MEDIAN_FILTER)));
+        //    IMAGES.put("MedianIMP", new ImageInfo("Impulse_Noise_Median_Filtered",
+        //        DataProcessor.Filtering.filterImg(IMAGES.get("MODELIMPNOISE").getMatrix(), 3, 3, ImgFIlterType.MEDIAN_FILTER)));
+        //    IMAGES.put("MedianCMB", new ImageInfo("Combined_Noise_Median_Filtered",
+        //        DataProcessor.Filtering.filterImg(IMAGES.get("MODELCMBNOISE").getMatrix(), 3, 3, ImgFIlterType.MEDIAN_FILTER)));
 
 
 
@@ -193,7 +211,7 @@ public class AppConfig implements WebMvcConfigurer, DisposableBean {
 		// TRENDS.put("inverseFourHarm", new Trend("Inversed Fourier Harm")
 		//         .setSeries(DataModeller
 		//                 .inverseFourier(DataModeller
-		//                         .fourier(TRENDS.get("initHarm").getSeries(), true))));
+		//                         .fourier(TRENDS.get("initHarm").getSeries(), true, false))));
 		// IMAGES.put("BWsquare", new ImageInfo("BWsquare256.jpg"));
 		// IMAGES.put("BWS_ASpectrum", new ImageInfo("BWS_Aspectrum",
 		//         DataProcessor.narrowGSRange(DataProcessor.Num2Int(DataProcessor
@@ -216,97 +234,93 @@ public class AppConfig implements WebMvcConfigurer, DisposableBean {
 		//                 .spectrumFourier2D(IMAGES.get("grace").getMatrix(), true)))))));
 
 
-		//LAB 9 ---------------------------------------------------------------
+		//LAB 9 ---------------------------------------------------------------а
 
-		//TRASH BLOCK (for Rhyme Function)
-		   XYSeries trashSeries = DataModeller.getStraight(1000, 0d, 0d, true);
-		   trashSeries.updateByIndex(200, 1d);
-		   trashSeries.updateByIndex(400, 1.1);
-		   trashSeries.updateByIndex(600, 1d);
-		   trashSeries.updateByIndex(800, 0.9);
+	// 	//TRASH BLOCK (for Rhyme Function)
+	// 		XYSeries trashSeries = DataModeller.getStraight(1000, 0d, 0d, true);
+	// 		trashSeries.updateByIndex(200, 1d);
+	// 		trashSeries.updateByIndex(400, 1.1);
+	// 		trashSeries.updateByIndex(600, 1d);
+	// 		trashSeries.updateByIndex(800, 0.9);
 
-		   XYSeries heartFunc = new Trend("").setSeries(
-			DataProcessor.normalizeFunc(
-			DataModeller.getMultiplied(
-				DataModeller.getHarm(200, 1, 7, 0.005),
-				DataModeller.getExponent(200, 0.005, 1d, 30d, false)),
-			120d
-			)
-		   ).getSeries();
-	   //END OF TRASH BLOCK
-		TRENDS.put("Cardiogram", new Trend("Cardiogram").setSeries(
-		   DataProcessor.cutEdges(
-			   DataProcessor.Convolution(
-				heartFunc,
-				trashSeries),
-			   0,
-			   200)));
-		TRENDS.put("InversedCardFunc", new Trend("Inversed Cardio Function").setSeries(
-			DataProcessor.inverseFilter(
-					TRENDS.get("Cardiogram").getSeries(),
-					heartFunc,
-					false,
-					0
-				)
-		));
-		TRENDS.put("CardioNoise", new Trend("Cardiogram with noise").setSeries(
-			DataModeller.getAddition(
-				TRENDS.get("Cardiogram").getSeries(),
-				DataModeller.getNoise(1000, 1, RandomType.SYSTEM)
-			)
-		));
-		TRENDS.put("InversedCardFuncNoise", new Trend("Inversed Cardio Function with noise").setSeries(
-			DataProcessor.inverseFilter(
-					TRENDS.get("CardioNoise").getSeries(), 
-					heartFunc,
-					true,
-					0.1
-				)
-		));
-		TRENDS.put("KernInit", new Trend("Kern").setSeries(
-		   DataModeller.getModel(IOC.readDat("kern76D.dat"))));
-		IMAGES.put("BlurInit", new ImageInfo("Blur", 
-			DataProcessor.Num2Int(
-				DataProcessor.rotate(
-					IOC.imageWrapper("blur307x221D.dat", 221, 307, FileType.DAT),
-					RotationType.LEFT
-				)
-			)
-		));
-		IMAGES.put("BlurNoiseInit", new ImageInfo("BlurNoise", 
-			DataProcessor.Num2Int(
-				DataProcessor.rotate(
-					IOC.imageWrapper("blur307x221D_N.dat", 221, 307, FileType.DAT), 
-					RotationType.LEFT
-				)
-			)
-		));
-		IMAGES.put("BlurInversed", new ImageInfo(
-			"Blur Inversed",
-			DataProcessor.narrowGSRange(
-				DataProcessor.Num2Int(
-					DataProcessor.inverseFilter2D(
-						IMAGES.get("BlurInit").getMatrix(),
-						TRENDS.get("KernInit").getSeries(),
-						true,
-						0.0025
-					)
-				)
-			)
-		));
-		IMAGES.put("BlurInversedNoise", new ImageInfo(
-			"Blur Inversed with noise",
-			DataProcessor.narrowGSRange(
-				DataProcessor.Num2Int(
-					DataProcessor.inverseFilter2D(
-						IMAGES.get("BlurNoiseInit").getMatrix(),
-						TRENDS.get("KernInit").getSeries(),
-						true,
-						0.015
-					)
-				)
-			)
-		));
+	// 		XYSeries heartFunc = new Trend("").setSeries(
+	// 			DataProcessor.normalizeFunc(
+	// 				DataModeller.getMultiplied(
+	// 					DataModeller.getHarm(200, 1, 7, 0.005),
+	// 					DataModeller.getExponent(200, 0.005, 1d, 30d, false)),
+	// 				120d
+	// 			)
+	// 		).getSeries();
+	//    //END OF TRASH BLOCK
+	// 	TRENDS.put("Cardiogram", new Trend("Cardiogram").setSeries(
+	// 	   DataProcessor.cutEdges(
+	// 		   DataProcessor.Convolution(
+	// 			heartFunc,
+	// 			trashSeries),
+	// 		   0,
+	// 		   200)));
+	// 	TRENDS.put("InversedCardFunc", new Trend("Inversed Cardio Function").setSeries(
+	// 		DataProcessor.inverseFilter(
+	// 				TRENDS.get("Cardiogram").getSeries(),
+	// 				heartFunc,
+	// 				false,
+	// 				0
+	// 			)
+	// 	));
+	// 	TRENDS.put("CardioNoise", new Trend("Cardiogram with noise").setSeries(
+	// 		DataModeller.getAddition(
+	// 			TRENDS.get("Cardiogram").getSeries(),
+	// 			DataModeller.getNoise(1000, 1, RandomType.SYSTEM)
+	// 		)
+	// 	));
+	// 	TRENDS.put("InversedCardFuncNoise", new Trend("Inversed Cardio Function with noise").setSeries(
+	// 		DataProcessor.inverseFilter(
+	// 				TRENDS.get("CardioNoise").getSeries(), 
+	// 				heartFunc,
+	// 				true,
+	// 				0.1
+	// 			)
+	// 	));
+	// 	TRENDS.put("KernInit", new Trend("Kern").setSeries(
+	// 	   DataModeller.getModel(IOC.readDat("kern76D.dat"))));
+	// 	IMAGES.put("BlurInit", new ImageInfo("Blur", 
+	// 			DataProcessor.rotate(
+	// 				IOC.imageWrapper("blur307x221D.dat", 221, 307, FileType.DAT),
+	// 				RotationType.LEFT
+	// 			)
+	// 	));
+	// 	IMAGES.put("BlurNoiseInit", new ImageInfo("BlurNoise", 
+	// 		DataProcessor.Num2Int(
+	// 			DataProcessor.rotate(
+	// 				IOC.imageWrapper("blur307x221D_N.dat", 221, 307, FileType.DAT), 
+	// 				RotationType.LEFT
+	// 			)
+	// 		)
+	// 	));
+	// 	IMAGES.put("BlurInversed", new ImageInfo(
+	// 		"Blur Inversed",
+	// 		DataProcessor.narrowGSRange(
+	// 					DataProcessor.inverseFilter2D(
+	// 						IMAGES.get("BlurInit").getNumMatrix(),
+	// 						TRENDS.get("KernInit").getSeries(),
+	// 						false,
+	// 						0
+	// 					)
+	// 		)
+	// 	));
+	// 	IMAGES.put("BlurInversedNoise", new ImageInfo(
+	// 		"Blur Inversed with noise",
+	// 		DataProcessor.narrowGSRange(
+	// 			DataProcessor.Num2Int(
+	// 				DataProcessor.inverseFilter2D(
+	// 					IMAGES.get("BlurNoiseInit").getMatrix(),
+	// 					TRENDS.get("KernInit").getSeries(),
+	// 					true,
+	// 					0.015
+	// 				)
+	// 			)
+	// 		)
+	// 	));
 		
 
 	}

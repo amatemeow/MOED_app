@@ -10,8 +10,13 @@ import moed.application.MOED_app.components.LineChartBox;
 import moed.application.MOED_app.utils.MyComplex;
 
 import org.apache.commons.math3.complex.Complex;
+import org.apache.commons.math3.transform.DftNormalization;
+import org.apache.commons.math3.transform.FastFourierTransformer;
+import org.apache.commons.math3.transform.TransformType;
 import org.jfree.data.xy.XYDataItem;
 import org.jfree.data.xy.XYSeries;
+
+import ch.qos.logback.core.subst.Token.Type;
 
 import javax.swing.*;
 
@@ -419,13 +424,14 @@ public class DataProcessor {
         return multiplied;
     }
 
-    public static Integer[][] narrowGSRange(Integer[][] data) {
-        int min = Arrays.stream(DataProcessor.toIntVector(data)).min(Integer::compareTo).get();
-        int max = Arrays.stream(DataProcessor.toIntVector(data)).max(Integer::compareTo).get();
-        Integer[][] narrowed = new Integer[data.length][data[0].length];
+    public static Number[][] narrowGSRange(Number[][] data) {
+        double min = Arrays.stream(DataProcessor.toVector(data)).map(Number::doubleValue).min(Double::compareTo).get();
+        double max = Arrays.stream(DataProcessor.toVector(data)).map(Number::doubleValue).max(Double::compareTo).get();
+        Number[][] narrowed = new Number[data.length][data[0].length];
         for (int i = 0; i < data.length; i++) {
             for (int j = 0; j < data[0].length; j++) {
-                narrowed[i][j] = (int) (((data[i][j] - min) / (double) (max - min)) * 255);
+                // if (data[i][j].doubleValue() == 0) narrowed[i][j] = 0;
+                narrowed[i][j] = (((data[i][j].doubleValue() - min) / (max - min)) * 255);
             }
         }
         return narrowed;
@@ -515,7 +521,7 @@ public class DataProcessor {
                 rotated = new Number[M][N];
                 for (int i = 0; i < M; i++) {
                     for (int j = 0; j < N; j++) {
-                        rotated[i][j] = data[j] == null ? 0 : data[j][M - 1 - i];
+                        rotated[i][j] = data[j][M - 1 - i];
                     }
                 }
                 break;
@@ -537,6 +543,17 @@ public class DataProcessor {
                 break;
         }
         return rotated;
+    }
+
+    public static Number[] toVector(Number[][] data) {
+        Number[] vector = new Number[data.length * data[0].length];
+        int iter = 0;
+        for (int i = 0; i < data.length; i++) {
+            for (int j = 0; j < data[0].length; j++, iter++) {
+                vector[iter] = data[i][j];
+            }
+        }
+        return vector;
     }
 
     public static Integer[] toIntVector(Integer[][] data) {
@@ -561,30 +578,35 @@ public class DataProcessor {
         return matrix;
     }
 
-    public static Map<Double, Double> getCDF(Integer[][] data) {
-        XYSeries denVec = DataAnalyzer.Statistics.getDensityVector(toIntVector(data));
-        HashMap<Double, Double> CDFed = new HashMap<>();
-        for (int i = 1; i < denVec.getItemCount(); i++) {
-            denVec.updateByIndex(i, denVec.getY(i).doubleValue() + denVec.getY(i - 1).doubleValue());
+    public static Map<Double, Double> getCDF(Number[][] data) {
+        var density = DataAnalyzer.Statistics.getProbDen(data, true);
+        for (double i = 1; i < density.size(); i++) {
+            density.replace(i, density.get(i) + density.get(i - 1));
         }
-        for (int i = 0; i < denVec.getItemCount(); i++) {
-            CDFed.put(denVec.getX(i).doubleValue(), denVec.getY(i).doubleValue());
-        }
-        return CDFed;
+        // for (int i = 0; i < denVec.getItemCount(); i++) {
+        //     CDFed.put(denVec.getX(i).doubleValue(), denVec.getY(i).doubleValue());
+        // }
+        return density;
     }
 
-    public static Integer[][] translateCDF(Integer[][] data) {
-        Integer[][] translated = new Integer[data.length][data[0].length];
-        int max = Arrays.stream(toIntVector(data)).max(Integer::compareTo).get();
+    public static XYSeries getCDFSeries(Number[][] data) {
+        XYSeries cdf = new XYSeries("");
+        getCDF(data).forEach((k, v) -> cdf.add(k, v));
+        return cdf;
+    }
+
+    public static Number[][] translateCDF(Number[][] data) {
+        Number[][] translated = new Number[data.length][data[0].length];
+        double max = Arrays.stream(toVector(data)).map(Number::doubleValue).max(Double::compareTo).get();
         var CDF = getCDF(data);
         for (int i = 0; i < data.length; i++) {
             for (int j = 0; j < data[0].length; j++) {
-                int curr = data[i][j];
-                double currcdf = CDF.getOrDefault(data[i][j].doubleValue(), 1d);
-                translated[i][j] = (int) Math.round((double) max * (double) curr * currcdf);
+                var curr = data[i][j].doubleValue();
+                double currcdf = CDF.getOrDefault(curr, 1d);
+                translated[i][j] = max * currcdf;
             }
         }
-        return narrowGSRange(translated);
+        return translated;
     }
 
     public static Integer[][] getDiff(Integer[][] data1, Integer[][] data2) {
@@ -613,7 +635,7 @@ public class DataProcessor {
 
     public static Double detector(Integer[][] data, int incr, double dt) {
         int rown = data.length / incr;
-        data = (Integer[][]) rotate(data, RotationType.LEFT);
+        data = Num2Int(rotate(data, RotationType.LEFT));
         Integer[][] firstderivs = new Integer[rown][];
         for (int i = 0; i < rown; i++) {
             firstderivs[i] = getFirstDeriv(data[Math.min(i * incr, data.length - 1)]);
@@ -694,18 +716,18 @@ public class DataProcessor {
     }
 
     public static Integer[][] suppressor(Integer[][] data, int incr, int m, double dt) {
-        Integer[][] result = new Integer[data.length][data[0].length];
-        result = (Integer[][]) rotate(result, RotationType.LEFT);
+        Number[][] result = new Number[data.length][data[0].length];
+        result = rotate(result, RotationType.LEFT);
         double f0 = detector(data, incr, dt);
         double f1 = f0 - 0.15;
         double f2 = f0 + 0.15;
         System.out.println("f0: " + f0);
-        data = (Integer[][]) rotate(data, RotationType.LEFT);
+        data = Num2Int(rotate(data, RotationType.LEFT));
         for (int i = 0; i < data.length; i++) {
             result[i] = ConvolutionIntF(data[i], Filtering.BSF(f1, f2, dt, m));
         }
-        result = (Integer[][]) rotate(result, RotationType.RIGHT);
-        return result;
+        result = rotate(result, RotationType.RIGHT);
+        return Num2Int(result);
     }
 
     public static Integer[][] randomNoiseImg(Integer[][] data, double R) {
@@ -779,17 +801,18 @@ public class DataProcessor {
         XYSeries resultSeries = new XYSeries("");
         int N = original.getItemCount();
         int M = part.getItemCount();
-        XYSeries partFilled = new XYSeries("");
-        for (int i = 0; i < N; i++) {
-            if (i < M) {
-                partFilled.add(i, part.getY(i));
-            } else {
-                partFilled.add(i, 0);
-            }
+        XYSeries partFilled = new XYSeries("", false, false);
+        try {
+            partFilled = part.createCopy(0, M - 1);
+        } catch (CloneNotSupportedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
         }
-        // XYSeries originalSpectrum = DataModeller.fourier(original, true, false);
-        MyComplex[] originalComplexes = DataModeller.fourierComplexes(original, true);
-        MyComplex[] partComplexes = DataModeller.fourierComplexes(partFilled, true);
+        for (int i = M; i < N; i++) {
+            partFilled.add(i, 0);
+        }
+        MyComplex[] originalComplexes = DataModeller.fourierComplexes(original, true, false);
+        MyComplex[] partComplexes = DataModeller.fourierComplexes(partFilled, true, false);
         if (hasNoise) {
             for (int i = 0; i < N; i++) {
                 Complex ermit = partComplexes[i].conjugate();
@@ -799,20 +822,45 @@ public class DataProcessor {
             }
         } else {
             for (int i = 0; i < N; i++) {
-                // Complex dividend = (new Complex(1));
-                // Complex divider = partComplexes[i];
-                // resultSeries.add(i, new MyComplex(dividend.divide(divider)).getComplexSpectrum());
-                resultSeries.add(i, new MyComplex(originalComplexes[i].divide(partComplexes[i])).getComplexSpectrum());
+                Complex H = Complex.valueOf(1).divide(partComplexes[i]);
+                MyComplex res = new MyComplex(originalComplexes[i].multiply(H));
+                resultSeries.add(i, res.getComplexSpectrum());
             }
         }
-        // XYSeries convol = new XYSeries("");
-        // try {
-        //     convol = Convolution(originalSpectrum, resultSeries).createCopy(0, N);
-        // } catch (CloneNotSupportedException e) {
-        //     // TODO Auto-generated catch block
-        //     e.printStackTrace();
-        // }
-        return DataModeller.inverseFourier(resultSeries);
+        return spectrumFourierSeries(DataModeller.fourierComplexes(resultSeries, true, false), true, false);
+    }
+
+    public static Number[] inverseFilterNum(Number[] original, XYSeries part, boolean hasNoise, double alpha) {
+        XYSeries resultSeries = new XYSeries("");
+        int N = original.length;
+        int M = part.getItemCount();
+        XYSeries partFilled = new XYSeries("", false, false);
+        try {
+            partFilled = part.createCopy(0, M - 1);
+        } catch (CloneNotSupportedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        for (int i = M; i < N; i++) {
+            partFilled.add(i, 0);
+        }
+        MyComplex[] originalComplexes = DataModeller.fourierComplexes(original, true, false);
+        MyComplex[] partComplexes = DataModeller.fourierComplexes(partFilled, true, false);
+        if (hasNoise) {
+            for (int i = 0; i < N; i++) {
+                Complex ermit = partComplexes[i].conjugate();
+                Complex dividend = originalComplexes[i].multiply(ermit);
+                var divider = Math.pow(partComplexes[i].abs(), 2) + Math.pow(alpha, 2);
+                resultSeries.add(i, new MyComplex(dividend.divide(divider)).getComplexSpectrum());
+            }
+        } else {
+            for (int i = 0; i < N; i++) {
+                Complex H = Complex.valueOf(1).divide(partComplexes[i]);
+                MyComplex res = new MyComplex(originalComplexes[i].multiply(H));
+                resultSeries.add(i, res.getComplexSpectrum());
+            }
+        }
+        return spectrumFourierNum(DataModeller.fourierComplexes(resultSeries, false, false), true, false);
     }
 
     public static Number[][] inverseFilter2D(Number[][] data, XYSeries function, boolean hasNoise, double alpha) {
@@ -821,10 +869,9 @@ public class DataProcessor {
         Number[][] resultData = new Number[N][M];
         data = rotate(data, RotationType.RIGHT);
         for (int i = 0; i < N; i++) {
-            resultData[i] = Series2Array(inverseFilter(Array2Series(data[i]), function, hasNoise, alpha), () -> new Number[M]);
+            resultData[i] = inverseFilterNum(data[i], function, hasNoise, alpha);
         }
         return rotate(resultData, RotationType.LEFT);
-        // return resultData;
     }
 
     public static <T> XYSeries Array2Series(T[] arr) {
@@ -836,7 +883,7 @@ public class DataProcessor {
     public static <T> T[] Series2Array(XYSeries series, Supplier<T[]> supplier) {
         int N = series.getItemCount();
         T[] result = supplier.get();
-        for (int i = 0; i < N; i++) result[i] = (T) series.getY(i);
+        for (int i = 0; i < N; i++) result[i] = (T)(Object) series.getY(i);
         return result;
     }
 
@@ -877,6 +924,18 @@ public class DataProcessor {
                 if (value.doubleValue() > 255) value = 255;
                 if (value.doubleValue() < 0) value = 0;
                 resultData[i][j] = value;
+            }
+        }
+        return resultData;
+    }
+
+    public static Number[][] cropImg(Number[][] data, int newX, int newY) {
+        int shiftN = (data.length - newX) / 2;
+        int shiftM = (data[0].length - newY) / 2;
+        Number[][] resultData = new Number[newX][newY];
+        for (int i = 0; i < newX; i++) {
+            for (int j = 0; j < newY; j++) {
+                resultData[i][j] = data[i + shiftN][j + shiftM];
             }
         }
         return resultData;

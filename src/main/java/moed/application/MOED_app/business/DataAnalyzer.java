@@ -6,7 +6,9 @@ import org.jfree.data.xy.XYDataItem;
 import org.jfree.data.xy.XYSeries;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class DataAnalyzer {
     public static class Statistics {
@@ -153,6 +155,29 @@ public class DataAnalyzer {
                 densitySeries.add(i + intervalLength / 2, cnt);
             }
             return densitySeries;
+        }
+
+        public static Map<Double, Double> getProbDen(Number[][] data, boolean normalized) {
+            Map<Double, Double> densityMap = new HashMap<>();
+            Number[] vector = DataProcessor.toVector(data);
+            var max = Arrays.stream(vector).map(Number::doubleValue).max(Double::compareTo).get();
+            int N = vector.length;
+            for (int i = 0; i <= max; i ++) {
+                int cnt = 0;
+                for (var item : vector) {
+                    if (item.doubleValue() == i) {
+                        cnt++;
+                    }
+                }
+                densityMap.put((double) i, normalized ? cnt / (double) N : cnt);
+            }
+            return densityMap;
+        }
+
+        public static XYSeries getHist2D(Number[][] data, boolean normalized) {
+            XYSeries hist = new XYSeries("");
+            getProbDen(data, normalized).forEach((k, v) -> hist.add(k, v));
+            return hist;
         }
 
         public static XYSeries getDensityVector(Integer[] data) {

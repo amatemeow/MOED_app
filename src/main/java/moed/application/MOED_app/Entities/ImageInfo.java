@@ -26,6 +26,8 @@ public class ImageInfo {
     private final BufferedImage image;
     @Getter
     private Integer[][] matrix;
+    @Getter
+    private Number[][] numMatrix;
     @Setter
     private boolean isTrend = false;
 
@@ -40,6 +42,14 @@ public class ImageInfo {
         this.name = path.replace(".jpg", "");
         this.matrix = data;
         this.image = buildImage();
+        this.imagePath = createFile(path);
+    }
+
+    public ImageInfo(String path, Number[][] data) {
+        this.name = path.replace(".jpg", "");
+        this.numMatrix = data;
+        this.matrix = DataProcessor.Num2Int(data);
+        this.image = buildImageNum();
         this.imagePath = createFile(path);
     }
 
@@ -89,6 +99,23 @@ public class ImageInfo {
             }
         }
         raster.setPixels(0, 0, this.matrix.length, this.matrix[0].length, pixels);
+        img.setData(raster);
+        return img;
+    }
+
+    private BufferedImage buildImageNum() {
+        int N = this.numMatrix.length;
+        int M = this.numMatrix[0].length;
+        BufferedImage img = new BufferedImage(N, M, BufferedImage.TYPE_BYTE_GRAY);
+        WritableRaster raster = img.getRaster();
+        double[] pixels = new double[N * M];
+        int idx = 0;
+        for (int i = 0; i < M; i++) {
+            for (int j = 0; j < N; j++, idx++) {
+             pixels[idx] = this.numMatrix[j][i].doubleValue();
+            }
+        }
+        raster.setPixels(0, 0, N, M, pixels);
         img.setData(raster);
         return img;
     }
