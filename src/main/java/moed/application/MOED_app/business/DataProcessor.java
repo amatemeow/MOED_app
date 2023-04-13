@@ -4,6 +4,7 @@ import moed.application.MOED_app.ENUM.ImgFIlterType;
 import moed.application.MOED_app.ENUM.InterpolationType;
 import moed.application.MOED_app.ENUM.RandomType;
 import moed.application.MOED_app.ENUM.RotationType;
+import moed.application.MOED_app.Entities.ImageInfo;
 import moed.application.MOED_app.business.DataAnalyzer.Statistics;
 
 import moed.application.MOED_app.components.LineChartBox;
@@ -90,14 +91,14 @@ public class DataProcessor {
         }
         return result;
     }
-    public static Number[][] spectrumFourier2D(Integer[][] data,  boolean complex) {
-        Number[][] spectrum = DataModeller.fourier2D(data, complex);
-        if (!complex) spectrum = Num2Double(cycleShift2D(spectrum, spectrum.length/2, spectrum[0].length/2));
+    public static Number[][] spectrumFourier2D(Number[][] data,  boolean complex, boolean normalize, boolean inverse) {
+        Number[][] spectrum = DataModeller.fourier2D(data, complex, normalize, inverse);
+        if (!complex) spectrum = Num2Double(cycleShift2D(spectrum, spectrum.length/2, spectrum[0].length/2, false));
         return spectrum;
     }
 
-    public static Number[][] inverseFourier2D(Integer[][] data) {
-        return DataModeller.inverseFourier2D(data);
+    public static Number[][] inverseFourier2D(Number[][] data, boolean normalize, boolean inverse) {
+        return DataModeller.inverseFourier2D(data, normalize, inverse);
     }
 
     public static XYSeries antiNoise(int M, int R, XYSeries... series) {
@@ -147,6 +148,17 @@ public class DataProcessor {
         return result;
     }
 
+    public static Number[] normalizeData(Number[] data, Double multiplier) {
+        int N = data.length;
+        Number[] result = new Number[N];
+        Double max = Arrays.stream(data).map(Number::doubleValue).max(Double::compareTo).get();
+        Double min = Arrays.stream(data).map(Number::doubleValue).min(Double::compareTo).get();
+        for (int i = 0; i < N; i++) {
+            result[i] = (((data[i].doubleValue() - min) / (max - min)) * multiplier);
+        }
+        return result;
+    }
+
     public static XYSeries amplify(XYSeries series, Double multiplier) {
         XYSeries result = new XYSeries("");
         for (int i = 0; i < series.getItemCount(); i++) {
@@ -178,30 +190,15 @@ public class DataProcessor {
         return result;
     }
 
-    public static Integer[] ConvolutionIntF(Integer[] series1, XYSeries series2) {
+    public static Number[] ConvolutionIntF(Number[] series1, XYSeries series2) {
         int N = series2.getItemCount();
         int M = series1.length;
-        Integer[] result = new Integer[N + M];
+        Number[] result = new Number[N + M];
         for (int k = 0; k < N + M; k++) {
-            Integer val = 0;
+            Double val = 0d;
             for (int m = 0; m < M; m++) {
                 if (k - m < 0 || k - m >= N) continue;
-                val += (int) (series1[m] * series2.getY(k - m).doubleValue());
-            }
-            result[k] = val;
-        }
-        return result;
-    }
-
-    public static Integer[] ConvolutionIntF2(Integer[] series2, XYSeries series1) {
-        int N = series2.length;
-        int M = series1.getItemCount();
-        Integer[] result = new Integer[N + M];
-        for (int k = 0; k < N + M; k++) {
-            Integer val = 0;
-            for (int m = 0; m < M; m++) {
-                if (k - m < 0 || k - m >= N) continue;
-                val += (int) (series1.getY(m).doubleValue() * series2[k - m]);
+                val += series1[m].doubleValue() * series2.getY(k - m).doubleValue();
             }
             result[k] = val;
         }
@@ -473,8 +470,8 @@ public class DataProcessor {
         return corrected;
     }
 
-    public static Integer[][] rescale(Integer[][] data, Double multiplier, InterpolationType type) {
-        Integer[][] rescaled = new Integer[(int) (data.length * multiplier)][(int) (data[0].length * multiplier)];
+    public static Number[][] rescale(Number[][] data, Double multiplier, InterpolationType type) {
+        Number[][] rescaled = new Number[(int) (data.length * multiplier)][(int) (data[0].length * multiplier)];
         switch (type) {
             case NEAREST_NEIGHBOUR:
                 for (int i = 0; i < rescaled.length; i++) {
@@ -488,25 +485,78 @@ public class DataProcessor {
                     for (int j = 0; j < rescaled[0].length; j++) {
                         int oldX = (int) (i / multiplier);
                         int oldY = (int) (j / multiplier);
-                        int top = 0;
+                        double top = 0;
                         try {
-                            top = data[oldX][oldY - 1];
+                            top = data[oldX][oldY - 1].doubleValue();
                         } catch (RuntimeException e) {}
-                        int bot = 0;
+                        double bot = 0;
                         try {
-                            bot = data[oldX][oldY + 1];
+                            bot = data[oldX][oldY + 1].doubleValue();
                         } catch (RuntimeException e) {}
-                        int left = 0;
+                        double left = 0;
                         try {
-                            left = data[oldX - 1][oldY];
+                            left = data[oldX - 1][oldY].doubleValue();
                         } catch (RuntimeException e) {}
-                        int right = 0;
+                        double right = 0;
                         try {
-                            right = data[oldX + 1][oldY];
+                            right = data[oldX + 1][oldY].doubleValue();
                         } catch (RuntimeException e) {}
                         rescaled[i][j] = (top + bot + left + right) / 4;
                     }
                 }
+                break;
+            case FOURIER:
+                Number[][] transformedF = null;
+                int N = data.length;
+                int M = data[0].length;
+                int newN = (int) (N * multiplier);
+                int newM = (int) (M * multiplier);
+                Number[][] scaledF = new Number[newN][newM];
+                if (multiplier > 1) {
+                    transformedF = spectrumFourier2D(data, true, true, false);
+                    int shiftN = (newN - N);
+                    int shiftM = (newM - M);
+                    for (int i = 0; i < newN; i++) {
+                        for (int j = 0; j < newM; j++) {
+                            if (i >= N/2 && i < N/2 + shiftN) scaledF[i][j] = 0;
+                            else if (j >= M/2 && j < M/2 + shiftM) scaledF[i][j] = 0;
+                            else {
+                                int newX = i < N/2 ? i : i - shiftN;
+                                int newY = j < M/2 ? j : j - shiftM;
+                                scaledF[i][j] = transformedF[newX][newY];
+                            }
+                        }
+                    }
+                } else if (multiplier < 1) {
+                    transformedF = new Number[N][M];
+                    int m = 32;
+                    for (int i = 0; i < N; i++) {
+                        transformedF[i] = ConvolutionIntF(data[i], Filtering.LPF(multiplier * 0.5, 1d, m));
+                    }
+                    transformedF = rotate(transformedF, RotationType.RIGHT);
+                    for (int i = 0; i < transformedF.length; i++) {
+                        transformedF[i] = ConvolutionIntF(transformedF[i], Filtering.LPF(multiplier * 0.5, 1d, m));
+                    }
+                    transformedF = rotate(transformedF, RotationType.LEFT);
+                    transformedF = cropImg(transformedF, N, M);
+                    transformedF = spectrumFourier2D(transformedF, true, false, false);
+                    int shiftN = N - newN;
+                    int shiftM = M - newM;
+                    for (int i = 0; i < newN; i++) {
+                        int newX = i;
+                        if (i >= newN / 2) {
+                            newX += shiftN;
+                        }
+                        for (int j = 0; j < newM; j++) {
+                            int newY = j;
+                            if (j >= newM / 2) {
+                                newY += shiftM;
+                            }
+                            scaledF[i][j] = transformedF[newX][newY];
+                        }
+                    }
+                } else scaledF = transformedF;
+                rescaled = inverseFourier2D(scaledF, false, false);
                 break;
         }
         return rescaled;
@@ -900,17 +950,28 @@ public class DataProcessor {
         return arr;
     }
 
-    public static Number[][] cycleShift2D(Number[][] data, int shiftX, int shiftY) {
+    public static Number[][] cycleShift2D(Number[][] data, int shiftX, int shiftY, boolean reverse) {
         int N = data.length;
         int M = data[0].length;
         Number[][] shifted = new Number[N][M];
-        for (int i = 0; i < N; i++) {
-            for (int j = 0; j < M; j++) {
-                int sX = i - shiftX < 0 ? N - 1 + i - shiftX : i - shiftX;
-                int sY = j - shiftY < 0 ? M - 1 + j - shiftY : j - shiftY;
-                shifted[i][j] = data[sX][sY];
+        if (!reverse) {
+            for (int i = 0; i < N; i++) {
+                for (int j = 0; j < M; j++) {
+                    int sX = i - shiftX < 0 ? N - 1 + i - shiftX : i - shiftX;
+                    int sY = j - shiftY < 0 ? M - 1 + j - shiftY : j - shiftY;
+                    shifted[i][j] = data[sX][sY];
+                }
+            }
+        } else {
+            for (int i = 0; i < N; i++) {
+                for (int j = 0; j < M; j++) {
+                    int sX = i + shiftX > N - 1 ? shiftX - N + i : i + shiftX;
+                    int sY = j + shiftY > M - 1 ? shiftY - M + j: j + shiftY;
+                    shifted[i][j] = data[sX][sY];
+                }
             }
         }
+        
         return shifted;
     }
 

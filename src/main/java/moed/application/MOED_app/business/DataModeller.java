@@ -333,7 +333,7 @@ public class DataModeller implements DisposableBean {
         return result;
     }
 
-    public static Number[] fourierNum(Number[] data, boolean complex, int... windowSize) {
+    public static Number[] fourierNum(Number[] data, boolean complex, boolean normalize, boolean inverse, int... windowSize) {
         int N = data.length;
         Number[] resultData;
         if (windowSize.length != 0) {
@@ -353,10 +353,15 @@ public class DataModeller implements DisposableBean {
                 Re += resultData[j].doubleValue() * Math.cos(2d*Math.PI*i*j/N);
                 Im += resultData[j].doubleValue() * Math.sin(2d*Math.PI*i*j/N);
             }
-            // if (complex) {
-            //     Re /= N;
-            //     Im /= N;
-            // }
+            if (normalize) {
+                if (inverse) {
+                    Re *= N;
+                    Im *= N;
+                } else {
+                    Re /= N;
+                    Im /= N;
+                }
+            }
             result[i] = complex ? Re + Im : Math.sqrt(Math.pow(Re, 2) + Math.pow(Im, 2));
         }
         return result;
@@ -404,31 +409,31 @@ public class DataModeller implements DisposableBean {
         return result;
     }
 
-    public static Number[][] fourier2D(Number[][] data, boolean complex) {
+    public static Number[][] fourier2D(Number[][] data, boolean complex, boolean normalize, boolean inverse) {
         int N = data.length;
         int M = data[0].length;
         Number[][] resultData = new Number[N][M];
         for (int i = 0; i < N; i++) {
-            resultData[i] = fourierNum(data[i], complex);
+            resultData[i] = fourierNum(data[i], complex, normalize, inverse);
         }
         resultData = DataProcessor.rotate(resultData, RotationType.LEFT);
         for (int i = 0; i < M; i++) {
-            resultData[i] = fourierNum(resultData[i], complex);
+            resultData[i] = fourierNum(resultData[i], complex, normalize, inverse);
         }
         resultData = DataProcessor.rotate(resultData, RotationType.RIGHT);
         return resultData;
     }
 
-    public static Number[][] inverseFourier2D(Number[][] data) {
+    public static Number[][] inverseFourier2D(Number[][] data, boolean normalize, boolean inverse) {
         int N = data.length;
         int M = data[0].length;
         var resultData = DataProcessor.rotate(data, RotationType.LEFT);
         for (int i = 0; i < M; i++) {
-            resultData[i] = inverseFourier(resultData[i]);
+            resultData[i] = DataProcessor.spectrumFourierNum(fourierComplexes(resultData[i], normalize, inverse), true, false);
         }
         resultData = DataProcessor.rotate(resultData, RotationType.RIGHT);
         for (int i = 0; i < N; i++) {
-            resultData[i] = inverseFourier(resultData[i]);
+            resultData[i] = DataProcessor.spectrumFourierNum(fourierComplexes(resultData[i], normalize, inverse), true, false);
         }
         return resultData;
     }

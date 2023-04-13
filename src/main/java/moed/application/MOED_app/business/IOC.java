@@ -183,7 +183,7 @@ public class IOC {
     }
 
     public static String writeTextMatrix(Number[][] arr, String path) {
-        File file = new File(AppConfig.IOCConfig.DATAFILES_FOLDER + "/" + path);
+        File file = new File(AppConfig.IOCConfig.CHART_FOLDER_WEB + "/" + path);
         try {
             PrintWriter writer = new PrintWriter(file);
             for (int i = 0; i < arr.length; i++) {

@@ -321,7 +321,31 @@ public class AppConfig implements WebMvcConfigurer, DisposableBean {
 	// 			)
 	// 		)
 	// 	));
+
+
+		//LAB 10 ---------------------------------------------------------------
 		
+		// IMAGES.put("BWsquare", new ImageInfo("BWsquare256.jpg"));
+		// IMAGES.put("BWsquareBF", new ImageInfo("Bigger_BWSquare_with_Fourier.jpg", 
+		// 	DataProcessor.narrowGSRange(DataProcessor.rescale(IMAGES.get("BWsquare").getMatrix(), 1.5, InterpolationType.FOURIER))
+		// ));
+		// IMAGES.put("BWsquareSF", new ImageInfo("Smaller_BWSquare_with_Fourier.jpg", 
+		// 	DataProcessor.narrowGSRange(DataProcessor.rescale(IMAGES.get("BWsquare").getMatrix(), 0.8, InterpolationType.FOURIER))
+		// ));
+		IMAGES.put("grace", new ImageInfo("grace.jpg"));
+		IMAGES.put("graceSF", new ImageInfo("Smaller_Grace_with_Fourier.jpg", 
+			DataProcessor.narrowGSRange(DataProcessor.rescale(IMAGES.get("grace").getMatrix(), 0.5, InterpolationType.FOURIER))
+		));
+		IMAGES.put("graceBF", new ImageInfo("Bigger_Grace_with_Fourier.jpg", 
+			DataProcessor.narrowGSRange(DataProcessor.rescale(IMAGES.get("graceSF").getMatrix(), 2d, InterpolationType.FOURIER))
+		));
+		IMAGES.put("DiffGrace", new ImageInfo("grace_difference",
+			DataProcessor.narrowGSRange(
+				DataProcessor.translateCDF(
+					DataProcessor.getDiff(IMAGES.get("grace").getMatrix(), IMAGES.get("graceBF").getMatrix())
+				)
+			)
+		));
 
 	}
 
