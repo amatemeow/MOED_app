@@ -9,12 +9,12 @@
 <body class="max-w-full flex flex-col align-middle justify-center p-5 bg-gray-700">
 <div class="w-full min-h-0 h-full flex flex-row justify-center overflow-y-scroll">
   <div class="w-full min-h-0 mx-auto flex flex-row gap-10 flex-wrap justify-center">
-    <div th:each="info: ${infos}" class="infoContainer relative w-[45%] max-h-[45%] p-2 bg-white rounded-md
+    <div th:each="info: ${infos}" class="infoContainer relative w-[45%] h-[45%] p-2 bg-white rounded-md
         shadow-sm shadow-[rgba(1,1,1,0.2)] flex gap-2 items-center
         hover:shadow-xl hover:shadow-blue-700 duration-100 ease-in">
       <div class="flex flex-col w-full h-full">
         <span th:text="${info.getName()}"></span>
-        <img th:src="${info.getImagePath()}" class="w-fit h-fit min-h-0 mx-auto">
+        <img th:src="${info.getImagePath()}" class="h-full min-h-0 mx-auto">
       </div>
       <div class="info hidden">
         <!-- <div class="flex gap-2 justify-between min-w-0 w-full mx-auto">

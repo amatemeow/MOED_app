@@ -332,20 +332,60 @@ public class AppConfig implements WebMvcConfigurer, DisposableBean {
 		// IMAGES.put("BWsquareSF", new ImageInfo("Smaller_BWSquare_with_Fourier.jpg", 
 		// 	DataProcessor.narrowGSRange(DataProcessor.rescale(IMAGES.get("BWsquare").getMatrix(), 0.8, InterpolationType.FOURIER))
 		// ));
-		IMAGES.put("grace", new ImageInfo("grace.jpg"));
-		IMAGES.put("graceSF", new ImageInfo("Smaller_Grace_with_Fourier.jpg", 
-			DataProcessor.narrowGSRange(DataProcessor.rescale(IMAGES.get("grace").getMatrix(), 0.5, InterpolationType.FOURIER))
+		// IMAGES.put("grace", new ImageInfo("grace.jpg"));
+		// IMAGES.put("graceSF", new ImageInfo("Smaller_Grace_with_Fourier.jpg", 
+		// 	DataProcessor.narrowGSRange(DataProcessor.rescale(IMAGES.get("grace").getMatrix(), 0.5, InterpolationType.FOURIER))
+		// ));
+		// IMAGES.put("graceBF", new ImageInfo("Bigger_Grace_with_Fourier.jpg", 
+		// 	DataProcessor.narrowGSRange(DataProcessor.rescale(IMAGES.get("graceSF").getMatrix(), 2d, InterpolationType.FOURIER))
+		// ));
+		// IMAGES.put("DiffGrace", new ImageInfo("grace_difference",
+		// 	DataProcessor.narrowGSRange(
+		// 		DataProcessor.translateCDF(
+		// 			DataProcessor.getDiff(IMAGES.get("grace").getMatrix(), IMAGES.get("graceBF").getMatrix())
+		// 		)
+		// 	)
+		// ));
+
+
+		//LAB 11 ---------------------------------------------------------------
+
+		// IMAGES.put("Hollywood", new ImageInfo("HollywoodLC.jpg"));
+		// IMAGES.put("HWCDF", new ImageInfo("HWCDF.jpg",
+		// 	// DataProcessor.narrowGSRange(
+		// 		DataProcessor.translateCDF(IMAGES.get("Hollywood").getMatrix())
+		// 	// )
+		// ));
+		IMAGES.put("MODEL", new ImageInfo("MODELimage.jpg"));
+		IMAGES.put("MODELLPF", new ImageInfo("LPFModel.jpg",
+			// DataProcessor.narrowGSRange(
+				DataProcessor.Filtering.LPF2D(IMAGES.get("MODEL").getMatrix(), 0.8, 1d, 32)
+			// )
 		));
-		IMAGES.put("graceBF", new ImageInfo("Bigger_Grace_with_Fourier.jpg", 
-			DataProcessor.narrowGSRange(DataProcessor.rescale(IMAGES.get("graceSF").getMatrix(), 2d, InterpolationType.FOURIER))
+		IMAGES.put("MODELET", new ImageInfo("TranslatedModel.jpg",
+				DataProcessor.edgeTranslate(IMAGES.get("MODELLPF").getMatrix(), 125)
 		));
-		IMAGES.put("DiffGrace", new ImageInfo("grace_difference",
-			DataProcessor.narrowGSRange(
-				DataProcessor.translateCDF(
-					DataProcessor.getDiff(IMAGES.get("grace").getMatrix(), IMAGES.get("graceBF").getMatrix())
+		IMAGES.put("MODELER", new ImageInfo("ErosedModel.jpg",
+			DataProcessor.DPMath.erose2D(IMAGES.get("MODELET").getMatrix(), 3)
+		));
+		IMAGES.put("MODELDIFF", new ImageInfo("DifferenceModel.jpg",
+			// DataProcessor.narrowGSRange(
+				DataProcessor.getDiff(
+					DataProcessor.Num2Int(DataProcessor.narrowGSRange(IMAGES.get("MODEL").getMatrix())),
+					IMAGES.get("MODELER").getMatrix()
 				)
-			)
+			// )
 		));
+		// IMAGES.put("grace", new ImageInfo("grace.jpg"));
+		// IMAGES.put("graceER", new ImageInfo("ErosedGrace.jpg",
+		// 	DataProcessor.DPMath.erose2D(IMAGES.get("grace").getMatrix(), 3)
+		// ));
+		// IMAGES.put("graceDiff", new ImageInfo("DifferenceGrace.jpg",
+		// 	// DataProcessor.narrowGSRange(
+		// 		DataProcessor.getDiff(IMAGES.get("grace").getMatrix(), IMAGES.get("graceER").getMatrix())
+		// 	// )
+		// ));
+
 
 	}
 

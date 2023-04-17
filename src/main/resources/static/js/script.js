@@ -17,5 +17,4 @@ function toggleInfo(el) {
     $(parent).toggleClass('max-h-[45%]');
     $(parent).toggleClass('w-11/12');
     $(parent).toggleClass('min-h-[85%]');
-    $(img).toggleClass('h-full');
 }

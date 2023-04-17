@@ -17,6 +17,7 @@ import org.apache.commons.math3.transform.TransformType;
 import org.jfree.data.xy.XYDataItem;
 import org.jfree.data.xy.XYSeries;
 
+import ch.qos.logback.classic.filter.LevelFilter;
 import ch.qos.logback.core.subst.Token.Type;
 
 import javax.swing.*;
@@ -26,6 +27,235 @@ import java.util.*;
 import java.util.function.Supplier;
 
 public class DataProcessor {
+
+    public static class Filtering {
+        ///Initial frequencies filter
+        public static XYSeries LPF(Double f, Double dt, int m) {
+            XYSeries ipw = new XYSeries("");
+            final Double[] edgePoints = new Double[] {0.35577019, 0.24336983, 0.07211497, 0.00630165};
+            double fact = f * 2 * dt;
+            ipw.add(0, fact);
+            double arg = fact * Math.PI;
+            for (int i = 1; i <= m; i++) {
+                ipw.add(i, Math.sin(arg * i) / (Math.PI * i));
+            }
+            ipw.updateByIndex(m, ipw.getY(m).doubleValue() / 2);
+            double sumg = ipw.getY(0).doubleValue();
+            for (int i = 1; i <= m; i++) {
+                double tmpsum = edgePoints[0];
+                arg = Math.PI * i / m;
+                for (int k = 1; k <= 3; k++) {
+                    tmpsum += 2 * edgePoints[k] * Math.cos(arg * k);
+                }
+                ipw.updateByIndex(i, ipw.getY(i).doubleValue() * tmpsum);
+                sumg += 2 * ipw.getY(i).doubleValue();
+            }
+            for (int i = 0; i <= m; i++) {
+                ipw.updateByIndex(i, ipw.getY(i).doubleValue() / sumg);
+            }
+            XYSeries additional = null;
+            try {
+                additional = ipw.createCopy(1, m);
+            } catch ( Exception e) {
+                e.printStackTrace();
+            }
+            reverseSeries(additional);
+            appendSeries(additional, ipw);
+            return additional;
+        }
+
+        public static XYSeries HPF(Double f, Double dt, int m) {
+            XYSeries hpw = new XYSeries("");
+            XYSeries ipw = LPF(f, dt, m);
+            int looper = 2 * m + 1;
+            for (int k = 0; k < looper; k++) {
+                if (k == m) {
+                    hpw.add(k, 1 - ipw.getY(k).doubleValue());
+                } else {
+                    hpw.add(k, -ipw.getY(k).doubleValue());
+                }
+            }
+            return hpw;
+        }
+
+        public static XYSeries BPF(Double f1, Double f2, Double dt, int m) {
+            XYSeries bpw = new XYSeries("");
+            XYSeries ipw1 = LPF(f1, dt, m);
+            XYSeries ipw2 = LPF(f2, dt, m);
+            int looper = 2 * m + 1;
+            for (int k = 0; k < looper; k++) {
+                bpw.add(k, ipw2.getY(k).doubleValue() - ipw1.getY(k).doubleValue());
+            }
+            return bpw;
+        }
+
+        public static XYSeries BSF(Double f1, Double f2, Double dt, int m) {
+            XYSeries bsw = new XYSeries("");
+            XYSeries ipw1 = LPF(f1, dt, m);
+            XYSeries ipw2 = LPF(f2, dt, m);
+            int looper = 2 * m + 1;
+            for (int k = 0; k < looper; k++) {
+                if (k == m) {
+                    bsw.add(k, 1 + ipw1.getY(k).doubleValue() - ipw2.getY(k).doubleValue());
+                } else {
+                    bsw.add(k, ipw1.getY(k).doubleValue() - ipw2.getY(k).doubleValue());
+                }
+            }
+            return bsw;
+        }
+
+        public static Integer[] BSFInt(Double f1, Double f2, Double dt, int m) {
+            XYSeries ipw1 = LPF(f1, dt, m);
+            XYSeries ipw2 = LPF(f2, dt, m);
+            int looper = 2 * m + 1;
+            Integer[] bsw = new Integer[looper];
+            for (int k = 0; k < looper; k++) {
+                if (k == m) {
+                    bsw[k] = (int) (1 + ipw1.getY(k).doubleValue() - ipw2.getY(k).doubleValue());
+                } else {
+                    bsw[k] = (int) (ipw1.getY(k).doubleValue() - ipw2.getY(k).doubleValue());
+                }
+            }
+            return bsw;
+        }
+
+        public static Integer[][] filterImg(Integer[][] data, int maskSizeX, int maskSizeY, ImgFIlterType filterType) {
+            int M = data.length;
+            int N = data[0].length;
+            Integer[][] filtered = Arrays.stream(data).map(Integer[]::clone).toArray(Integer[][]::new);
+            switch (filterType) {
+                case ARIFMETHIC_MEAN_FILTER:
+                    for (int i = 0; i < M; i++) {
+                        for (int j = 0; j < N; j++) {
+                            filtered[i][j] = arifMask(filtered, i, j, maskSizeX, maskSizeY);
+                        }
+                    }
+                    break;
+                case MEDIAN_FILTER:
+                    for (int i = 0; i < M; i++) {
+                        for (int j = 0; j < N; j++) {
+                            filtered[i][j] = medianMask(filtered, i, j, maskSizeX, maskSizeY);
+                        }
+                    }
+                    break;
+            }
+            return filtered;
+        }
+
+        private static int arifMask(Integer[][] data, int pX, int pY, int maskSizeX, int maskSizeY) {
+            int sum = 0;
+            int minusCount = 0;
+            for (int i = -maskSizeX / 2; i <= maskSizeX / 2; i++) {
+                for (int j = -maskSizeY / 2; j <= maskSizeY / 2; j++) {
+                    if (i == 0 && j == 0) continue;
+                    try {
+                        int value = Optional.ofNullable(data[pX + i][pY + j]).orElse(0);
+                        if (value > 255) {
+                            value = 255;
+                        } else if (value < 0) {
+                            value = 0;
+                        }
+                        sum += value;
+                    } catch(IndexOutOfBoundsException e) {
+                        minusCount++;
+                    }
+                }
+            }
+            int result = (int) ((double) sum / (maskSizeX * maskSizeY - minusCount));
+            if (result > 255) {
+                result = 255;
+            } else if (result < 0) {
+                result = 0;
+            }
+            return result;
+        }
+
+        private static int medianMask(Integer[][] data, int pX, int pY, int maskSizeX, int maskSizeY) {
+            ArrayList<Integer> arr = new ArrayList<>();
+            for (int i = -maskSizeX / 2; i <= maskSizeX / 2; i++) {
+                for (int j = -maskSizeY / 2; j <= maskSizeY / 2; j++) {
+                    if (i == 0 && j == 0) continue;
+                    try {
+                        arr.add(Optional.ofNullable(data[pX + i][pY + j]).orElse(0));
+                    } catch(IndexOutOfBoundsException e) {}
+                }
+            }
+            arr.sort(Integer::compareTo);
+            int size = arr.size();
+            int result = size % 2 == 0 ? (arr.get(size / 2 - 1) + arr.get(size / 2)) / 2 : arr.get(size / 2);
+            if (result > 255) {
+                result = 255;
+            } else if (result < 0) {
+                result = 0;
+            }
+            return result;
+        }
+
+        public static Number[][] LPF2D(Number[][] data, double f0, double dt, int m) {
+            double f = f0 * 0.5;
+            int N = data.length;
+            int M = data[0].length;
+            Number[][] filtered = new Number[N][M];
+            var filter = LPF(f, dt, m);
+            for (int i = 0; i < N; i++) {
+                var some = Arrays.copyOfRange(ConvolutionIntF(data[i], filter), m, m + M);
+                filtered[i] = some;
+            }
+            filtered = rotate(filtered, RotationType.LEFT);
+            for (int i = 0; i < M; i++) {
+                filtered[i] = Arrays.copyOfRange(ConvolutionIntF(filtered[i], filter), m, m + N);
+            }
+            filtered = rotate(filtered, RotationType.RIGHT);
+            return filtered;
+        }
+
+        public static Number[][] HPF2D(Number[][] data, double f0, double dt, int m) {
+            double f = f0 * 0.5;
+            int N = data.length;
+            int M = data[0].length;
+            Number[][] filtered = new Number[N][M];
+            var filter = HPF(f, dt, m);
+            for (int i = 0; i < N; i++) {
+                filtered[i] = Arrays.copyOfRange(ConvolutionIntF(data[i], filter), m, m + M);
+            }
+            filtered = rotate(filtered, RotationType.LEFT);
+            for (int i = 0; i < M; i++) {
+                filtered[i] = Arrays.copyOfRange(ConvolutionIntF(filtered[i], filter), m, m + N);
+            }
+            filtered = rotate(filtered, RotationType.RIGHT);
+            return filtered;
+        }
+    }
+
+    public static class DPMath {
+
+        public static Number[][] erose2D(Number[][] data, int maskSize) {
+            int N = data.length;
+            int M = data[0].length;
+            // Double[][] erosed = Arrays.stream(data)
+            //     .map(s -> Arrays.stream(s)
+            //         .map(Number::doubleValue).toArray(Double[]::new))
+            //     .map(s -> s.clone())
+            //     .toArray(Double[][]::new);
+            var erosed = new Number[N][M];
+            int maskShift = maskSize / 2;
+            for (int i = 0; i < N; i++) {
+                for (int j = 0; j < M; j++) {
+                    var maskVals = new ArrayList<Double>();
+                    for (int o = -maskShift; o <= maskShift; o++) {
+                        for (int p = -maskShift; p <= maskShift; p++) {
+                            try {
+                                maskVals.add(data[i + o][j + p].doubleValue());
+                            } catch(IndexOutOfBoundsException e) {}
+                        }
+                    }
+                    erosed[i][j] = maskVals.stream().min(Double::compareTo).orElse(maskVals.get(0));
+                }
+            }
+            return erosed;
+        }
+    }
+
     //Выделение изначальных трендов из смешанных данных с помощью производной
     public static XYSeries reverseMergeDerivative(XYSeries series) {
         XYSeries result = new XYSeries("");
@@ -215,170 +445,6 @@ public class DataProcessor {
             e.printStackTrace();
         }
         return result;
-    }
-
-    public static class Filtering {
-        ///Initial frequencies filter
-        public static XYSeries LPF(Double f, Double dt, int m) {
-            XYSeries ipw = new XYSeries("");
-            final Double[] edgePoints = new Double[] {0.35577019, 0.24336983, 0.07211497, 0.00630165};
-            double fact = f * 2 * dt;
-            ipw.add(0, fact);
-            double arg = fact * Math.PI;
-            for (int i = 1; i <= m; i++) {
-                ipw.add(i, Math.sin(arg * i) / (Math.PI * i));
-            }
-            ipw.updateByIndex(m, ipw.getY(m).doubleValue() / 2);
-            double sumg = ipw.getY(0).doubleValue();
-            for (int i = 1; i <= m; i++) {
-                double tmpsum = edgePoints[0];
-                arg = Math.PI * i / m;
-                for (int k = 1; k <= 3; k++) {
-                    tmpsum += 2 * edgePoints[k] * Math.cos(arg * k);
-                }
-                ipw.updateByIndex(i, ipw.getY(i).doubleValue() * tmpsum);
-                sumg += 2 * ipw.getY(i).doubleValue();
-            }
-            for (int i = 0; i <= m; i++) {
-                ipw.updateByIndex(i, ipw.getY(i).doubleValue() / sumg);
-            }
-            XYSeries additional = null;
-            try {
-                additional = ipw.createCopy(1, m);
-            } catch ( Exception e) {
-                e.printStackTrace();
-            }
-            reverseSeries(additional);
-            appendSeries(additional, ipw);
-            return additional;
-        }
-
-        public static XYSeries HPF(Double f, Double dt, int m) {
-            XYSeries hpw = new XYSeries("");
-            XYSeries ipw = LPF(f, dt, m);
-            int looper = 2 * m + 1;
-            for (int k = 0; k < looper; k++) {
-                if (k == m) {
-                    hpw.add(k, 1 - ipw.getY(k).doubleValue());
-                } else {
-                    hpw.add(k, -ipw.getY(k).doubleValue());
-                }
-            }
-            return hpw;
-        }
-
-        public static XYSeries BPF(Double f1, Double f2, Double dt, int m) {
-            XYSeries bpw = new XYSeries("");
-            XYSeries ipw1 = LPF(f1, dt, m);
-            XYSeries ipw2 = LPF(f2, dt, m);
-            int looper = 2 * m + 1;
-            for (int k = 0; k < looper; k++) {
-                bpw.add(k, ipw2.getY(k).doubleValue() - ipw1.getY(k).doubleValue());
-            }
-            return bpw;
-        }
-
-        public static XYSeries BSF(Double f1, Double f2, Double dt, int m) {
-            XYSeries bsw = new XYSeries("");
-            XYSeries ipw1 = LPF(f1, dt, m);
-            XYSeries ipw2 = LPF(f2, dt, m);
-            int looper = 2 * m + 1;
-            for (int k = 0; k < looper; k++) {
-                if (k == m) {
-                    bsw.add(k, 1 + ipw1.getY(k).doubleValue() - ipw2.getY(k).doubleValue());
-                } else {
-                    bsw.add(k, ipw1.getY(k).doubleValue() - ipw2.getY(k).doubleValue());
-                }
-            }
-            return bsw;
-        }
-
-        public static Integer[] BSFInt(Double f1, Double f2, Double dt, int m) {
-            XYSeries ipw1 = LPF(f1, dt, m);
-            XYSeries ipw2 = LPF(f2, dt, m);
-            int looper = 2 * m + 1;
-            Integer[] bsw = new Integer[looper];
-            for (int k = 0; k < looper; k++) {
-                if (k == m) {
-                    bsw[k] = (int) (1 + ipw1.getY(k).doubleValue() - ipw2.getY(k).doubleValue());
-                } else {
-                    bsw[k] = (int) (ipw1.getY(k).doubleValue() - ipw2.getY(k).doubleValue());
-                }
-            }
-            return bsw;
-        }
-
-        public static Integer[][] filterImg(Integer[][] data, int maskSizeX, int maskSizeY, ImgFIlterType filterType) {
-            int M = data.length;
-            int N = data[0].length;
-            Integer[][] filtered = Arrays.stream(data).map(Integer[]::clone).toArray(Integer[][]::new);
-            switch (filterType) {
-                case ARIFMETHIC_MEAN_FILTER:
-                    for (int i = 0; i < M; i++) {
-                        for (int j = 0; j < N; j++) {
-                            filtered[i][j] = arifMask(filtered, i, j, maskSizeX, maskSizeY);
-                        }
-                    }
-                    break;
-                case MEDIAN_FILTER:
-                    for (int i = 0; i < M; i++) {
-                        for (int j = 0; j < N; j++) {
-                            filtered[i][j] = medianMask(filtered, i, j, maskSizeX, maskSizeY);
-                        }
-                    }
-                    break;
-            }
-            return filtered;
-        }
-
-        private static int arifMask(Integer[][] data, int pX, int pY, int maskSizeX, int maskSizeY) {
-            int sum = 0;
-            int minusCount = 0;
-            for (int i = -maskSizeX / 2; i <= maskSizeX / 2; i++) {
-                for (int j = -maskSizeY / 2; j <= maskSizeY / 2; j++) {
-                    if (i == 0 && j == 0) continue;
-                    try {
-                        int value = Optional.ofNullable(data[pX + i][pY + j]).orElse(0);
-                        if (value > 255) {
-                            value = 255;
-                        } else if (value < 0) {
-                            value = 0;
-                        }
-                        sum += value;
-                    } catch(IndexOutOfBoundsException e) {
-                        minusCount++;
-                    }
-                }
-            }
-            int result = (int) ((double) sum / (maskSizeX * maskSizeY - minusCount));
-            if (result > 255) {
-                result = 255;
-            } else if (result < 0) {
-                result = 0;
-            }
-            return result;
-        }
-
-        private static int medianMask(Integer[][] data, int pX, int pY, int maskSizeX, int maskSizeY) {
-            ArrayList<Integer> arr = new ArrayList<>();
-            for (int i = -maskSizeX / 2; i <= maskSizeX / 2; i++) {
-                for (int j = -maskSizeY / 2; j <= maskSizeY / 2; j++) {
-                    if (i == 0 && j == 0) continue;
-                    try {
-                        arr.add(Optional.ofNullable(data[pX + i][pY + j]).orElse(0));
-                    } catch(IndexOutOfBoundsException e) {}
-                }
-            }
-            arr.sort(Integer::compareTo);
-            int size = arr.size();
-            int result = size % 2 == 0 ? (arr.get(size / 2 - 1) + arr.get(size / 2)) / 2 : arr.get(size / 2);
-            if (result > 255) {
-                result = 255;
-            } else if (result < 0) {
-                result = 0;
-            }
-            return result;
-        }
     }
 
     //reverse series
@@ -615,6 +681,17 @@ public class DataProcessor {
             }
         }
         return vector;
+    }
+
+    public static <T> Number[][] toMatrix(T[] data, Integer dim1, Integer dim2) {
+        Number[][] matrix = new Number[dim1][dim2];
+        int iter = 0;
+        for (int i = 0; i < dim1; i++) {
+            for (int j = 0; j < dim2; j++, iter++) {
+                matrix[i][j] = (Number) data[iter];
+            }
+        }
+        return matrix;
     }
 
     public static Integer[][] toIntMatrix(Integer[] data, Integer dim1, Integer dim2) {
@@ -922,6 +999,15 @@ public class DataProcessor {
             resultData[i] = inverseFilterNum(data[i], function, hasNoise, alpha);
         }
         return rotate(resultData, RotationType.LEFT);
+    }
+
+    // TODO auto-find T
+    public static Number[][] edgeTranslate(Number[][] data, int T) {
+        return Arrays.stream(data)
+            .map(s -> Arrays.stream(s)
+                .map(n -> n.doubleValue() < T ? 0 : n)
+                .toArray(Number[]::new))
+            .toArray(Number[][]::new);
     }
 
     public static <T> XYSeries Array2Series(T[] arr) {
