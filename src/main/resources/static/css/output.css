@@ -682,6 +682,10 @@ video {
   height: 1.5rem;
 }
 
+.h-\[45\%\] {
+  height: 45%;
+}
+
 .h-fit {
   height: -webkit-fit-content;
   height: -moz-fit-content;
@@ -690,10 +694,6 @@ video {
 
 .h-full {
   height: 100%;
-}
-
-.h-\[45\%\] {
-  height: 45%;
 }
 
 .max-h-\[45\%\] {

@@ -9,29 +9,18 @@
 <body class="max-w-full flex flex-col align-middle justify-center p-5 bg-gray-700">
 <div class="w-full min-h-0 h-full flex flex-row justify-center overflow-y-scroll">
   <div class="w-full min-h-0 mx-auto flex flex-row gap-10 flex-wrap justify-center">
-    <div th:each="info: ${infos}" class="infoContainer relative w-[45%] h-[45%] p-2 bg-white rounded-md
-        shadow-sm shadow-[rgba(1,1,1,0.2)] flex gap-2 items-center
-        hover:shadow-xl hover:shadow-blue-700 duration-100 ease-in">
-      <div class="flex flex-col w-full h-full">
+    <div th:each="info: ${infos}" class="infoContainer relative w-[45%] h-[45%] p-2 flex gap-2 items-center"
+        th:classappend="${!info.isBreak() ? 'bg-white rounded-md shadow-sm shadow-[rgba(1,1,1,0.2)] 
+        hover:shadow-xl hover:shadow-blue-700 duration-100 ease-in' : ''}">
+      <div th:if="${!info.isBreak()}" class="flex flex-col w-full h-full">
         <span th:text="${info.getName()}"></span>
         <img th:src="${info.getImagePath()}" class="h-full min-h-0 mx-auto">
       </div>
-      <div class="info hidden">
-        <!-- <div class="flex gap-2 justify-between min-w-0 w-full mx-auto">
-         <pre  class="w-fit h-fit p-2"><span th:text="${info.getTextMatrix()}" class="text-sm"></span></pre>
-          <img th:src="${info.getHistPath()}" class="min-w-0 w-1/2">
-        </div> -->
-        <!--                <div class="flex gap-2 min-w-0 w-full">-->
-        <!--                    <img th:src="${info.getAutoCovariancePath()}" class="min-w-0">-->
-        <!--                    <img th:src="${info.getNormalizedAutoCovariancePath()}" class="min-w-0">-->
-        <!--                </div>-->
+      <div th:if="${!info.isBreak()}" class="info hidden">
       </div>
-      <div class="info-toggler absolute inset-0 h-full w-full text-white rounded-xl cursor-pointer
+      <div th:if="${!info.isBreak()}" class="info-toggler absolute inset-0 h-full w-full text-white rounded-xl cursor-pointer
                 hover:animate-pulse"
            onclick="toggleInfo(this)">
-<!--        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">-->
-<!--          <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />-->
-<!--        </svg>-->
       </div>
     </div>
   </div>

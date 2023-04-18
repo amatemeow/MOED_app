@@ -19,7 +19,6 @@ import java.util.Arrays;
 public class ImageInfo {
     @Getter
     private String name;
-    @Getter
     private String imagePath;
     private String trendPath;
     @Getter
@@ -30,17 +29,32 @@ public class ImageInfo {
     private Number[][] numMatrix;
     @Setter
     private boolean isTrend = false;
+    @Getter
+    private boolean isBreak = false;
+
+    public ImageInfo() {
+        this.image = null;
+        this.isBreak = true;
+    }
 
     public ImageInfo(String path) {
         this.name = path.replace(".jpg", "");
         this.image = IOC.readImg(path);
         this.imagePath = createFile(path);
         this.matrix = IOC.readImgData(path);
+        this.numMatrix = Arrays.stream(this.matrix)
+            .map(v -> Arrays.stream(v)
+                .toArray(Number[]::new))
+            .toArray(Number[][]::new);
     }
 
     public ImageInfo(String path, Integer[][] data) {
         this.name = path.replace(".jpg", "");
         this.matrix = data;
+        this.numMatrix = Arrays.stream(this.matrix)
+            .map(v -> Arrays.stream(v)
+                .toArray(Number[]::new))
+            .toArray(Number[][]::new);
         this.image = buildImage();
         this.imagePath = createFile(path);
     }
@@ -56,6 +70,10 @@ public class ImageInfo {
     public ImageInfo(String path, Integer[][] data, boolean showHist) {
         this.name = path.replace(".jpg", "");
         this.matrix = data;
+        this.numMatrix = Arrays.stream(this.matrix)
+            .map(v -> Arrays.stream(v)
+                .toArray(Number[]::new))
+            .toArray(Number[][]::new);
         this.isTrend = showHist;
         if (this.isTrend) {
             buildHist();

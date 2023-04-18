@@ -198,8 +198,7 @@ public class DataProcessor {
             Number[][] filtered = new Number[N][M];
             var filter = LPF(f, dt, m);
             for (int i = 0; i < N; i++) {
-                var some = Arrays.copyOfRange(ConvolutionIntF(data[i], filter), m, m + M);
-                filtered[i] = some;
+                filtered[i] = Arrays.copyOfRange(ConvolutionIntF(data[i], filter), m, m + M);
             }
             filtered = rotate(filtered, RotationType.LEFT);
             for (int i = 0; i < M; i++) {
@@ -232,11 +231,6 @@ public class DataProcessor {
         public static Number[][] erose2D(Number[][] data, int maskSize) {
             int N = data.length;
             int M = data[0].length;
-            // Double[][] erosed = Arrays.stream(data)
-            //     .map(s -> Arrays.stream(s)
-            //         .map(Number::doubleValue).toArray(Double[]::new))
-            //     .map(s -> s.clone())
-            //     .toArray(Double[][]::new);
             var erosed = new Number[N][M];
             int maskShift = maskSize / 2;
             for (int i = 0; i < N; i++) {
@@ -253,6 +247,27 @@ public class DataProcessor {
                 }
             }
             return erosed;
+        }
+
+        public static Number[][] dilate2D(Number[][] data, int maskSize) {
+            int N = data.length;
+            int M = data[0].length;
+            var dilated = new Number[N][M];
+            int maskShift = maskSize / 2;
+            for (int i = 0; i < N; i++) {
+                for (int j = 0; j < M; j++) {
+                    var maskVals = new ArrayList<Double>();
+                    for (int o = -maskShift; o <= maskShift; o++) {
+                        for (int p = -maskShift; p <= maskShift; p++) {
+                            try {
+                                maskVals.add(data[i + o][j + p].doubleValue());
+                            } catch(IndexOutOfBoundsException e) {}
+                        }
+                    }
+                    dilated[i][j] = maskVals.stream().max(Double::compareTo).orElse(maskVals.get(0));
+                }
+            }
+            return dilated;
         }
     }
 
@@ -881,14 +896,14 @@ public class DataProcessor {
         return result;
     }
 
-    public static Integer[][] combinedNoiseImg(Integer[][] data, double rndR, double impR, double shift, double percentile) {
+    public static Number[][] combinedNoiseImg(Number[][] data, double rndR, double impR, double shift, double percentile) {
         int N = data[0].length;
-        Integer[][] result = new Integer[data.length][N];
+        Number[][] result = new Number[data.length][N];
         for (int i = 0; i < data.length; i++) {
             XYSeries impNoise = DataModeller.getImpulseNoise(N, shift, percentile, impR);
             XYSeries rndNoise = DataModeller.getNoise(N, rndR, RandomType.SYSTEM);
             for (int j = 0; j < N; j++) {
-                result[i][j] = data[i][j] + rndNoise.getY(j).intValue() + impNoise.getY(j).intValue();
+                result[i][j] = data[i][j].doubleValue() + rndNoise.getY(j).intValue() + impNoise.getY(j).intValue();
             }
         }
         return result;
@@ -1002,10 +1017,11 @@ public class DataProcessor {
     }
 
     // TODO auto-find T
-    public static Number[][] edgeTranslate(Number[][] data, int T) {
+    public static Number[][] edgeTranslate(Number[][] data, int... T) {
+        final int edge2 = T.length > 1 ? T[1] : Integer.MAX_VALUE;
         return Arrays.stream(data)
             .map(s -> Arrays.stream(s)
-                .map(n -> n.doubleValue() < T ? 0 : n)
+                .map(n -> (n.doubleValue() <= edge2 && n.doubleValue() > T[0]) ? 255 : 0)
                 .toArray(Number[]::new))
             .toArray(Number[][]::new);
     }
