@@ -228,6 +228,14 @@ public class DataProcessor {
 
     public static class DPMath {
 
+        public static void zeros2D(Number[][] toZero) {
+            for (int i = 0; i < toZero.length; i++) {
+                for (int j = 0; j < toZero[0].length; j++) {
+                    toZero[i][j] = 0d;
+                }
+            }
+        }
+
         public static Number[][] erose2D(Number[][] data, int maskSize) {
             int N = data.length;
             int M = data[0].length;
@@ -268,6 +276,48 @@ public class DataProcessor {
                 }
             }
             return dilated;
+        }
+
+        public static double laplacianMask(Number[][] data, int x, int y, int[][] mask) {
+            int N = data.length;
+            int M = data[0].length;
+            double x1 = x + 1 >= N ? 0 : data[x + 1][y].doubleValue() * mask[1][2];
+            double x2 = x - 1 < 0 ? 0 : data[x - 1][y].doubleValue() * mask[1][0];
+            double y1 = y + 1 >= M ? 0 : data[x][y + 1].doubleValue() * mask[2][1];
+            double y2 = y - 1 < 0 ? 0 : data[x][y - 1].doubleValue() * mask[0][1];
+            double result = x1 + x2 + y1 + y2 - data[x][y].doubleValue() * mask[1][1];
+            if (mask[0][0] != 0) {
+                double x1y1 = x + 1 >= N || y + 1 >= M ? 0 : data[x + 1][y + 1].doubleValue() * mask[2][2];
+                double x1y2 = x + 1 >= N || y - 1 < 0 ? 0 : data[x + 1][y - 1].doubleValue() * mask[0][2];
+                double x2y1 = x - 1 < 0 || y + 1 >= M ? 0 : data[x - 1][y + 1].doubleValue() * mask[2][0];
+                double x2y2 = x - 1 < 0 || y - 1 < 0 ? 0 : data[x - 1][y - 1].doubleValue() * mask[0][0];
+                result = x1 + x2 + y1 + y2 + x1y1 + x1y2 + x2y1 + x2y2 - 8 * data[x][y].doubleValue() * mask[1][1];
+            }
+            return result;
+        }
+
+        public static int[][] multiplyIntMask(int[][] mask, double multiplier) {
+            int N = mask.length;
+            int M = mask[0].length;
+            var result = new int[N][M];
+            for (int i = 0; i <N; i++) {
+                for (int j = 0; j < M; j++) {
+                    result[i][j] = (int) (mask[i][j] * multiplier);
+                }
+            }
+            return result;
+        }
+
+        public static Number[][] multiplyNumMask(Number[][] mask, double multiplier) {
+            int N = mask.length;
+            int M = mask[0].length;
+            var result = new Number[N][M];
+            for (int i = 0; i <N; i++) {
+                for (int j = 0; j < M; j++) {
+                    result[i][j] = mask[i][j].doubleValue() * multiplier;
+                }
+            }
+            return result;
         }
     }
 
@@ -446,6 +496,54 @@ public class DataProcessor {
                 val += series1[m].doubleValue() * series2.getY(k - m).doubleValue();
             }
             result[k] = val;
+        }
+        return result;
+    }
+
+    public static Number[][] convol2D(Number[][] data1, Number[][] data2) {
+        int N = data1.length;
+        int M = data1[0].length;
+        int a = (data2.length - 1) / 2;
+        int b = (data2[0].length - 1) / 2;
+        var result = new Number[N][M];
+        DPMath.zeros2D(result);
+        for (int i = a; i < N - a; i++) {
+            for (int j = b; j < M - b; j++) {
+                double sum1 = 0d;
+                for (int s = -a; s <= a; s++) {
+                    double sum2 = 0d;
+                    for (int t = -b; t <= b; t++) {
+                        try {
+                            sum2 += data1[i - s][j - t].doubleValue() * data2[a + s][b + t].doubleValue();
+                        } catch (IndexOutOfBoundsException e) {}
+                    }
+                    sum1 += sum2;
+                }
+                result[i][j] = (int) sum1;
+            }
+        }
+        return result;
+    }
+
+    public static Number[][] findZeros(Number[][] data) {
+        int N = data.length;
+        int M = data[0].length;
+        var result = new Number[N][M];
+        DPMath.zeros2D(result);
+        for (int i = 1; i < N - 1; i++) {
+            for (int j = 1; j < M - 1; j++) {
+                int negCnt = 0;
+                int posCnt = 0;
+                for (int a = -1; a <= 1; a++) {
+                    for (int b = -1; b <= 1; b++) {
+                        if (a != 0 && b != 0) {
+                            if (data[i + a][j + b].doubleValue() < 0) negCnt++;
+                            else if (data[i + a][j + b].doubleValue() > 0) posCnt++;
+                        }
+                    }
+                }
+                if (negCnt > 0 && posCnt > 0) result[i][j] = 255;
+            }
         }
         return result;
     }
@@ -751,14 +849,24 @@ public class DataProcessor {
         return translated;
     }
 
-    public static Integer[][] getDiff(Integer[][] data1, Integer[][] data2) {
-        Integer[][] diff = new Integer[data1.length][data1[0].length];
+    public static Number[][] getDiff(Number[][] data1, Number[][] data2) {
+        var diff = new Number[data1.length][data1[0].length];
         for (int i = 0; i < diff.length; i++) {
             for (int j = 0; j < diff[0].length; j++) {
-                diff[i][j] = data1[i][j] - data2[i][j];
+                diff[i][j] = data1[i][j].doubleValue() - data2[i][j].doubleValue();
             }
         }
         return diff;
+    }
+
+    public static Number[][] getAdd(Number[][] data1, Number[][] data2) {
+        var add = new Number[data1.length][data1[0].length];
+        for (int i = 0; i < add.length; i++) {
+            for (int j = 0; j < add[0].length; j++) {
+                add[i][j] = data1[i][j].doubleValue() + data2[i][j].doubleValue();
+            }
+        }
+        return add;
     }
 
     public static Integer[] getFirstDeriv(Integer[] data) {
@@ -1026,6 +1134,18 @@ public class DataProcessor {
             .toArray(Number[][]::new);
     }
 
+    public static Number[][] laplacian(Number[][] data, int[][] mask) {
+        int N = data.length;
+        int M = data[0].length;
+        var result = new Number[N][M];
+        for (int i = 0; i < N; i++) {
+            for (int j = 0; j < M; j++) {
+                result[i][j] = DPMath.laplacianMask(data, i, j, mask);
+            }
+        }
+        return result;
+    }
+
     public static <T> XYSeries Array2Series(T[] arr) {
         XYSeries result = new XYSeries("");
         for (int i = 0; i < arr.length; i++) result.add(i, (Number) arr[i]);
@@ -1102,5 +1222,9 @@ public class DataProcessor {
             }
         }
         return resultData;
+    }
+
+    public static Number[][] cloneNumMatrix(Number[][] data) {
+        return Arrays.stream(data).map(Number[]::clone).toArray(Number[][]::new);
     }
 }
