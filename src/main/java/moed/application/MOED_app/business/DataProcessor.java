@@ -1134,6 +1134,23 @@ public class DataProcessor {
             .toArray(Number[][]::new);
     }
 
+    public static Number[][] gradient(Number[][] data, Number[][] mask1, Number[][] mask2) {
+        int N = data.length;
+        int M = data[0].length;
+        var result = new Number[N][M];
+        var mask1Conv = convol2D(data, mask1);
+        var mask2Conv = convol2D(data, mask2);
+        for (int i = 0; i < N; i++) {
+            for (int j = 0; j < M; j++) {
+                result[i][j] = Math.sqrt(
+                    Math.pow(mask1Conv[i][j].doubleValue(), 2) +
+                    Math.pow(mask2Conv[i][j].doubleValue(), 2)    
+                );
+            }
+        }
+        return result;
+    }
+
     public static Number[][] laplacian(Number[][] data, int[][] mask) {
         int N = data.length;
         int M = data[0].length;

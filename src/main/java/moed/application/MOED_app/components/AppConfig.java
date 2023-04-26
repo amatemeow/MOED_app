@@ -647,6 +647,230 @@ public class AppConfig implements WebMvcConfigurer, DisposableBean {
 
 		//LAB 12 ---------------------------------------------------------------
 
+		Runnable modelGeneratePrevit = () -> {
+			String prefix = "Previt_";
+			var model = new ImageInfo("MODELimage.jpg").getNumMatrix();
+			var maskHor = new Number [][] {
+				{-1, 0, 1},
+				{-1, 0, 1},
+				{-1, 0, 1}
+			};
+			var maskVer = new Number [][] {
+				{-1, -1, -1},
+				{0, 0, 0},
+				{1, 1, 1}
+			};
+			IMAGES.put(prefix + "Model", new ImageInfo(prefix + "Model.jpg", model));
+			var grad = DataProcessor.gradient(model, maskHor, maskVer);
+			var noised = DataProcessor.combinedNoiseImg(
+				model,
+				10,
+				100,
+				255,
+				0.01
+			);
+			var gradNoised = DataProcessor.gradient(noised, maskHor, maskVer);
+			var filtered = DataProcessor.Filtering.filterImg(
+				DataProcessor.Num2Int(noised),
+				3,
+				3,
+				ImgFIlterType.MEDIAN_FILTER
+			);
+			var gradFiltered = DataProcessor.gradient(filtered, maskHor, maskVer);
+
+			IMAGES.put(prefix + "ModelGrad", new ImageInfo(prefix +"ModelGrad.jpg", grad));
+			IMAGES.put(prefix + "ModelNoised", new ImageInfo(prefix +"ModelNoised.jpg", noised));
+			IMAGES.put(prefix + "ModelNoisedGrad", new ImageInfo(prefix +"ModelNoisedGrad.jpg", gradNoised));
+			IMAGES.put(prefix + "ModelFiltered", new ImageInfo(prefix +"ModelFiltered.jpg", filtered));
+			IMAGES.put(prefix + "ModelFilteredGrad", new ImageInfo(prefix +"ModelFilteredGrad.jpg", gradFiltered));
+		};
+
+		Runnable modelGenerateSobel = () -> {
+			String prefix = "Sobel_";
+			var model = new ImageInfo("MODELimage.jpg").getNumMatrix();
+			var maskHor = new Number [][] {
+				{-1, 0, 1},
+				{-2, 0, 2},
+				{-1, 0, 1}
+			};
+			var maskVer = new Number [][] {
+				{-1, -2, -1},
+				{0, 0, 0},
+				{1, 2, 1}
+			};
+			IMAGES.put(prefix + "Model", new ImageInfo(prefix + "Model.jpg", model));
+			var grad = DataProcessor.gradient(model, maskHor, maskVer);
+			var noised = DataProcessor.combinedNoiseImg(
+				model,
+				10,
+				100,
+				255,
+				0.01
+			);
+			var gradNoised = DataProcessor.gradient(noised, maskHor, maskVer);
+			var filtered = DataProcessor.Filtering.filterImg(
+				DataProcessor.Num2Int(noised),
+				3,
+				3,
+				ImgFIlterType.MEDIAN_FILTER
+			);
+			var gradFiltered = DataProcessor.gradient(filtered, maskHor, maskVer);
+
+			IMAGES.put(prefix + "ModelGrad", new ImageInfo(prefix +"ModelGrad.jpg", grad));
+			IMAGES.put(prefix + "ModelNoised", new ImageInfo(prefix +"ModelNoised.jpg", noised));
+			IMAGES.put(prefix + "ModelNoisedGrad", new ImageInfo(prefix +"ModelNoisedGrad.jpg", gradNoised));
+			IMAGES.put(prefix + "ModelFiltered", new ImageInfo(prefix +"ModelFiltered.jpg", filtered));
+			IMAGES.put(prefix + "ModelFilteredGrad", new ImageInfo(prefix +"ModelFilteredGrad.jpg", gradFiltered));
+		};
+
+		Runnable modelGenerateLaplacian = () -> {
+			String prefix = "Laplacian_";
+			var model = new ImageInfo("MODELimage.jpg").getNumMatrix();
+			var mask = new Number [][] {
+				{1, 1, 1},
+				{1, -8, 1},
+				{1, 1, 1}
+			};
+			IMAGES.put(prefix + "Model", new ImageInfo(prefix + "Model.jpg", model));
+			var grad = DataProcessor.convol2D(model, mask);
+			grad = DataProcessor.edgeTranslate(grad, 100);
+			var noised = DataProcessor.combinedNoiseImg(
+				model,
+				10,
+				100,
+				255,
+				0.01
+			);
+			var gradNoised = DataProcessor.convol2D(noised, mask);
+			gradNoised = DataProcessor.edgeTranslate(gradNoised, 100);
+			var filtered = DataProcessor.Filtering.filterImg(
+				DataProcessor.Num2Int(noised),
+				3,
+				3,
+				ImgFIlterType.MEDIAN_FILTER
+			);
+			var gradFiltered = DataProcessor.convol2D(filtered, mask);
+			gradFiltered = DataProcessor.edgeTranslate(gradFiltered, 60);
+
+			IMAGES.put(prefix + "ModelGrad", new ImageInfo(prefix +"ModelGrad.jpg", grad));
+			IMAGES.put(prefix + "ModelNoised", new ImageInfo(prefix +"ModelNoised.jpg", noised));
+			IMAGES.put(prefix + "ModelNoisedGrad", new ImageInfo(prefix +"ModelNoisedGrad.jpg", gradNoised));
+			IMAGES.put(prefix + "ModelFiltered", new ImageInfo(prefix +"ModelFiltered.jpg", filtered));
+			IMAGES.put(prefix + "ModelFilteredGrad", new ImageInfo(prefix +"ModelFilteredGrad.jpg", gradFiltered));
+		};
+
+		Runnable graceGeneratePrevit = () -> {
+			String prefix = "Previt_";
+			var grace = new ImageInfo("grace.jpg").getNumMatrix();
+			var maskHor = new Number [][] {
+				{-1, 0, 1},
+				{-1, 0, 1},
+				{-1, 0, 1}
+			};
+			var maskVer = new Number [][] {
+				{-1, -1, -1},
+				{0, 0, 0},
+				{1, 1, 1}
+			};
+			IMAGES.put(prefix + "Grace", new ImageInfo(prefix + "Grace.jpg", grace));
+			var grad = DataProcessor.gradient(grace, maskHor, maskVer);
+			var noised = DataProcessor.combinedNoiseImg(
+				grace,
+				10,
+				100,
+				255,
+				0.01
+			);
+			var gradNoised = DataProcessor.gradient(noised, maskHor, maskVer);
+			var filtered = DataProcessor.Filtering.filterImg(
+				DataProcessor.Num2Int(noised),
+				3,
+				3,
+				ImgFIlterType.MEDIAN_FILTER
+			);
+			var gradFiltered = DataProcessor.gradient(filtered, maskHor, maskVer);
+
+			IMAGES.put(prefix + "GraceGrad", new ImageInfo(prefix +"GraceGrad.jpg", grad));
+			IMAGES.put(prefix + "GraceNoised", new ImageInfo(prefix +"GraceNoised.jpg", noised));
+			IMAGES.put(prefix + "GraceNoisedGrad", new ImageInfo(prefix +"GraceNoisedGrad.jpg", gradNoised));
+			IMAGES.put(prefix + "GraceFiltered", new ImageInfo(prefix +"GraceFiltered.jpg", filtered));
+			IMAGES.put(prefix + "GraceFilteredGrad", new ImageInfo(prefix +"GraceFilteredGrad.jpg", gradFiltered));
+		};
+
+		Runnable graceGenerateSobel = () -> {
+			String prefix = "Sobel_";
+			var grace = new ImageInfo("grace.jpg").getNumMatrix();
+			var maskHor = new Number [][] {
+				{-1, 0, 1},
+				{-2, 0, 2},
+				{-1, 0, 1}
+			};
+			var maskVer = new Number [][] {
+				{-1, -2, -1},
+				{0, 0, 0},
+				{1, 2, 1}
+			};
+			IMAGES.put(prefix + "Grace", new ImageInfo(prefix + "Grace.jpg", grace));
+			var grad = DataProcessor.gradient(grace, maskHor, maskVer);
+			var noised = DataProcessor.combinedNoiseImg(
+				grace,
+				10,
+				100,
+				255,
+				0.01
+			);
+			var gradNoised = DataProcessor.gradient(noised, maskHor, maskVer);
+			var filtered = DataProcessor.Filtering.filterImg(
+				DataProcessor.Num2Int(noised),
+				3,
+				3,
+				ImgFIlterType.MEDIAN_FILTER
+			);
+			var gradFiltered = DataProcessor.gradient(filtered, maskHor, maskVer);
+
+			IMAGES.put(prefix + "GraceGrad", new ImageInfo(prefix +"GraceGrad.jpg", grad));
+			IMAGES.put(prefix + "GraceNoised", new ImageInfo(prefix +"GraceNoised.jpg", noised));
+			IMAGES.put(prefix + "GraceNoisedGrad", new ImageInfo(prefix +"GraceNoisedGrad.jpg", gradNoised));
+			IMAGES.put(prefix + "GraceFiltered", new ImageInfo(prefix +"GraceFiltered.jpg", filtered));
+			IMAGES.put(prefix + "GraceFilteredGrad", new ImageInfo(prefix +"GraceFilteredGrad.jpg", gradFiltered));
+		};
+
+		Runnable graceGenerateLaplacian = () -> {
+			String prefix = "Laplacian_";
+			var grace = new ImageInfo("grace.jpg").getNumMatrix();
+			var mask = new Number [][] {
+				{1, 1, 1},
+				{1, -8, 1},
+				{1, 1, 1}
+			};
+			IMAGES.put(prefix + "Grace", new ImageInfo(prefix + "Grace.jpg", grace));
+			var grad = DataProcessor.convol2D(grace, mask);
+			grad = DataProcessor.edgeTranslate(grad, 90);
+			var noised = DataProcessor.combinedNoiseImg(
+				grace,
+				10,
+				100,
+				255,
+				0.01
+			);
+			var gradNoised = DataProcessor.convol2D(noised, mask);
+			gradNoised = DataProcessor.edgeTranslate(gradNoised, 90);
+			var filtered = DataProcessor.Filtering.filterImg(
+				DataProcessor.Num2Int(noised),
+				3,
+				3,
+				ImgFIlterType.MEDIAN_FILTER
+			);
+			var gradFiltered = DataProcessor.convol2D(filtered, mask);
+			gradFiltered = DataProcessor.edgeTranslate(gradFiltered, 50);
+
+			IMAGES.put(prefix + "GraceGrad", new ImageInfo(prefix +"GraceGrad.jpg", grad));
+			IMAGES.put(prefix + "GraceNoised", new ImageInfo(prefix +"GraceNoised.jpg", noised));
+			IMAGES.put(prefix + "GraceNoisedGrad", new ImageInfo(prefix +"GraceNoisedGrad.jpg", gradNoised));
+			IMAGES.put(prefix + "GraceFiltered", new ImageInfo(prefix +"GraceFiltered.jpg", filtered));
+			IMAGES.put(prefix + "GraceFilteredGrad", new ImageInfo(prefix +"GraceFilteredGrad.jpg", gradFiltered));
+		};
+
 		Runnable birchesGenerateLaplacian = () -> {
 			String prefix = "Laplacian_";
 			var birches = new ImageInfo("NASAmoon.jpg").getNumMatrix();
@@ -667,7 +891,7 @@ public class AppConfig implements WebMvcConfigurer, DisposableBean {
 			// var birchesMask45P = DataProcessor.narrowGSRange(DataProcessor.laplacian(birches, mask45_8_P));
 			var birchesMask45N = DataProcessor.convol2D(birches, mask45_8_N);
 			birchesMask45N = DataProcessor.narrowGSRange(birchesMask45N);
-			birchesMask45N = DataProcessor.edgeTranslate(birchesMask45N, 90);
+			// birchesMask45N = DataProcessor.edgeTranslate(birchesMask45N, 90);
 			var birchesDiff = DataProcessor.getDiff(
 				birches, 
 				birchesMask45N
@@ -690,8 +914,14 @@ public class AppConfig implements WebMvcConfigurer, DisposableBean {
 			
 		};
 
-		// graceGenerateLaplacian.run();
-		birchesGenerateLaplacian.run();
+		// modelGeneratePrevit.run();
+		// modelGenerateSobel.run();
+		// modelGenerateLaplacian.run();
+		// graceGeneratePrevit.run();
+		// graceGenerateSobel.run();
+		graceGenerateLaplacian.run();
+		// birchesGenerateLaplacian.run();
+
 
 
 	}
