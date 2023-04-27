@@ -873,7 +873,7 @@ public class AppConfig implements WebMvcConfigurer, DisposableBean {
 
 		Runnable birchesGenerateLaplacian = () -> {
 			String prefix = "Laplacian_";
-			var birches = new ImageInfo("NASAmoon.jpg").getNumMatrix();
+			var birches = new ImageInfo("igor1.jpg").getNumMatrix();
 			var mask45_8_N = new Number [][] {
 				{1, 1, 1},
 				{1, -8, 1},
@@ -884,33 +884,21 @@ public class AppConfig implements WebMvcConfigurer, DisposableBean {
 				{1, -4, 1},
 				{0, 1, 0}
 			};
-			birches = DataProcessor.narrowGSRange(birches);
+			var birchesE = DataProcessor.narrowGSRange(birches);
 			IMAGES.put(prefix + "Birches", new ImageInfo("NASAmoon.jpg", birches));
 			var mask45_8_P = DataProcessor.DPMath.multiplyNumMask(mask45_8_N, -1d);
 			var mask90_4_P = DataProcessor.DPMath.multiplyNumMask(mask90_4_N, -1d);
-			// var birchesMask45P = DataProcessor.narrowGSRange(DataProcessor.laplacian(birches, mask45_8_P));
-			var birchesMask45N = DataProcessor.convol2D(birches, mask45_8_N);
-			birchesMask45N = DataProcessor.narrowGSRange(birchesMask45N);
-			// birchesMask45N = DataProcessor.edgeTranslate(birchesMask45N, 90);
+			var birchesMask45N = DataProcessor.convol2D(birchesE, mask45_8_N);
 			var birchesDiff = DataProcessor.getDiff(
 				birches, 
 				birchesMask45N
 			);
-			// birchesDiff = DataProcessor.narrowGSRange(birchesDiff);
-			// var birchesAdd = DataProcessor.getAdd(
-			// 	birches, 
-			// 	birchesDiff
-			// );
-			// birchesAdd = DataProcessor.narrowGSRange(birchesAdd);
-			// var diffCDF = DataProcessor.narrowGSRange(DataProcessor.translateCDF(birchesAdd));
-			// var mask45NCDF = DataProcessor.narrowGSRange(DataProcessor.translateCDF(birchesMask45N));
-			
-			// IMAGES.put(prefix + "BirchesMask45P", new ImageInfo(prefix + "BirchesMask45P.jpg", birchesMask45P));
-			IMAGES.put(prefix + "BirchesMask45N", new ImageInfo(prefix + "BirchesMask45N.jpg", birchesMask45N));
+			birchesDiff = DataProcessor.trashhold(birchesDiff, 0, true);
+			birchesDiff = DataProcessor.trashhold(birchesDiff, 255, false);
+			birchesDiff = DataProcessor.narrowGSRange(birchesDiff);
+		
+			// IMAGES.put(prefix + "BirchesMask45N", new ImageInfo(prefix + "BirchesMask45N.jpg", birchesMask45N));
 			IMAGES.put(prefix + "BirchesDiff", new ImageInfo(prefix + "BirchesDiff.jpg", birchesDiff));
-			// IMAGES.put(prefix + "BirchesAdd", new ImageInfo(prefix + "BirchesAdd.jpg", birchesAdd));
-			// IMAGES.put(prefix + "BirchesDiffCDF", new ImageInfo(prefix + "BirchesDiffCDF.jpg", diffCDF));
-			// IMAGES.put(prefix + "BirchesMask45NCDF", new ImageInfo(prefix + "BirchesMask45NCDF.jpg", mask45NCDF));
 			
 		};
 
@@ -919,8 +907,8 @@ public class AppConfig implements WebMvcConfigurer, DisposableBean {
 		// modelGenerateLaplacian.run();
 		// graceGeneratePrevit.run();
 		// graceGenerateSobel.run();
-		graceGenerateLaplacian.run();
-		// birchesGenerateLaplacian.run();
+		// graceGenerateLaplacian.run();
+		birchesGenerateLaplacian.run();
 
 
 

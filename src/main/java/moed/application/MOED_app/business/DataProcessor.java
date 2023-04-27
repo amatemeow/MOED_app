@@ -278,20 +278,20 @@ public class DataProcessor {
             return dilated;
         }
 
-        public static double laplacianMask(Number[][] data, int x, int y, int[][] mask) {
+        public static double laplacianMask(Number[][] data, int x, int y, boolean square) {
             int N = data.length;
             int M = data[0].length;
-            double x1 = x + 1 >= N ? 0 : data[x + 1][y].doubleValue() * mask[1][2];
-            double x2 = x - 1 < 0 ? 0 : data[x - 1][y].doubleValue() * mask[1][0];
-            double y1 = y + 1 >= M ? 0 : data[x][y + 1].doubleValue() * mask[2][1];
-            double y2 = y - 1 < 0 ? 0 : data[x][y - 1].doubleValue() * mask[0][1];
-            double result = x1 + x2 + y1 + y2 - data[x][y].doubleValue() * mask[1][1];
-            if (mask[0][0] != 0) {
-                double x1y1 = x + 1 >= N || y + 1 >= M ? 0 : data[x + 1][y + 1].doubleValue() * mask[2][2];
-                double x1y2 = x + 1 >= N || y - 1 < 0 ? 0 : data[x + 1][y - 1].doubleValue() * mask[0][2];
-                double x2y1 = x - 1 < 0 || y + 1 >= M ? 0 : data[x - 1][y + 1].doubleValue() * mask[2][0];
-                double x2y2 = x - 1 < 0 || y - 1 < 0 ? 0 : data[x - 1][y - 1].doubleValue() * mask[0][0];
-                result = x1 + x2 + y1 + y2 + x1y1 + x1y2 + x2y1 + x2y2 - 8 * data[x][y].doubleValue() * mask[1][1];
+            double x1 = x + 1 >= N ? 0 : data[x + 1][y].doubleValue();
+            double x2 = x - 1 < 0 ? 0 : data[x - 1][y].doubleValue();
+            double y1 = y + 1 >= M ? 0 : data[x][y + 1].doubleValue();
+            double y2 = y - 1 < 0 ? 0 : data[x][y - 1].doubleValue();
+            double result = x1 + x2 + y1 + y2 - data[x][y].doubleValue();
+            if (!square) {
+                double x1y1 = x + 1 >= N || y + 1 >= M ? 0 : data[x + 1][y + 1].doubleValue();
+                double x1y2 = x + 1 >= N || y - 1 < 0 ? 0 : data[x + 1][y - 1].doubleValue();
+                double x2y1 = x - 1 < 0 || y + 1 >= M ? 0 : data[x - 1][y + 1].doubleValue();
+                double x2y2 = x - 1 < 0 || y - 1 < 0 ? 0 : data[x - 1][y - 1].doubleValue();
+                result = x1 + x2 + y1 + y2 + x1y1 + x1y2 + x2y1 + x2y2 - 8 * data[x][y].doubleValue();
             }
             return result;
         }
@@ -1134,6 +1134,19 @@ public class DataProcessor {
             .toArray(Number[][]::new);
     }
 
+    public static Number[][] trashhold(Number[][] data, double edge, boolean bottom) {
+        int N = data.length;
+        int M = data[0].length;
+        Number[][] result = new Number[N][M];
+        for (int i = 0; i < N; i++) {
+            for (int j = 0; j < M; j++) {
+                var value = data[i][j].doubleValue();
+                result[i][j] = bottom ? (value < edge ? 0 : value) : (value > edge ? 255 : value);
+            }
+        }
+        return result;
+    }
+
     public static Number[][] gradient(Number[][] data, Number[][] mask1, Number[][] mask2) {
         int N = data.length;
         int M = data[0].length;
@@ -1151,13 +1164,13 @@ public class DataProcessor {
         return result;
     }
 
-    public static Number[][] laplacian(Number[][] data, int[][] mask) {
+    public static Number[][] laplacian(Number[][] data, boolean square) {
         int N = data.length;
         int M = data[0].length;
         var result = new Number[N][M];
         for (int i = 0; i < N; i++) {
             for (int j = 0; j < M; j++) {
-                result[i][j] = DPMath.laplacianMask(data, i, j, mask);
+                result[i][j] = DPMath.laplacianMask(data, i, j, square);
             }
         }
         return result;
@@ -1214,15 +1227,16 @@ public class DataProcessor {
         return shifted;
     }
 
-    public static Number[][] recomputeGSRange(Number[][] data) {
+    // Param "edge": 0 - both, 1 - top, 2 - bottom
+    public static Number[][] recomputeGSRange(Number[][] data, int edge) {
         int N = data.length;
         int M = data[0].length;
         Number[][] resultData = new Number[N][M];
         for (int i = 0; i < N; i++) {
             for (int j = 0; j < M; j++) {
                 Number value = data[i][j];
-                if (value.doubleValue() > 255) value = 255;
-                if (value.doubleValue() < 0) value = 0;
+                if (value.doubleValue() > 255 && edge != 2) value = 255;
+                if (value.doubleValue() < 0 && edge != 1) value = 0;
                 resultData[i][j] = value;
             }
         }
