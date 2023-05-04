@@ -338,7 +338,7 @@ public class AppConfig implements WebMvcConfigurer, DisposableBean {
 		// ));
 		// IMAGES.put("grace", new ImageInfo("grace.jpg"));
 		// IMAGES.put("graceSF", new ImageInfo("Smaller_Grace_with_Fourier.jpg", 
-		// 	DataProcessor.narrowGSRange(DataProcessor.rescale(IMAGES.get("grace").getMatrix(), 0.5, InterpolationType.FOURIER))
+		// 	DataProcessor.narrowGSRange(DataProcessor.rescale(IMAGES.get("graceTR").getMatrix(), 0.5, InterpolationType.FOURIER))
 		// ));
 		// IMAGES.put("graceBF", new ImageInfo("Bigger_Grace_with_Fourier.jpg", 
 		// 	DataProcessor.narrowGSRange(DataProcessor.rescale(IMAGES.get("graceSF").getMatrix(), 2d, InterpolationType.FOURIER))
@@ -346,7 +346,7 @@ public class AppConfig implements WebMvcConfigurer, DisposableBean {
 		// IMAGES.put("DiffGrace", new ImageInfo("grace_difference",
 		// 	DataProcessor.narrowGSRange(
 		// 		DataProcessor.translateCDF(
-		// 			DataProcessor.getDiff(IMAGES.get("grace").getMatrix(), IMAGES.get("graceBF").getMatrix())
+		// 			DataProcessor.getDiff(IMAGES.get("graceTR").getMatrix(), IMAGES.get("graceBF").getMatrix())
 		// 		)
 		// 	)
 		// ));
@@ -354,295 +354,199 @@ public class AppConfig implements WebMvcConfigurer, DisposableBean {
 
 		//LAB 11 ---------------------------------------------------------------
 
-		// Runnable modelGenerateLPF = () -> {
-		// 	String prefix = "LPF_";
-		// 	IMAGES.put(prefix + "MODEL", new ImageInfo("MODELimage.jpg"));
-		// 	var model = IMAGES.get(prefix + "MODEL").getNumMatrix();
-		// 	var modelTrans = DataProcessor.edgeTranslate(model, 190);
-		// 	var modelLPF = DataProcessor.Filtering.LPF2D(modelTrans, 0.1, 1, 16);
-		// 	var modelDiff = DataProcessor.getDiff(
-		// 		DataProcessor.Num2Int(modelTrans),
-		// 		DataProcessor.Num2Int(modelLPF)
-		// 	);
-		// 	var modelDiffTrans = DataProcessor.edgeTranslate(modelDiff, 90);
-		// 	var noisedModel = DataProcessor.combinedNoiseImg(
-		// 		model,
-		// 		10,
-		// 		100,
-		// 		255,
-		// 		0.01
-		// 	);
-		// 	var noisedModelTrans = DataProcessor.edgeTranslate(noisedModel, 190);
-		// 	var noisedModelLPF = DataProcessor.Filtering.LPF2D(noisedModelTrans, 0.1, 1, 16);
-		// 	var noisedModelDiff = DataProcessor.getDiff(
-		// 		DataProcessor.Num2Int(noisedModelTrans),
-		// 		DataProcessor.Num2Int(noisedModelLPF)
-		// 	);
-		// 	var noisedModelDiffTrans = DataProcessor.edgeTranslate(noisedModelDiff, 90);
-		// 	var filteredModel = DataProcessor.Filtering.filterImg(
-		// 		DataProcessor.Num2Int(noisedModel),
-		// 		3,
-		// 		3,
-		// 		ImgFIlterType.MEDIAN_FILTER
-		// 	);
-		// 	var filteredModelTrans = DataProcessor.edgeTranslate(filteredModel, 190);
-		// 	var filteredModelLPF = DataProcessor.Filtering.LPF2D(filteredModelTrans, 0.1, 1, 16);
-		// 	var filteredModelDiff = DataProcessor.getDiff(
-		// 		DataProcessor.Num2Int(filteredModelTrans),
-		// 		DataProcessor.Num2Int(filteredModelLPF)
-		// 	);
-		// 	var filteredModelDiffTrans = DataProcessor.edgeTranslate(filteredModelDiff, 90);
+		Runnable modelGenerateLPF = () -> {
+			String prefix = "LPF_";
+			IMAGES.put(prefix + "MODEL", new ImageInfo("MODELimage.jpg"));
+			var model = IMAGES.get(prefix + "MODEL").getNumMatrix();
+			var modelTrans = DataProcessor.edgeTranslate(model, 190);
+			var modelLPF = DataProcessor.Filtering.LPF2D(modelTrans, 0.1, 1, 16);
+			var modelDiff = DataProcessor.getDiff(
+				DataProcessor.Num2Int(modelTrans),
+				DataProcessor.Num2Int(modelLPF)
+			);
+			var modelDiffTrans = DataProcessor.edgeTranslate(modelDiff, 90);
+			var noisedModel = DataProcessor.combinedNoiseImg(
+				model,
+				10,
+				100,
+				255,
+				0.01
+			);
+			var noisedModelTrans = DataProcessor.edgeTranslate(noisedModel, 190);
+			var noisedModelLPF = DataProcessor.Filtering.LPF2D(noisedModelTrans, 0.1, 1, 16);
+			var noisedModelDiff = DataProcessor.getDiff(
+				DataProcessor.Num2Int(noisedModelTrans),
+				DataProcessor.Num2Int(noisedModelLPF)
+			);
+			var noisedModelDiffTrans = DataProcessor.edgeTranslate(noisedModelDiff, 90);
+			var filteredModel = DataProcessor.Filtering.filterImg(
+				DataProcessor.Num2Int(noisedModel),
+				3,
+				3,
+				ImgFIlterType.MEDIAN_FILTER
+			);
+			var filteredModelTrans = DataProcessor.edgeTranslate(filteredModel, 190);
+			var filteredModelLPF = DataProcessor.Filtering.LPF2D(filteredModelTrans, 0.1, 1, 16);
+			var filteredModelDiff = DataProcessor.getDiff(
+				DataProcessor.Num2Int(filteredModelTrans),
+				DataProcessor.Num2Int(filteredModelLPF)
+			);
+			var filteredModelDiffTrans = DataProcessor.edgeTranslate(filteredModelDiff, 90);
 
-		// 	IMAGES.put(prefix +"ModelTrans", new ImageInfo(prefix + "ModelTranslated.jpg", modelTrans));
-		// 	IMAGES.put(prefix + "ModelLPF", new ImageInfo(prefix + "ModelLPF.jpg", modelLPF));
-		// 	IMAGES.put(prefix + "ModelDiff", new ImageInfo(prefix + "ModelDifference.jpg", modelDiff));
-		// 	IMAGES.put(prefix + "ModelDiffTrans", new ImageInfo(prefix + "ModelDifferenceTranslated.jpg", modelDiffTrans));
-		// 	IMAGES.put("break-" + UUID.randomUUID(), new ImageInfo());
-		// 	IMAGES.put(prefix + "NoisedModel", new ImageInfo(prefix + "NoisedModel.jpg", noisedModel));
-		// 	IMAGES.put(prefix + "NoisedModelDiff", new ImageInfo(prefix + "NoisedModelDifference.jpg", noisedModelDiffTrans));
-		// 	IMAGES.put(prefix + "FilteredModel", new ImageInfo(prefix + "FilteredModel.jpg", filteredModel));
-		// 	IMAGES.put(prefix + "FilteredModelDiff", new ImageInfo(prefix + "FilteredModelDifference.jpg", filteredModelDiffTrans));
-		// };
+			IMAGES.put(prefix +"ModelTrans", new ImageInfo(prefix + "ModelTranslated.jpg", modelTrans));
+			IMAGES.put(prefix + "ModelLPF", new ImageInfo(prefix + "ModelLPF.jpg", modelLPF));
+			IMAGES.put(prefix + "ModelDiff", new ImageInfo(prefix + "ModelDifference.jpg", modelDiff));
+			IMAGES.put(prefix + "ModelDiffTrans", new ImageInfo(prefix + "ModelDifferenceTranslated.jpg", modelDiffTrans));
+			IMAGES.put("break-" + UUID.randomUUID(), new ImageInfo());
+			IMAGES.put(prefix + "NoisedModel", new ImageInfo(prefix + "NoisedModel.jpg", noisedModel));
+			IMAGES.put(prefix + "NoisedModelDiff", new ImageInfo(prefix + "NoisedModelDifference.jpg", noisedModelDiffTrans));
+			IMAGES.put(prefix + "FilteredModel", new ImageInfo(prefix + "FilteredModel.jpg", filteredModel));
+			IMAGES.put(prefix + "FilteredModelDiff", new ImageInfo(prefix + "FilteredModelDifference.jpg", filteredModelDiffTrans));
+		};
 
-		// Runnable modelGenerateHPF = () -> {
-		// 	String prefix = "HPF_";
-		// 	IMAGES.put(prefix + "MODEL", new ImageInfo("MODELimage.jpg"));
-		// 	var model = IMAGES.get(prefix + "MODEL").getNumMatrix();
-		// 	var modelTrans = DataProcessor.edgeTranslate(model, 190);
-		// 	var modelHPF = DataProcessor.Filtering.HPF2D(modelTrans, 0.1, 1, 16);
-		// 	var modelDiffTrans = DataProcessor.edgeTranslate(modelHPF, 20);
-		// 	var noisedModel = DataProcessor.combinedNoiseImg(
-		// 		model,
-		// 		10,
-		// 		100,
-		// 		255,
-		// 		0.01
-		// 	);
-		// 	var noisedModelTrans = DataProcessor.edgeTranslate(noisedModel, 190);
-		// 	var noisedModelHPF = DataProcessor.Filtering.HPF2D(noisedModelTrans, 0.1, 1, 16);
-		// 	var noisedModelDiffTrans = DataProcessor.edgeTranslate(noisedModelHPF, 40);
-		// 	var filteredModel = DataProcessor.Filtering.filterImg(
-		// 		DataProcessor.Num2Int(noisedModel),
-		// 		3,
-		// 		3,
-		// 		ImgFIlterType.MEDIAN_FILTER
-		// 	);
-		// 	var filteredModelTrans = DataProcessor.edgeTranslate(filteredModel, 190);
-		// 	var filteredModelHPF = DataProcessor.Filtering.HPF2D(filteredModelTrans, 0.1, 1, 16);
-		// 	var filteredModelDiffTrans = DataProcessor.edgeTranslate(filteredModelHPF, 20);
+		Runnable modelGenerateHPF = () -> {
+			String prefix = "HPF_";
+			IMAGES.put(prefix + "MODEL", new ImageInfo("MODELimage.jpg"));
+			var model = IMAGES.get(prefix + "MODEL").getNumMatrix();
+			var modelTrans = DataProcessor.edgeTranslate(model, 190);
+			var modelHPF = DataProcessor.Filtering.HPF2D(modelTrans, 0.1, 1, 16);
+			var modelDiffTrans = DataProcessor.edgeTranslate(modelHPF, 20);
+			var noisedModel = DataProcessor.combinedNoiseImg(
+				model,
+				10,
+				100,
+				255,
+				0.01
+			);
+			var noisedModelTrans = DataProcessor.edgeTranslate(noisedModel, 190);
+			var noisedModelHPF = DataProcessor.Filtering.HPF2D(noisedModelTrans, 0.1, 1, 16);
+			var noisedModelDiffTrans = DataProcessor.edgeTranslate(noisedModelHPF, 40);
+			var filteredModel = DataProcessor.Filtering.filterImg(
+				DataProcessor.Num2Int(noisedModel),
+				3,
+				3,
+				ImgFIlterType.MEDIAN_FILTER
+			);
+			var filteredModelTrans = DataProcessor.edgeTranslate(filteredModel, 190);
+			var filteredModelHPF = DataProcessor.Filtering.HPF2D(filteredModelTrans, 0.1, 1, 16);
+			var filteredModelDiffTrans = DataProcessor.edgeTranslate(filteredModelHPF, 20);
 
-		// 	IMAGES.put(prefix +"ModelTrans", new ImageInfo(prefix + "ModelTranslated.jpg", modelTrans));
-		// 	IMAGES.put(prefix + "ModelHPF", new ImageInfo(prefix + "ModelHPF.jpg", modelHPF));
-		// 	IMAGES.put(prefix + "ModelTransDiff", new ImageInfo(prefix + "ModelTransDiff.jpg", modelDiffTrans));
-		// 	// IMAGES.put("break-" + UUID.randomUUID(), new ImageInfo());
-		// 	IMAGES.put(prefix + "NoisedModel", new ImageInfo(prefix + "NoisedModel.jpg", noisedModel));
-		// 	IMAGES.put(prefix + "NoisedModelDiff", new ImageInfo(prefix + "NoisedModelDifference.jpg", noisedModelDiffTrans));
-		// 	IMAGES.put(prefix + "FilteredModel", new ImageInfo(prefix + "FilteredModel.jpg", filteredModel));
-		// 	IMAGES.put(prefix + "FilteredModelDiff", new ImageInfo(prefix + "FilteredModelDifference.jpg", filteredModelDiffTrans));
-		// };
-
-		// Runnable modelGenerateER = () -> {
-		// 	String prefix = "EROSION_";
-		// 	IMAGES.put(prefix + "MODEL", new ImageInfo("MODELimage.jpg"));
-		// 	var model = IMAGES.get(prefix + "MODEL").getNumMatrix();
-		// 	var modelTrans = DataProcessor.edgeTranslate(model, 190);
-		// 	var modelEr = DataProcessor.DPMath.erose2D(modelTrans, 3);
-		// 	var modelDiff = DataProcessor.getDiff(
-		// 		DataProcessor.Num2Int(modelTrans),
-		// 		DataProcessor.Num2Int(modelEr)
-		// 	);
-		// 	var noisedModel = DataProcessor.combinedNoiseImg(
-		// 		model,
-		// 		10,
-		// 		100,
-		// 		255,
-		// 		0.01
-		// 	);
-		// 	var noisedModelTrans = DataProcessor.edgeTranslate(noisedModel, 190);
-		// 	var noisedModelEr = DataProcessor.DPMath.erose2D(noisedModelTrans, 3);
-		// 	var noisedModelDiff = DataProcessor.getDiff(
-		// 		DataProcessor.Num2Int(noisedModelTrans),
-		// 		DataProcessor.Num2Int(noisedModelEr)
-		// 	);
-		// 	var noisedModelDiffTrans = DataProcessor.edgeTranslate(noisedModelDiff, 190, 255);
-		// 	var filteredModel = DataProcessor.Filtering.filterImg(
-		// 		DataProcessor.Num2Int(noisedModel),
-		// 		3,
-		// 		3,
-		// 		ImgFIlterType.MEDIAN_FILTER
-		// 	);
-		// 	var filteredModelTrans = DataProcessor.edgeTranslate(filteredModel, 190);
-		// 	var filteredModelEr = DataProcessor.DPMath.erose2D(filteredModelTrans, 3);
-		// 	var filteredModelDiff = DataProcessor.getDiff(
-		// 		DataProcessor.Num2Int(filteredModelTrans),
-		// 		DataProcessor.Num2Int(filteredModelEr)
-		// 	);
-
-		// 	IMAGES.put(prefix +"ModelTrans", new ImageInfo(prefix + "ModelTranslated.jpg", modelTrans));
-		// 	IMAGES.put(prefix + "ModelEr", new ImageInfo(prefix + "ModelErosed.jpg", modelEr));
-		// 	IMAGES.put(prefix + "ModelDiff", new ImageInfo(prefix + "ModelDiff.jpg", modelDiff));
-		// 	// IMAGES.put("break-" + UUID.randomUUID(), new ImageInfo());
-		// 	IMAGES.put(prefix + "NoisedModel", new ImageInfo(prefix + "NoisedModel.jpg", noisedModel));
-		// 	IMAGES.put(prefix + "NoisedModelDiff", new ImageInfo(prefix + "NoisedModelDifference.jpg", noisedModelDiffTrans));
-		// 	IMAGES.put(prefix + "FilteredModel", new ImageInfo(prefix + "FilteredModel.jpg", filteredModel));
-		// 	IMAGES.put(prefix + "FilteredModelDiff", new ImageInfo(prefix + "FilteredModelDifference.jpg", filteredModelDiff));
-		// };
+			IMAGES.put(prefix +"ModelTrans", new ImageInfo(prefix + "ModelTranslated.jpg", modelTrans));
+			IMAGES.put(prefix + "ModelHPF", new ImageInfo(prefix + "ModelHPF.jpg", modelHPF));
+			IMAGES.put(prefix + "ModelTransDiff", new ImageInfo(prefix + "ModelTransDiff.jpg", modelDiffTrans));
+			// IMAGES.put("break-" + UUID.randomUUID(), new ImageInfo());
+			IMAGES.put(prefix + "NoisedModel", new ImageInfo(prefix + "NoisedModel.jpg", noisedModel));
+			IMAGES.put(prefix + "NoisedModelDiff", new ImageInfo(prefix + "NoisedModelDifference.jpg", noisedModelDiffTrans));
+			IMAGES.put(prefix + "FilteredModel", new ImageInfo(prefix + "FilteredModel.jpg", filteredModel));
+			IMAGES.put(prefix + "FilteredModelDiff", new ImageInfo(prefix + "FilteredModelDifference.jpg", filteredModelDiffTrans));
+		};
 		
-		// Runnable graceGenerateLPF = () -> {
-		// 	String prefix = "LPF_";
-		// 	IMAGES.put(prefix + "grace", new ImageInfo("grace.jpg"));
-		// 	var grace = IMAGES.get(prefix + "grace").getNumMatrix();
-		// 	var graceTrans = DataProcessor.edgeTranslate(grace, 140);
-		// 	var graceLPF = DataProcessor.Filtering.LPF2D(graceTrans, 0.1, 1, 16);
-		// 	var graceDiff = DataProcessor.getDiff(
-		// 		DataProcessor.Num2Int(graceTrans),
-		// 		DataProcessor.Num2Int(graceLPF)
-		// 	);
-		// 	var graceDiffTrans = DataProcessor.edgeTranslate(graceDiff, 90);
-		// 	var noisedModel = DataProcessor.combinedNoiseImg(
-		// 		grace,
-		// 		10,
-		// 		100,
-		// 		255,
-		// 		0.01
-		// 	);
-		// 	var noisedModelTrans = DataProcessor.edgeTranslate(noisedModel, 140);
-		// 	var noisedModelLPF = DataProcessor.Filtering.LPF2D(noisedModelTrans, 0.1, 1, 16);
-		// 	var noisedModelDiff = DataProcessor.getDiff(
-		// 		DataProcessor.Num2Int(noisedModelTrans),
-		// 		DataProcessor.Num2Int(noisedModelLPF)
-		// 	);
-		// 	var noisedModelDiffTrans = DataProcessor.edgeTranslate(noisedModelDiff, 90);
-		// 	var filteredModel = DataProcessor.Filtering.filterImg(
-		// 		DataProcessor.Num2Int(noisedModel),
-		// 		3,
-		// 		3,
-		// 		ImgFIlterType.MEDIAN_FILTER
-		// 	);
-		// 	var filteredModelTrans = DataProcessor.edgeTranslate(filteredModel, 120);
-		// 	var filteredModelLPF = DataProcessor.Filtering.LPF2D(filteredModelTrans, 0.1, 1, 16);
-		// 	var filteredModelDiff = DataProcessor.getDiff(
-		// 		DataProcessor.Num2Int(filteredModelTrans),
-		// 		DataProcessor.Num2Int(filteredModelLPF)
-		// 	);
-		// 	var filteredModelDiffTrans = DataProcessor.edgeTranslate(filteredModelDiff, 90);
+		Runnable graceGenerateLPF = () -> {
+			String prefix = "LPF_";
+			IMAGES.put(prefix + "grace", new ImageInfo("grace.jpg"));
+			var grace = IMAGES.get(prefix + "grace").getNumMatrix();
+			var graceTrans = DataProcessor.edgeTranslate(grace, 140);
+			var graceLPF = DataProcessor.Filtering.LPF2D(graceTrans, 0.1, 1, 16);
+			var graceDiff = DataProcessor.getDiff(
+				DataProcessor.Num2Int(graceTrans),
+				DataProcessor.Num2Int(graceLPF)
+			);
+			var graceDiffTrans = DataProcessor.edgeTranslate(graceDiff, 90);
+			var noisedModel = DataProcessor.combinedNoiseImg(
+				grace,
+				10,
+				100,
+				255,
+				0.01
+			);
+			var noisedModelTrans = DataProcessor.edgeTranslate(noisedModel, 140);
+			var noisedModelLPF = DataProcessor.Filtering.LPF2D(noisedModelTrans, 0.1, 1, 16);
+			var noisedModelDiff = DataProcessor.getDiff(
+				DataProcessor.Num2Int(noisedModelTrans),
+				DataProcessor.Num2Int(noisedModelLPF)
+			);
+			var noisedModelDiffTrans = DataProcessor.edgeTranslate(noisedModelDiff, 90);
+			var filteredModel = DataProcessor.Filtering.filterImg(
+				DataProcessor.Num2Int(noisedModel),
+				3,
+				3,
+				ImgFIlterType.MEDIAN_FILTER
+			);
+			var filteredModelTrans = DataProcessor.edgeTranslate(filteredModel, 120);
+			var filteredModelLPF = DataProcessor.Filtering.LPF2D(filteredModelTrans, 0.1, 1, 16);
+			var filteredModelDiff = DataProcessor.getDiff(
+				DataProcessor.Num2Int(filteredModelTrans),
+				DataProcessor.Num2Int(filteredModelLPF)
+			);
+			var filteredModelDiffTrans = DataProcessor.edgeTranslate(filteredModelDiff, 90);
 
-		// 	IMAGES.put(prefix + "graceTrans", new ImageInfo(prefix + "GraceTranslated.jpg", graceTrans));
-		// 	IMAGES.put(prefix + "graceLPF", new ImageInfo(prefix + "GraceLPF.jpg", graceLPF));
-		// 	IMAGES.put(prefix + "graceDiff", new ImageInfo(prefix + "GraceDifference.jpg", graceDiff));
-		// 	IMAGES.put(prefix + "graceDiffTrans", new ImageInfo(prefix + "GraceDifferenceTranslated.jpg", graceDiffTrans));
-		// 	IMAGES.put("break-" + UUID.randomUUID(), new ImageInfo());
-		// 	IMAGES.put(prefix + "NoisedGrace", new ImageInfo(prefix + "NoisedGrace.jpg", noisedModel));
-		// 	IMAGES.put(prefix + "NoisedGraceDiff", new ImageInfo(prefix + "NoisedGraceDifference.jpg", noisedModelDiffTrans));
-		// 	IMAGES.put(prefix + "FilteredGrace", new ImageInfo(prefix + "FilteredGrace.jpg", filteredModel));
-		// 	IMAGES.put(prefix + "FilteredGraceDiff", new ImageInfo(prefix + "FilteredGraceDifference.jpg", filteredModelDiffTrans));
+			IMAGES.put(prefix + "graceTrans", new ImageInfo(prefix + "GraceTranslated.jpg", graceTrans));
+			IMAGES.put(prefix + "graceLPF", new ImageInfo(prefix + "GraceLPF.jpg", graceLPF));
+			IMAGES.put(prefix + "graceDiff", new ImageInfo(prefix + "GraceDifference.jpg", graceDiff));
+			IMAGES.put(prefix + "graceDiffTrans", new ImageInfo(prefix + "GraceDifferenceTranslated.jpg", graceDiffTrans));
+			IMAGES.put("break-" + UUID.randomUUID(), new ImageInfo());
+			IMAGES.put(prefix + "NoisedGrace", new ImageInfo(prefix + "NoisedGrace.jpg", noisedModel));
+			IMAGES.put(prefix + "NoisedGraceDiff", new ImageInfo(prefix + "NoisedGraceDifference.jpg", noisedModelDiffTrans));
+			IMAGES.put(prefix + "FilteredGrace", new ImageInfo(prefix + "FilteredGrace.jpg", filteredModel));
+			IMAGES.put(prefix + "FilteredGraceDiff", new ImageInfo(prefix + "FilteredGraceDifference.jpg", filteredModelDiffTrans));
 
-		// };
+		};
 
-		// Runnable graceGenerateHPF = () -> {
-		// 	String prefix = "HPF_";
-		// 	IMAGES.put(prefix + "grace", new ImageInfo("grace.jpg"));
-		// 	var grace = IMAGES.get(prefix + "grace").getNumMatrix();
-		// 	var graceTrans = DataProcessor.edgeTranslate(grace, 140);
-		// 	var graceHPF = DataProcessor.Filtering.HPF2D(graceTrans, 0.1, 1, 16);
-		// 	var graceDiff = DataProcessor.getDiff(
-		// 		DataProcessor.Num2Int(graceTrans),
-		// 		DataProcessor.Num2Int(graceHPF)
-		// 	);
-		// 	var graceDiffTrans = DataProcessor.edgeTranslate(graceHPF, 80);
-		// 	var noisedModel = DataProcessor.combinedNoiseImg(
-		// 		grace,
-		// 		10,
-		// 		100,
-		// 		255,
-		// 		0.01
-		// 	);
-		// 	var noisedModelTrans = DataProcessor.edgeTranslate(noisedModel, 140);
-		// 	var noisedModelHPF = DataProcessor.Filtering.HPF2D(noisedModelTrans, 0.1, 1, 16);
-		// 	var noisedModelDiff = DataProcessor.getDiff(
-		// 		DataProcessor.Num2Int(noisedModelTrans),
-		// 		DataProcessor.Num2Int(noisedModelHPF)
-		// 	);
-		// 	var noisedModelDiffTrans = DataProcessor.edgeTranslate(noisedModelHPF, 80);
-		// 	var filteredModel = DataProcessor.Filtering.filterImg(
-		// 		DataProcessor.Num2Int(noisedModel),
-		// 		3,
-		// 		3,
-		// 		ImgFIlterType.MEDIAN_FILTER
-		// 	);
-		// 	var filteredModelTrans = DataProcessor.edgeTranslate(filteredModel, 120);
-		// 	var filteredModelHPF = DataProcessor.Filtering.HPF2D(filteredModelTrans, 0.1, 1, 16);
-		// 	var filteredModelDiff = DataProcessor.getDiff(
-		// 		DataProcessor.Num2Int(filteredModelTrans),
-		// 		DataProcessor.Num2Int(filteredModelHPF)
-		// 	);
-		// 	var filteredModelDiffTrans = DataProcessor.edgeTranslate(filteredModelHPF, 40);
+		Runnable graceGenerateHPF = () -> {
+			String prefix = "HPF_";
+			IMAGES.put(prefix + "grace", new ImageInfo("grace.jpg"));
+			var grace = IMAGES.get(prefix + "grace").getNumMatrix();
+			var graceTrans = DataProcessor.edgeTranslate(grace, 140);
+			var graceHPF = DataProcessor.Filtering.HPF2D(graceTrans, 0.1, 1, 16);
+			var graceDiff = DataProcessor.getDiff(
+				DataProcessor.Num2Int(graceTrans),
+				DataProcessor.Num2Int(graceHPF)
+			);
+			var graceDiffTrans = DataProcessor.edgeTranslate(graceHPF, 80);
+			var noisedModel = DataProcessor.combinedNoiseImg(
+				grace,
+				10,
+				100,
+				255,
+				0.01
+			);
+			var noisedModelTrans = DataProcessor.edgeTranslate(noisedModel, 140);
+			var noisedModelHPF = DataProcessor.Filtering.HPF2D(noisedModelTrans, 0.1, 1, 16);
+			var noisedModelDiff = DataProcessor.getDiff(
+				DataProcessor.Num2Int(noisedModelTrans),
+				DataProcessor.Num2Int(noisedModelHPF)
+			);
+			var noisedModelDiffTrans = DataProcessor.edgeTranslate(noisedModelHPF, 80);
+			var filteredModel = DataProcessor.Filtering.filterImg(
+				DataProcessor.Num2Int(noisedModel),
+				3,
+				3,
+				ImgFIlterType.MEDIAN_FILTER
+			);
+			var filteredModelTrans = DataProcessor.edgeTranslate(filteredModel, 120);
+			var filteredModelHPF = DataProcessor.Filtering.HPF2D(filteredModelTrans, 0.1, 1, 16);
+			var filteredModelDiff = DataProcessor.getDiff(
+				DataProcessor.Num2Int(filteredModelTrans),
+				DataProcessor.Num2Int(filteredModelHPF)
+			);
+			var filteredModelDiffTrans = DataProcessor.edgeTranslate(filteredModelHPF, 40);
 
-		// 	IMAGES.put(prefix + "graceTrans", new ImageInfo(prefix + "GraceTranslated.jpg", graceTrans));
-		// 	IMAGES.put(prefix + "graceHPF", new ImageInfo(prefix + "GraceHPF.jpg", graceHPF));
-		// 	// IMAGES.put(prefix + "graceDiff", new ImageInfo(prefix + "GraceDifference.jpg", graceDiff));
-		// 	IMAGES.put(prefix + "graceDiffTrans", new ImageInfo(prefix + "GraceDifferenceTranslated.jpg", graceDiffTrans));
-		// 	// IMAGES.put("break-" + UUID.randomUUID(), new ImageInfo());
-		// 	IMAGES.put(prefix + "NoisedGrace", new ImageInfo(prefix + "NoisedGrace.jpg", noisedModel));
-		// 	IMAGES.put(prefix + "NoisedGraceDiff", new ImageInfo(prefix + "NoisedGraceDifference.jpg", noisedModelDiffTrans));
-		// 	IMAGES.put(prefix + "FilteredGrace", new ImageInfo(prefix + "FilteredGrace.jpg", filteredModel));
-		// 	IMAGES.put(prefix + "FilteredGraceDiff", new ImageInfo(prefix + "FilteredGraceDifference.jpg", filteredModelDiffTrans));
+			IMAGES.put(prefix + "graceTrans", new ImageInfo(prefix + "GraceTranslated.jpg", graceTrans));
+			IMAGES.put(prefix + "graceHPF", new ImageInfo(prefix + "GraceHPF.jpg", graceHPF));
+			// IMAGES.put(prefix + "graceDiff", new ImageInfo(prefix + "GraceDifference.jpg", graceDiff));
+			IMAGES.put(prefix + "graceDiffTrans", new ImageInfo(prefix + "GraceDifferenceTranslated.jpg", graceDiffTrans));
+			// IMAGES.put("break-" + UUID.randomUUID(), new ImageInfo());
+			IMAGES.put(prefix + "NoisedGrace", new ImageInfo(prefix + "NoisedGrace.jpg", noisedModel));
+			IMAGES.put(prefix + "NoisedGraceDiff", new ImageInfo(prefix + "NoisedGraceDifference.jpg", noisedModelDiffTrans));
+			IMAGES.put(prefix + "FilteredGrace", new ImageInfo(prefix + "FilteredGrace.jpg", filteredModel));
+			IMAGES.put(prefix + "FilteredGraceDiff", new ImageInfo(prefix + "FilteredGraceDifference.jpg", filteredModelDiffTrans));
 
-		// };
-
-		// Runnable graceGenerateER = () -> {
-		// 	String prefix = "EROSION_";
-		// 	IMAGES.put(prefix + "grace", new ImageInfo("grace.jpg"));
-		// 	var grace = IMAGES.get(prefix + "grace").getNumMatrix();
-		// 	// var graceTrans = DataProcessor.edgeTranslate(grace, 140);
-		// 	var graceEr = DataProcessor.DPMath.erose2D(grace, 3);
-		// 	var graceDiff = DataProcessor.narrowGSRange(DataProcessor.getDiff(
-		// 		DataProcessor.Num2Int(grace),
-		// 		DataProcessor.Num2Int(graceEr)
-		// 	));
-		// 	var noisedGrace = DataProcessor.combinedNoiseImg(
-		// 		grace,
-		// 		10,
-		// 		100,
-		// 		255,
-		// 		0.01
-		// 	);
-		// 	var noisedGraceTrans = DataProcessor.edgeTranslate(noisedGrace, 120);
-		// 	var noisedGraceEr = DataProcessor.DPMath.erose2D(noisedGraceTrans, 3);
-		// 	var noisedGraceDiff = DataProcessor.getDiff(
-		// 		DataProcessor.Num2Int(noisedGraceTrans),
-		// 		DataProcessor.Num2Int(noisedGraceEr)
-		// 	);
-		// 	var noisedGraceDiffTrans = DataProcessor.edgeTranslate(noisedGraceDiff, 140, 255);
-		// 	var filteredGrace = DataProcessor.Filtering.filterImg(
-		// 		DataProcessor.Num2Int(noisedGrace),
-		// 		3,
-		// 		3,
-		// 		ImgFIlterType.MEDIAN_FILTER
-		// 	);
-		// 	var filteredGraceTrans = DataProcessor.edgeTranslate(filteredGrace, 110);
-		// 	var filteredGraceEr = DataProcessor.DPMath.erose2D(filteredGraceTrans, 3);
-		// 	var filteredGraceDiff = DataProcessor.getDiff(
-		// 		DataProcessor.Num2Int(filteredGraceTrans),
-		// 		DataProcessor.Num2Int(filteredGraceEr)
-		// 	);
-
-		// 	// IMAGES.put(prefix +"GraceTrans", new ImageInfo(prefix + "GraceTranslated.jpg", graceTrans));
-		// 	IMAGES.put(prefix + "GraceEr", new ImageInfo(prefix + "GraceErosed.jpg", graceEr));
-		// 	IMAGES.put(prefix + "GraceDiff", new ImageInfo(prefix + "GraceDiff.jpg", graceDiff));
-		// 	IMAGES.put("break-" + UUID.randomUUID(), new ImageInfo());
-		// 	IMAGES.put(prefix + "NoisedGrace", new ImageInfo(prefix + "NoisedGrace.jpg", noisedGrace));
-		// 	IMAGES.put(prefix + "NoisedGraceDiff", new ImageInfo(prefix + "NoisedGraceDifference.jpg", noisedGraceDiffTrans));
-		// 	IMAGES.put(prefix + "FilteredGrace", new ImageInfo(prefix + "FilteredGrace.jpg", filteredGrace));
-		// 	IMAGES.put(prefix + "FilteredGraceDiff", new ImageInfo(prefix + "FilteredGraceDifference.jpg", filteredGraceDiff));
-		// };
+		};
 
 		// modelGenerateLPF.run();
 		// modelGenerateHPF.run();
-		// modelGenerateER.run();
 		// graceGenerateLPF.run();
 		// graceGenerateHPF.run();
-		// graceGenerateER.run();
 
 
 		//LAB 12 ---------------------------------------------------------------
@@ -873,7 +777,7 @@ public class AppConfig implements WebMvcConfigurer, DisposableBean {
 
 		Runnable birchesGenerateLaplacian = () -> {
 			String prefix = "Laplacian_";
-			var birches = new ImageInfo("igor1.jpg").getNumMatrix();
+			var birches = new ImageInfo("birches.jpg").getNumMatrix();
 			var mask45_8_N = new Number [][] {
 				{1, 1, 1},
 				{1, -8, 1},
@@ -908,9 +812,203 @@ public class AppConfig implements WebMvcConfigurer, DisposableBean {
 		// graceGeneratePrevit.run();
 		// graceGenerateSobel.run();
 		// graceGenerateLaplacian.run();
-		birchesGenerateLaplacian.run();
+		// birchesGenerateLaplacian.run();
 
 
+		//LAB 13 ---------------------------------------------------------------
+
+		Runnable modelGenerateER = () -> {
+			String prefix = "EROSION_";
+			IMAGES.put(prefix + "MODEL", new ImageInfo("MODELimage.jpg"));
+			var model = IMAGES.get(prefix + "MODEL").getNumMatrix();
+			var modelTrans = DataProcessor.edgeTranslate(model, 190);
+			var modelEr = DataProcessor.DPMath.erose2D(modelTrans, 3);
+			var modelDiff = DataProcessor.getDiff(
+				DataProcessor.Num2Int(modelTrans),
+				DataProcessor.Num2Int(modelEr)
+			);
+			var noisedModel = DataProcessor.combinedNoiseImg(
+				model,
+				10,
+				100,
+				255,
+				0.01
+			);
+			var noisedModelTrans = DataProcessor.edgeTranslate(noisedModel, 190);
+			var noisedModelEr = DataProcessor.DPMath.erose2D(noisedModelTrans, 3);
+			var noisedModelDiff = DataProcessor.getDiff(
+				DataProcessor.Num2Int(noisedModelTrans),
+				DataProcessor.Num2Int(noisedModelEr)
+			);
+			var noisedModelDiffTrans = DataProcessor.edgeTranslate(noisedModelDiff, 190, 255);
+			var filteredModel = DataProcessor.Filtering.filterImg(
+				DataProcessor.Num2Int(noisedModel),
+				3,
+				3,
+				ImgFIlterType.MEDIAN_FILTER
+			);
+			var filteredModelTrans = DataProcessor.edgeTranslate(filteredModel, 190);
+			var filteredModelEr = DataProcessor.DPMath.erose2D(filteredModelTrans, 3);
+			var filteredModelDiff = DataProcessor.getDiff(
+				DataProcessor.Num2Int(filteredModelTrans),
+				DataProcessor.Num2Int(filteredModelEr)
+			);
+
+			IMAGES.put(prefix +"ModelTrans", new ImageInfo(prefix + "ModelTranslated.jpg", modelTrans));
+			IMAGES.put(prefix + "ModelEr", new ImageInfo(prefix + "ModelErosed.jpg", modelEr));
+			IMAGES.put(prefix + "ModelDiff", new ImageInfo(prefix + "ModelDiff.jpg", modelDiff));
+			// IMAGES.put("break-" + UUID.randomUUID(), new ImageInfo());
+			IMAGES.put(prefix + "NoisedModel", new ImageInfo(prefix + "NoisedModel.jpg", noisedModel));
+			IMAGES.put(prefix + "NoisedModelDiff", new ImageInfo(prefix + "NoisedModelDifference.jpg", noisedModelDiffTrans));
+			IMAGES.put(prefix + "FilteredModel", new ImageInfo(prefix + "FilteredModel.jpg", filteredModel));
+			IMAGES.put(prefix + "FilteredModelDiff", new ImageInfo(prefix + "FilteredModelDifference.jpg", filteredModelDiff));
+		};
+
+		Runnable graceGenerateER = () -> {
+			String prefix = "EROSION_";
+			IMAGES.put(prefix + "grace", new ImageInfo("grace.jpg"));
+			var grace = IMAGES.get(prefix + "grace").getNumMatrix();
+			// var graceTrans = DataProcessor.edgeTranslate(grace, 140);
+			var graceEr = DataProcessor.DPMath.erose2D(grace, 3);
+			var graceDiff = DataProcessor.narrowGSRange(DataProcessor.getDiff(
+				DataProcessor.Num2Int(grace),
+				DataProcessor.Num2Int(graceEr)
+			));
+			var noisedGrace = DataProcessor.combinedNoiseImg(
+				grace,
+				10,
+				100,
+				255,
+				0.01
+			);
+			var noisedGraceTrans = DataProcessor.edgeTranslate(noisedGrace, 120);
+			var noisedGraceEr = DataProcessor.DPMath.erose2D(noisedGraceTrans, 3);
+			var noisedGraceDiff = DataProcessor.getDiff(
+				DataProcessor.Num2Int(noisedGraceTrans),
+				DataProcessor.Num2Int(noisedGraceEr)
+			);
+			var noisedGraceDiffTrans = DataProcessor.edgeTranslate(noisedGraceDiff, 140, 255);
+			var filteredGrace = DataProcessor.Filtering.filterImg(
+				DataProcessor.Num2Int(noisedGrace),
+				3,
+				3,
+				ImgFIlterType.MEDIAN_FILTER
+			);
+			var filteredGraceTrans = DataProcessor.edgeTranslate(filteredGrace, 110);
+			var filteredGraceEr = DataProcessor.DPMath.erose2D(filteredGraceTrans, 3);
+			var filteredGraceDiff = DataProcessor.getDiff(
+				DataProcessor.Num2Int(filteredGraceTrans),
+				DataProcessor.Num2Int(filteredGraceEr)
+			);
+
+			// IMAGES.put(prefix +"GraceTrans", new ImageInfo(prefix + "GraceTranslated.jpg", graceTrans));
+			IMAGES.put(prefix + "GraceEr", new ImageInfo(prefix + "GraceErosed.jpg", graceEr));
+			IMAGES.put(prefix + "GraceDiff", new ImageInfo(prefix + "GraceDiff.jpg", graceDiff));
+			IMAGES.put("break-" + UUID.randomUUID(), new ImageInfo());
+			IMAGES.put(prefix + "NoisedGrace", new ImageInfo(prefix + "NoisedGrace.jpg", noisedGrace));
+			IMAGES.put(prefix + "NoisedGraceDiff", new ImageInfo(prefix + "NoisedGraceDifference.jpg", noisedGraceDiffTrans));
+			IMAGES.put(prefix + "FilteredGrace", new ImageInfo(prefix + "FilteredGrace.jpg", filteredGrace));
+			IMAGES.put(prefix + "FilteredGraceDiff", new ImageInfo(prefix + "FilteredGraceDifference.jpg", filteredGraceDiff));
+		};
+
+		Runnable modelGenerateDI = () -> {
+			String prefix = "DILATATION_";
+			IMAGES.put(prefix + "MODEL", new ImageInfo("MODELimage.jpg"));
+			var model = IMAGES.get(prefix + "MODEL").getNumMatrix();
+			var modelTrans = DataProcessor.edgeTranslate(model, 190);
+			var modelEr = DataProcessor.DPMath.dilate2D(modelTrans, 3);
+			var modelDiff = DataProcessor.getDiff(
+				DataProcessor.Num2Int(modelEr),
+				DataProcessor.Num2Int(modelTrans)
+			);
+			var noisedModel = DataProcessor.combinedNoiseImg(
+				model,
+				10,
+				100,
+				255,
+				0.01
+			);
+			var noisedModelTrans = DataProcessor.edgeTranslate(noisedModel, 190);
+			var noisedModelEr = DataProcessor.DPMath.dilate2D(noisedModelTrans, 3);
+			var noisedModelDiff = DataProcessor.getDiff(
+				DataProcessor.Num2Int(noisedModelEr),
+				DataProcessor.Num2Int(noisedModelTrans)
+			);
+			var noisedModelDiffTrans = DataProcessor.edgeTranslate(noisedModelDiff, 190, 255);
+			var filteredModel = DataProcessor.Filtering.filterImg(
+				DataProcessor.Num2Int(noisedModel),
+				3,
+				3,
+				ImgFIlterType.MEDIAN_FILTER
+			);
+			var filteredModelTrans = DataProcessor.edgeTranslate(filteredModel, 190);
+			var filteredModelEr = DataProcessor.DPMath.dilate2D(filteredModelTrans, 3);
+			var filteredModelDiff = DataProcessor.getDiff(
+				DataProcessor.Num2Int(filteredModelEr),
+				DataProcessor.Num2Int(filteredModelTrans)
+			);
+
+			IMAGES.put(prefix +"ModelTrans", new ImageInfo(prefix + "ModelTranslated.jpg", modelTrans));
+			IMAGES.put(prefix + "ModelDilat", new ImageInfo(prefix + "ModelDilatated.jpg", modelEr));
+			IMAGES.put(prefix + "ModelDiff", new ImageInfo(prefix + "ModelDiff.jpg", modelDiff));
+			// IMAGES.put("break-" + UUID.randomUUID(), new ImageInfo());
+			IMAGES.put(prefix + "NoisedModel", new ImageInfo(prefix + "NoisedModel.jpg", noisedModel));
+			IMAGES.put(prefix + "NoisedModelDiff", new ImageInfo(prefix + "NoisedModelDifference.jpg", noisedModelDiffTrans));
+			IMAGES.put(prefix + "FilteredModel", new ImageInfo(prefix + "FilteredModel.jpg", filteredModel));
+			IMAGES.put(prefix + "FilteredModelDiff", new ImageInfo(prefix + "FilteredModelDifference.jpg", filteredModelDiff));
+		};
+
+		Runnable graceGenerateDI = () -> {
+			String prefix = "DILATATION_";
+			IMAGES.put(prefix + "grace", new ImageInfo("grace.jpg"));
+			var grace = IMAGES.get(prefix + "grace").getNumMatrix();
+			// var graceTrans = DataProcessor.edgeTranslate(grace, 140);
+			var graceEr = DataProcessor.DPMath.dilate2D(grace, 3);
+			var graceDiff = DataProcessor.narrowGSRange(DataProcessor.getDiff(
+				DataProcessor.Num2Int(graceEr),
+				DataProcessor.Num2Int(grace)
+			));
+			var noisedGrace = DataProcessor.combinedNoiseImg(
+				grace,
+				10,
+				100,
+				255,
+				0.01
+			);
+			var noisedGraceTrans = DataProcessor.edgeTranslate(noisedGrace, 120);
+			var noisedGraceEr = DataProcessor.DPMath.dilate2D(noisedGraceTrans, 3);
+			var noisedGraceDiff = DataProcessor.getDiff(
+				DataProcessor.Num2Int(noisedGraceEr),
+				DataProcessor.Num2Int(noisedGraceTrans)
+			);
+			var noisedGraceDiffTrans = DataProcessor.edgeTranslate(noisedGraceDiff, 140, 255);
+			var filteredGrace = DataProcessor.Filtering.filterImg(
+				DataProcessor.Num2Int(noisedGrace),
+				3,
+				3,
+				ImgFIlterType.MEDIAN_FILTER
+			);
+			var filteredGraceTrans = DataProcessor.edgeTranslate(filteredGrace, 110);
+			var filteredGraceEr = DataProcessor.DPMath.dilate2D(filteredGraceTrans, 3);
+			var filteredGraceDiff = DataProcessor.getDiff(
+				DataProcessor.Num2Int(filteredGraceEr),
+				DataProcessor.Num2Int(filteredGraceTrans)
+			);
+
+			// IMAGES.put(prefix +"GraceTrans", new ImageInfo(prefix + "GraceTranslated.jpg", graceTrans));
+			IMAGES.put(prefix + "GraceDilat", new ImageInfo(prefix + "GraceDilatated.jpg", graceEr));
+			IMAGES.put(prefix + "GraceDiff", new ImageInfo(prefix + "GraceDiff.jpg", graceDiff));
+			IMAGES.put("break-" + UUID.randomUUID(), new ImageInfo());
+			IMAGES.put(prefix + "NoisedGrace", new ImageInfo(prefix + "NoisedGrace.jpg", noisedGrace));
+			IMAGES.put(prefix + "NoisedGraceDiff", new ImageInfo(prefix + "NoisedGraceDifference.jpg", noisedGraceDiffTrans));
+			IMAGES.put(prefix + "FilteredGrace", new ImageInfo(prefix + "FilteredGrace.jpg", filteredGrace));
+			IMAGES.put(prefix + "FilteredGraceDiff", new ImageInfo(prefix + "FilteredGraceDifference.jpg", filteredGraceDiff));
+		};
+
+		modelGenerateER.run();
+		graceGenerateER.run();
+		modelGenerateDI.run();
+		graceGenerateDI.run();
 
 	}
 
