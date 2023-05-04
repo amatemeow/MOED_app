@@ -161,7 +161,7 @@ public class IOC {
         return data;
     }
 
-    public static Integer[][] readRAW(String path, int off, int xSize, int ySize, int byteMultiplier) {
+    public static Number[][] readRAW(String path, int off, int xSize, int ySize, int byteMultiplier, boolean reverse) {
         byte[] buffer = new byte[0];
         try {
             BufferedInputStream stream = new BufferedInputStream(
@@ -172,11 +172,16 @@ public class IOC {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        Integer[][] data = new Integer[xSize][ySize];
+        var data = new Number[xSize][ySize];
         int idx = 0;
         for (int i = 0; i < data.length; i++) {
-            for (int j = 0; j < data[0].length; j++, idx+=2) {
-                data[i][j] = (buffer[idx] & 0xFF) << 8 | buffer[idx + 1] & 0xFF;
+            for (int j = 0; j < data[0].length; j++, idx += 2) {
+                if (reverse) {
+                    data[i][j] = (buffer[idx] & 0xFF) << 8 | buffer[idx + 1] & 0xFF;
+                } else {
+                    data[i][j] = (buffer[idx + 1] & 0xFF) << 8 | buffer[idx] & 0xFF;
+                }
+                
             }
         }
         return data;

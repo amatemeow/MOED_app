@@ -15,6 +15,7 @@ import moed.application.MOED_app.business.IOC;
 
 import org.apache.commons.io.file.PathUtils;
 import org.apache.commons.math3.distribution.LaplaceDistribution;
+import org.apache.commons.math3.ode.events.FilterType;
 import org.jfree.data.xy.XYSeries;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.context.annotation.ComponentScan;
@@ -25,6 +26,8 @@ import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import javax.annotation.PostConstruct;
+import javax.xml.crypto.Data;
+
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -1005,10 +1008,76 @@ public class AppConfig implements WebMvcConfigurer, DisposableBean {
 			IMAGES.put(prefix + "FilteredGraceDiff", new ImageInfo(prefix + "FilteredGraceDifference.jpg", filteredGraceDiff));
 		};
 
-		modelGenerateER.run();
-		graceGenerateER.run();
-		modelGenerateDI.run();
-		graceGenerateDI.run();
+		// modelGenerateER.run();
+		// graceGenerateER.run();
+		// modelGenerateDI.run();
+		// graceGenerateDI.run();
+
+
+		//CREATIVE 1 ---------------------------------------------------------------
+
+		Runnable readMed = () -> {
+			var spineH = IOC.readRAW("spine-V_x512.bin", 0, 512, 512, 2, false);
+			var spineV = IOC.readRAW("spine-H_x256.bin", 0, 256, 256, 2, false);
+			var brainV = IOC.readRAW("brain-V_x256.bin", 0, 256, 256, 2, false);
+			var brainH = IOC.readRAW("brain-H_x512.bin", 0, 512, 512, 2, false);
+			var maskL = new Number [][] {
+				{1, 1, 1},
+				{1, -8, 1},
+				{1, 1, 1}
+			};
+			// maskL = DataProcessor.DPMath.multiplyNumMask(maskL, -1d);
+			var spineVN = DataProcessor.narrowGSRange(spineV);
+			var spineVCDF = DataProcessor.translateCDF(spineV);
+			spineVCDF = DataProcessor.narrowGSRange(spineVCDF);
+			// spineVR = DataProcessor.narrowGSRange(spineVR);
+			spineVN = DataProcessor.gammaCorrection(spineVCDF, 3d, 1);
+			spineVN = DataProcessor.narrowGSRange(spineVN);
+			spineVN = DataProcessor.gammaCorrection(spineVN, 0.5d, 1);
+			spineVN = DataProcessor.narrowGSRange(spineVN);
+			spineVN = DataProcessor.trashhold(spineVN, 30, true);
+			var spineVL = DataProcessor.convol2D(spineVN, maskL);
+			var spineVR = DataProcessor.getDiff(spineVN, spineVL);
+			spineVR = DataProcessor.recomputeGSRange(spineVR, 0);
+			// spineVR = DataProcessor.narrowGSRange(spineVR);
+
+			var spineHN = DataProcessor.narrowGSRange(spineH);
+			var spineHCDF = DataProcessor.translateCDF(spineH);
+			spineHCDF = DataProcessor.narrowGSRange(spineHCDF);
+			spineHN = DataProcessor.gammaCorrection(spineHCDF, 3d, 1);
+			spineHN = DataProcessor.narrowGSRange(spineHN);
+			spineHN = DataProcessor.gammaCorrection(spineHN, 0.5d, 1);
+			spineHN = DataProcessor.narrowGSRange(spineHN);
+			spineHN = DataProcessor.trashhold(spineHN, 30, true);
+
+			var brainVN = DataProcessor.narrowGSRange(brainV);
+			var brainVCDF = DataProcessor.translateCDF(brainV);
+			brainVCDF = DataProcessor.narrowGSRange(brainVCDF);
+			brainVN = DataProcessor.gammaCorrection(brainVCDF, 3d, 1);
+			brainVN = DataProcessor.narrowGSRange(brainVN);
+			brainVN = DataProcessor.gammaCorrection(brainVN, 0.5d, 1);
+			brainVN = DataProcessor.narrowGSRange(brainVN);
+			brainVN = DataProcessor.trashhold(brainVN, 30, true);
+
+			var brainHN = DataProcessor.narrowGSRange(brainH);
+			var brainHCDF = DataProcessor.translateCDF(brainH);
+			brainHCDF = DataProcessor.narrowGSRange(brainHCDF);
+			brainHN = DataProcessor.gammaCorrection(brainHCDF, 3d, 1);
+			brainHN = DataProcessor.narrowGSRange(brainHN);
+			brainHN = DataProcessor.gammaCorrection(brainHN, 0.5d, 1);
+			brainHN = DataProcessor.narrowGSRange(brainHN);
+			brainHN = DataProcessor.trashhold(brainHN, 30, true);
+
+
+			IMAGES.put("SpineV", new ImageInfo("Spine-V.jpg", spineVN));
+			// IMAGES.put("SpineVCDF", new ImageInfo("Spine-V_TCDF.jpg", spineVCDF));
+			// IMAGES.put("SpineVR", new ImageInfo("Spine-V_R.jpg", spineVR));
+			IMAGES.put("SpineH", new ImageInfo("Spine-H.jpg", spineHN));
+			IMAGES.put("BrainV", new ImageInfo("Brain-V.jpg", brainVN));
+			IMAGES.put("BrainH", new ImageInfo("Brain-H.jpg", brainHN));
+		};
+
+		readMed.run();
 
 	}
 

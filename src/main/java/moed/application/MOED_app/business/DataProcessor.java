@@ -119,10 +119,10 @@ public class DataProcessor {
             return bsw;
         }
 
-        public static Integer[][] filterImg(Integer[][] data, int maskSizeX, int maskSizeY, ImgFIlterType filterType) {
+        public static Number[][] filterImg(Number[][] data, int maskSizeX, int maskSizeY, ImgFIlterType filterType) {
             int M = data.length;
             int N = data[0].length;
-            Integer[][] filtered = Arrays.stream(data).map(Integer[]::clone).toArray(Integer[][]::new);
+            var filtered = Arrays.stream(data).map(Number[]::clone).toArray(Number[][]::new);
             switch (filterType) {
                 case ARIFMETHIC_MEAN_FILTER:
                     for (int i = 0; i < M; i++) {
@@ -142,18 +142,18 @@ public class DataProcessor {
             return filtered;
         }
 
-        private static int arifMask(Integer[][] data, int pX, int pY, int maskSizeX, int maskSizeY) {
-            int sum = 0;
+        private static double arifMask(Number[][] data, int pX, int pY, int maskSizeX, int maskSizeY) {
+            double sum = 0;
             int minusCount = 0;
             for (int i = -maskSizeX / 2; i <= maskSizeX / 2; i++) {
                 for (int j = -maskSizeY / 2; j <= maskSizeY / 2; j++) {
                     if (i == 0 && j == 0) continue;
                     try {
-                        int value = Optional.ofNullable(data[pX + i][pY + j]).orElse(0);
+                        double value = Optional.ofNullable(data[pX + i][pY + j].doubleValue()).orElse(0d);
                         if (value > 255) {
-                            value = 255;
+                            value = 255d;
                         } else if (value < 0) {
-                            value = 0;
+                            value = 0d;
                         }
                         sum += value;
                     } catch(IndexOutOfBoundsException e) {
@@ -161,32 +161,32 @@ public class DataProcessor {
                     }
                 }
             }
-            int result = (int) ((double) sum / (maskSizeX * maskSizeY - minusCount));
+            double result = sum / (maskSizeX * maskSizeY - minusCount);
             if (result > 255) {
-                result = 255;
+                result = 255d;
             } else if (result < 0) {
-                result = 0;
+                result = 0d;
             }
             return result;
         }
 
-        private static int medianMask(Integer[][] data, int pX, int pY, int maskSizeX, int maskSizeY) {
-            ArrayList<Integer> arr = new ArrayList<>();
+        private static double medianMask(Number[][] data, int pX, int pY, int maskSizeX, int maskSizeY) {
+            ArrayList<Double> arr = new ArrayList<>();
             for (int i = -maskSizeX / 2; i <= maskSizeX / 2; i++) {
                 for (int j = -maskSizeY / 2; j <= maskSizeY / 2; j++) {
                     if (i == 0 && j == 0) continue;
                     try {
-                        arr.add(Optional.ofNullable(data[pX + i][pY + j]).orElse(0));
+                        arr.add(Optional.ofNullable(data[pX + i][pY + j].doubleValue()).orElse(0d));
                     } catch(IndexOutOfBoundsException e) {}
                 }
             }
-            arr.sort(Integer::compareTo);
+            arr.sort(Double::compareTo);
             int size = arr.size();
-            int result = size % 2 == 0 ? (arr.get(size / 2 - 1) + arr.get(size / 2)) / 2 : arr.get(size / 2);
+            double result = size % 2 == 0 ? (arr.get(size / 2 - 1) + arr.get(size / 2)) / 2 : arr.get(size / 2);
             if (result > 255) {
-                result = 255;
+                result = 255d;
             } else if (result < 0) {
-                result = 0;
+                result = 0d;
             }
             return result;
         }
@@ -629,21 +629,21 @@ public class DataProcessor {
         return negated;
     }
 
-    public static Integer[][] gammaCorrection(Integer[][] data, Double gamma, Integer constant) {
-        Integer[][] corrected = new Integer[data.length][data[0].length];
+    public static Number[][] gammaCorrection(Number[][] data, Double gamma, Integer constant) {
+        var corrected = new Number[data.length][data[0].length];
         for (int i = 0; i < data.length; i++) {
             for (int j = 0; j < data[0].length; j++) {
-                corrected[i][j] = (int) (constant * Math.pow(data[i][j], gamma));
+                corrected[i][j] = constant * Math.pow(data[i][j].doubleValue(), gamma);
             }
         }
         return corrected;
     }
 
-    public static Integer[][] logCorrection(Integer[][] data, Integer constant) {
-        Integer[][] corrected = new Integer[data.length][data[0].length];
+    public static Number[][] logCorrection(Number[][] data, Integer constant) {
+        var corrected = new Number[data.length][data[0].length];
         for (int i = 0; i < data.length; i++) {
             for (int j = 0; j < data[0].length; j++) {
-                corrected[i][j] = (int) (constant * Math.log(data[i][j] + 1));
+                corrected[i][j] = constant * Math.log(data[i][j].doubleValue() + 1);
             }
         }
         return corrected;
