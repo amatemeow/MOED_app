@@ -1017,64 +1017,46 @@ public class AppConfig implements WebMvcConfigurer, DisposableBean {
 		//CREATIVE 1 ---------------------------------------------------------------
 
 		Runnable readMed = () -> {
-			var spineH = IOC.readRAW("spine-V_x512.bin", 0, 512, 512, 2, false);
-			var spineV = IOC.readRAW("spine-H_x256.bin", 0, 256, 256, 2, false);
+			var spineV = IOC.readRAW("spine-V_x512.bin", 0, 512, 512, 2, false);
+			var spineH = IOC.readRAW("spine-H_x256.bin", 0, 256, 256, 2, false);
 			var brainV = IOC.readRAW("brain-V_x256.bin", 0, 256, 256, 2, false);
 			var brainH = IOC.readRAW("brain-H_x512.bin", 0, 512, 512, 2, false);
+			spineV = DataProcessor.rotate(spineV, RotationType.RIGHT);
+			spineH = DataProcessor.rotate(spineH, RotationType.RIGHT);
+			brainV = DataProcessor.rotate(brainV, RotationType.RIGHT);
+			brainH = DataProcessor.rotate(brainH, RotationType.RIGHT);
 			var maskL = new Number [][] {
 				{1, 1, 1},
 				{1, -8, 1},
 				{1, 1, 1}
 			};
-			// maskL = DataProcessor.DPMath.multiplyNumMask(maskL, -1d);
-			var spineVN = DataProcessor.narrowGSRange(spineV);
+			spineV = DataProcessor.trashhold(spineV, 50, true);
 			var spineVCDF = DataProcessor.translateCDF(spineV);
+			var spineVN = DataProcessor.narrowGSRange(spineV);
+			var spineVC = DataProcessor.convol2D(spineVN, maskL);
 			spineVCDF = DataProcessor.narrowGSRange(spineVCDF);
-			// spineVR = DataProcessor.narrowGSRange(spineVR);
-			spineVN = DataProcessor.gammaCorrection(spineVCDF, 3d, 1);
-			spineVN = DataProcessor.narrowGSRange(spineVN);
-			spineVN = DataProcessor.gammaCorrection(spineVN, 0.5d, 1);
-			spineVN = DataProcessor.narrowGSRange(spineVN);
-			spineVN = DataProcessor.trashhold(spineVN, 30, true);
-			var spineVL = DataProcessor.convol2D(spineVN, maskL);
-			var spineVR = DataProcessor.getDiff(spineVN, spineVL);
+			var spineVR = DataProcessor.getDiff(spineVCDF, spineVC);
 			spineVR = DataProcessor.recomputeGSRange(spineVR, 0);
-			// spineVR = DataProcessor.narrowGSRange(spineVR);
 
-			var spineHN = DataProcessor.narrowGSRange(spineH);
-			var spineHCDF = DataProcessor.translateCDF(spineH);
-			spineHCDF = DataProcessor.narrowGSRange(spineHCDF);
-			spineHN = DataProcessor.gammaCorrection(spineHCDF, 3d, 1);
-			spineHN = DataProcessor.narrowGSRange(spineHN);
-			spineHN = DataProcessor.gammaCorrection(spineHN, 0.5d, 1);
-			spineHN = DataProcessor.narrowGSRange(spineHN);
-			spineHN = DataProcessor.trashhold(spineHN, 30, true);
+			// var spineVO = DataProcessor.autoOptimize(spineV);
+			var spineHO = DataProcessor.autoOptimize(spineH);
+			var brainVO = DataProcessor.autoOptimize(brainV);
+			var brainHO = DataProcessor.autoOptimize(brainH);
 
-			var brainVN = DataProcessor.narrowGSRange(brainV);
-			var brainVCDF = DataProcessor.translateCDF(brainV);
-			brainVCDF = DataProcessor.narrowGSRange(brainVCDF);
-			brainVN = DataProcessor.gammaCorrection(brainVCDF, 3d, 1);
-			brainVN = DataProcessor.narrowGSRange(brainVN);
-			brainVN = DataProcessor.gammaCorrection(brainVN, 0.5d, 1);
-			brainVN = DataProcessor.narrowGSRange(brainVN);
-			brainVN = DataProcessor.trashhold(brainVN, 30, true);
-
-			var brainHN = DataProcessor.narrowGSRange(brainH);
-			var brainHCDF = DataProcessor.translateCDF(brainH);
-			brainHCDF = DataProcessor.narrowGSRange(brainHCDF);
-			brainHN = DataProcessor.gammaCorrection(brainHCDF, 3d, 1);
-			brainHN = DataProcessor.narrowGSRange(brainHN);
-			brainHN = DataProcessor.gammaCorrection(brainHN, 0.5d, 1);
-			brainHN = DataProcessor.narrowGSRange(brainHN);
-			brainHN = DataProcessor.trashhold(brainHN, 30, true);
+			
 
 
 			IMAGES.put("SpineV", new ImageInfo("Spine-V.jpg", spineVN));
-			// IMAGES.put("SpineVCDF", new ImageInfo("Spine-V_TCDF.jpg", spineVCDF));
-			// IMAGES.put("SpineVR", new ImageInfo("Spine-V_R.jpg", spineVR));
-			IMAGES.put("SpineH", new ImageInfo("Spine-H.jpg", spineHN));
-			IMAGES.put("BrainV", new ImageInfo("Brain-V.jpg", brainVN));
-			IMAGES.put("BrainH", new ImageInfo("Brain-H.jpg", brainHN));
+			IMAGES.put("SpineVCDF", new ImageInfo("Spine-VCDF.jpg", spineVCDF));
+			IMAGES.put("SpineVC", new ImageInfo("Spine-VC.jpg", DataProcessor.narrowGSRange(spineVC)));
+			IMAGES.put("SpineVR", new ImageInfo("Spine-VR.jpg", spineVR));
+			// IMAGES.put("SpineVO", new ImageInfo("Spine-VO.jpg", spineVO));
+			IMAGES.put("SpineH", new ImageInfo("Spine-H.jpg", DataProcessor.narrowGSRange(spineH)));
+			IMAGES.put("SpineHO", new ImageInfo("Spine-HO.jpg", spineHO));
+			IMAGES.put("BrainV", new ImageInfo("Brain-V.jpg", DataProcessor.narrowGSRange(brainV)));
+			IMAGES.put("BrainVO", new ImageInfo("Brain-VO.jpg", brainVO));
+			IMAGES.put("BrainH", new ImageInfo("Brain-H.jpg", DataProcessor.narrowGSRange(brainH)));
+			IMAGES.put("BrainHO", new ImageInfo("Brain-HO.jpg", brainHO));
 		};
 
 		readMed.run();

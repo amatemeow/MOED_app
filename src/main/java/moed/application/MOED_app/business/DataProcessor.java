@@ -606,8 +606,20 @@ public class DataProcessor {
         Number[][] narrowed = new Number[data.length][data[0].length];
         for (int i = 0; i < data.length; i++) {
             for (int j = 0; j < data[0].length; j++) {
-                // if (data[i][j].doubleValue() == 0) narrowed[i][j] = 0;
                 narrowed[i][j] = (((data[i][j].doubleValue() - min) / (max - min)) * 255);
+            }
+        }
+        return narrowed;
+    }
+
+    public static Number[][] narrowGSOutOnly(Number[][] data) {
+        double min = Arrays.stream(DataProcessor.toVector(data)).map(Number::doubleValue).min(Double::compareTo).get();
+        double max = Arrays.stream(DataProcessor.toVector(data)).map(Number::doubleValue).max(Double::compareTo).get();
+        Number[][] narrowed = new Number[data.length][data[0].length];
+        for (int i = 0; i < data.length; i++) {
+            for (int j = 0; j < data[0].length; j++) {
+                var value = data[i][j].doubleValue();
+                narrowed[i][j] =  (value < 0 || value > 255) ? ((value - min) / (max - min)) * 255 : value;
             }
         }
         return narrowed;
@@ -864,6 +876,16 @@ public class DataProcessor {
         for (int i = 0; i < add.length; i++) {
             for (int j = 0; j < add[0].length; j++) {
                 add[i][j] = data1[i][j].doubleValue() + data2[i][j].doubleValue();
+            }
+        }
+        return add;
+    }
+
+    public static Number[][] getMult(Number[][] data1, Number[][] data2) {
+        var add = new Number[data1.length][data1[0].length];
+        for (int i = 0; i < add.length; i++) {
+            for (int j = 0; j < add[0].length; j++) {
+                add[i][j] = data1[i][j].doubleValue() * data2[i][j].doubleValue();
             }
         }
         return add;
@@ -1164,16 +1186,50 @@ public class DataProcessor {
         return result;
     }
 
-    public static Number[][] laplacian(Number[][] data, boolean square) {
+    public static Number[][] laplacianImprove(Number[][] data, boolean positive) {
         int N = data.length;
         int M = data[0].length;
         var result = new Number[N][M];
-        for (int i = 0; i < N; i++) {
-            for (int j = 0; j < M; j++) {
-                result[i][j] = DPMath.laplacianMask(data, i, j, square);
+        var maskL = new Number [][] {
+            {1, 1, 1},
+            {1, -8, 1},
+            {1, 1, 1}
+        };
+        if (positive) maskL = DPMath.multiplyNumMask(maskL, -1);
+        var clean = narrowGSRange(data);
+        var lap = convol2D(clean, maskL);
+        result = positive ? getAdd(clean, lap) : getDiff(clean, lap);
+        result = recomputeGSRange(result, 0);
+        return result;
+    }
+
+    public static Number[][] autoOptimize(Number[][] data) {
+        var maskL = new Number [][] {
+            {1, 1, 1},
+            {1, -8, 1},
+            {1, 1, 1}
+        };
+        var hist = DataAnalyzer.Statistics.getHist2D(data, false);
+        var maxHist = hist.getMaxY();
+        double cut = 0;
+        var itemsCount = hist.getItemCount();
+        for (int i = 0; i < itemsCount; i++) {
+            if (hist.getY(i).doubleValue() == maxHist) {
+                cut = hist.getX(i).doubleValue();
+                break;
             }
         }
-        return result;
+        cut += itemsCount / 100 * 2;
+        // new LineChartBox(hist, "").setVisible(true);
+        var clean = trashhold(data, (int) cut, true);
+        var cdfed = translateCDF(clean);
+        clean = narrowGSRange(clean);
+        cdfed = narrowGSRange(cdfed);
+        var rim = convol2D(clean, maskL);
+        rim = getDiff(cdfed, rim);
+        rim = recomputeGSRange(rim, 0);
+
+        return rim;
     }
 
     public static <T> XYSeries Array2Series(T[] arr) {
